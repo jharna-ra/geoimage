@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geotag Studio — Batch Crop &amp; Geotag Stamping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<style>
+  :root{
+    --bg:#14161A;
+    --panel:#1C1F26;
+    --panel-raised:#22262F;
+    --border:#2A2E37;
+    --text:#EDEAE3;
+    --text-dim:#8B909B;
+    --text-faint:#5B606B;
+    --accent:#E8A33D;
+    --accent-dim:#5A4728;
+    --ok:#5FB489;
+    --ok-dim:#1F3A2C;
+    --warn:#D9645A;
+    --warn-dim:#3D2323;
+    --radius:6px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); font-size:14px;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  ::selection{ background:var(--accent-dim); color:var(--accent); }
+  button{
+    font-family:var(--font-body); cursor:pointer; border:1px solid var(--border);
+    background:var(--panel-raised); color:var(--text); border-radius:var(--radius);
+    padding:8px 14px; font-size:13px; font-weight:500; transition:border-color .15s, background .15s;
+  }
+  button:hover:not(:disabled){ border-color:var(--accent); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button.primary{ background:var(--accent); color:#1A1305; border-color:var(--accent); font-weight:600; }
+  button.primary:hover:not(:disabled){ filter:brightness(1.08); }
+  button.ghost{ background:transparent; }
+  button.danger{ border-color:var(--warn); color:var(--warn); }
+  button.small{ padding:5px 10px; font-size:12px; }
+  input[type=text], input[type=number]{
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:var(--radius); padding:6px 8px; font-family:var(--font-mono); font-size:12px;
+  }
+  a{ color:var(--accent); }
+
+  /* ---------- Header ---------- */
+  #topbar{
+    display:flex; align-items:center; gap:10px; padding:10px 16px;
+    background:var(--panel); border-bottom:1px solid var(--border); flex-shrink:0;
+    flex-wrap:wrap;
+  }
+  #topbar .brand{ display:flex; align-items:baseline; gap:8px; margin-right:12px; }
+  #topbar .brand .mark{ width:9px; height:9px; background:var(--accent); border-radius:2px; display:inline-block; }
+  #topbar h1{ font-family:var(--font-display); font-size:16px; margin:0; letter-spacing:.2px; font-weight:600; }
+  #topbar .sub{ color:var(--text-faint); font-size:11px; font-family:var(--font-mono); }
+  .divider{ width:1px; height:22px; background:var(--border); margin:0 4px; }
+  #topbar .grow{ flex:1; }
+  #statusline{ font-family:var(--font-mono); font-size:12px; color:var(--text-dim); }
+
+  /* ---------- Progress bar ---------- */
+  #progressWrap{
+    height:3px; background:var(--border); flex-shrink:0; display:none; position:relative; overflow:hidden;
+  }
+  #progressWrap.active{ display:block; }
+  #progressBar{ height:100%; background:var(--accent); width:0%; transition:width .12s linear; }
+  #progressLabel{
+    position:absolute; top:6px; right:16px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    background:var(--panel); padding:2px 8px; border-radius:4px; border:1px solid var(--border); display:none;
+  }
+  #progressWrap.active + #progressLabel, #progressLabel.show{ display:block; }
+
+  /* ---------- Main layout ---------- */
+  #main{ flex:1; display:flex; min-height:0; }
+  #gridPane{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  #gridScroll{ flex:1; overflow-y:auto; padding:16px; position:relative; }
+  #gridInner{ position:relative; }
+
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; color:var(--text-faint); gap:10px; text-align:center; padding:40px;
+  }
+  .empty-state .glyph{ font-size:34px; opacity:.5; font-family:var(--font-mono); }
+  .empty-state h2{ font-family:var(--font-display); color:var(--text-dim); font-weight:600; font-size:16px; margin:0; }
+  .empty-state p{ margin:0; font-size:13px; max-width:340px; line-height:1.5; }
+
+  .card{
+    position:absolute; width:172px; background:var(--panel); border:1px solid var(--border);
+    border-radius:var(--radius); overflow:hidden; transition:border-color .15s;
+  }
+  .card:hover{ border-color:var(--text-faint); }
+  .card.selected{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .card .thumb-box{
+    width:100%; height:118px; background:
+      linear-gradient(45deg,#20232a 25%,transparent 25%) -8px 0/16px 16px,
+      linear-gradient(-45deg,#20232a 25%,transparent 25%) -8px 0/16px 16px,
+      linear-gradient(45deg,transparent 75%,#20232a 75%) -8px 0/16px 16px,
+      linear-gradient(-45deg,transparent 75%,#20232a 75%) -8px 0/16px 16px, #191b20;
+    display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer;
+  }
+  .card .thumb-box img{ max-width:100%; max-height:100%; display:block; }
+  .card .thumb-box .spinner{ width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .card .check{
+    position:absolute; top:6px; left:6px; width:16px; height:16px; border-radius:4px;
+    border:1px solid rgba(237,234,227,.5); background:rgba(20,22,26,.55); z-index:2;
+  }
+  .card.selected .check{ background:var(--accent); border-color:var(--accent); }
+  .card.selected .check::after{ content:'✓'; color:#1A1305; font-size:11px; display:flex; align-items:center; justify-content:center; height:100%; font-weight:700; }
+  .card .flag{
+    position:absolute; top:0; right:0; font-family:var(--font-mono); font-size:9px; letter-spacing:.3px;
+    padding:2px 6px 2px 8px; border-bottom-left-radius:6px; z-index:2; font-weight:500;
+  }
+  .card .flag.tagged{ background:var(--ok-dim); color:var(--ok); }
+  .card .flag.cropped{ background:var(--accent-dim); color:var(--accent); }
+  .card .meta{ padding:7px 9px; }
+  .card .meta .name{ font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:var(--font-mono); }
+  .card .meta .dims{ font-size:10px; color:var(--text-faint); font-family:var(--font-mono); margin-top:2px; }
+
+  /* ---------- Right inspector ---------- */
+  #inspector{
+    width:270px; background:var(--panel); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .insp-section{ padding:16px; border-bottom:1px solid var(--border); }
+  .insp-section h3{
+    font-family:var(--font-display); font-size:11px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--text-faint); margin:0 0 12px 0; font-weight:600;
+  }
+  .insp-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:12px; color:var(--text-dim); }
+  .insp-row .v{ font-family:var(--font-mono); color:var(--text); }
+  .stack{ display:flex; flex-direction:column; gap:8px; }
+  .geotag-preview-box{
+    width:100%; height:64px; border:1px dashed var(--border); border-radius:var(--radius);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:10px;
+    background:
+      linear-gradient(45deg,#20232a 25%,transparent 25%) -6px 0/12px 12px,
+      linear-gradient(-45deg,#20232a 25%,transparent 25%) -6px 0/12px 12px, #191b20;
+  }
+  .geotag-preview-box img{ max-width:90%; max-height:85%; }
+  .geotag-preview-box .placeholder{ color:var(--text-faint); font-size:11px; font-family:var(--font-mono); }
+
+  /* ---------- Dialog / editor modal ---------- */
+  #overlay{
+    position:fixed; inset:0; background:rgba(10,11,13,.78); display:none;
+    align-items:center; justify-content:center; z-index:50; backdrop-filter:blur(2px);
+  }
+  #overlay.open{ display:flex; }
+  #dialog{
+    width:min(1180px, 94vw); height:min(820px, 92vh); background:var(--panel);
+    border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; overflow:hidden;
+  }
+  #dialogHead{
+    display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  #dialogHead .title{ font-family:var(--font-display); font-weight:600; font-size:14px; }
+  #dialogHead .counter{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); }
+  #dialogHead .grow{ flex:1; }
+  #dialogBody{ flex:1; display:flex; min-height:0; }
+  #stageWrap{
+    flex:1; display:flex; align-items:center; justify-content:center; position:relative;
+    background:repeating-conic-gradient(#191b20 0% 25%, #14161A 0% 50%) 0 0/22px 22px;
+    overflow:hidden;
+  }
+  #stageCanvas{ box-shadow:0 4px 24px rgba(0,0,0,.5); cursor:crosshair; touch-action:none; user-select:none; -webkit-user-select:none; }
+  #cropBox{
+    position:absolute; border:1.5px solid var(--warn); background:rgba(217,100,90,.12); display:none; cursor:move;
+    touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  #cropBox .handle{
+    position:absolute; width:16px; height:16px; background:var(--warn); border:1px solid #1A0F0F; border-radius:3px; touch-action:none;
+  }
+  #cropBox .h-nw{ top:-8px; left:-8px; cursor:nwse-resize; }
+  #cropBox .h-ne{ top:-8px; right:-8px; cursor:nesw-resize; }
+  #cropBox .h-sw{ bottom:-8px; left:-8px; cursor:nesw-resize; }
+  #cropBox .h-se{ bottom:-8px; right:-8px; cursor:nwse-resize; }
+  #cropReadout{
+    position:absolute; bottom:8px; left:8px; font-family:var(--font-mono); font-size:11px;
+    background:rgba(20,22,26,.85); border:1px solid var(--border); padding:4px 8px; border-radius:4px; color:var(--warn);
+    display:none;
+  }
+  #dialogSide{
+    width:250px; border-left:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; overflow-y:auto;
+  }
+  .stage-tab{ padding:16px; border-bottom:1px solid var(--border); }
+  .stage-tab h4{ font-family:var(--font-display); font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--text-faint); margin:0 0 10px; font-weight:600; }
+  .stage-tab p.hint{ font-size:11.5px; color:var(--text-dim); line-height:1.5; margin:0 0 10px; }
+  #dialogFoot{
+    display:flex; align-items:center; gap:8px; padding:12px 16px; border-top:1px solid var(--border); flex-shrink:0;
+  }
+  #dialogFoot .grow{ flex:1; }
+  .badge{
+    font-family:var(--font-mono); font-size:10px; padding:2px 7px; border-radius:10px; letter-spacing:.3px;
+  }
+  .badge.ok{ background:var(--ok-dim); color:var(--ok); }
+  .badge.warn{ background:var(--accent-dim); color:var(--accent); }
+
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--panel-raised); border:1px solid var(--border); color:var(--text);
+    padding:10px 16px; border-radius:var(--radius); font-size:12.5px; z-index:100; opacity:0;
+    transition:opacity .2s, transform .2s; pointer-events:none;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  input[type=file]{ display:none; }
+  .file-btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
+  ::-webkit-scrollbar-thumb:hover{ background:var(--text-faint); }
+
+  /* ---------- Responsive: tablet / mobile ---------- */
+  @media (max-width: 900px){
+    #topbar{ padding:8px 10px; gap:6px; }
+    #topbar .brand{ margin-right:4px; }
+    #topbar h1{ font-size:14px; }
+    #topbar .sub{ display:none; }
+    .divider{ display:none; }
+    #main{ flex-direction:column; }
+    #inspector{
+      width:100%; border-left:none; border-top:1px solid var(--border);
+      max-height:45vh;
+    }
+    #gridScroll{ padding:10px; }
+    .card{ width:calc(50% - 6px); }
+    .card .thumb-box{ height:110px; }
+
+    #overlay{ padding:0; }
+    #dialog{ width:100vw; height:100vh; max-height:100vh; border-radius:0; border:none; }
+    #dialogHead{ padding:8px 10px; gap:6px; flex-wrap:wrap; }
+    #dialogHead .counter{ font-size:10px; }
+    #dialogBody{ flex-direction:column; }
+    #stageWrap{ min-height:50vh; flex:1 1 auto; }
+    #dialogSide{
+      width:100%; border-left:none; border-top:1px solid var(--border);
+      max-height:42vh; flex-shrink:0;
+    }
+    .stage-tab{ padding:10px 12px; }
+    #dialogFoot{ padding:8px 10px; flex-wrap:wrap; gap:6px; }
+    #dialogFoot button{ padding:6px 10px; font-size:12px; }
+    button{ padding:7px 11px; font-size:12px; }
+  }
+  @media (max-width: 480px){
+    .card{ width:100%; }
+    #topbar h1{ font-size:13px; }
+    #cropBox .handle{ width:22px; height:22px; }
+    #cropBox .h-nw{ top:-11px; left:-11px; }
+    #cropBox .h-ne{ top:-11px; right:-11px; }
+    #cropBox .h-sw{ bottom:-11px; left:-11px; }
+    #cropBox .h-se{ bottom:-11px; right:-11px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand"><span class="mark"></span><h1>Geotag Studio</h1><span class="sub">crop &amp; stamp</span></div>
+  <div class="divider"></div>
+  <div class="file-btn-row">
+    <button id="btnSelectFiles" class="ghost">Select images</button>
+    <button id="btnSelectFolder" class="ghost">Select folder</button>
+  </div>
+  <div class="divider"></div>
+  <button id="btnUploadGeotag" class="ghost">Upload geotag image</button>
+  <button id="btnStampAll" class="primary" disabled>Add geotag to all</button>
+  <div class="grow"></div>
+  <span id="statusline">No images loaded</span>
+  <div class="divider"></div>
+  <button id="btnDownloadSelected" class="ghost" disabled>Download selected</button>
+  <button id="btnDownloadAll" class="ghost" disabled>Download all (ZIP)</button>
+  <input type="file" id="inputFiles" accept="image/*,.heic,.heif,.tif,.tiff" multiple>
+  <input type="file" id="inputFolder" accept="image/*,.heic,.heif,.tif,.tiff" multiple webkitdirectory directory>
+  <input type="file" id="inputGeotag" accept="image/*,.heic,.heif">
+</div>
+<div id="progressWrap"><div id="progressBar"></div></div>
+<div id="progressLabel"></div>
+
+<div id="main">
+  <div id="gridPane">
+    <div id="gridScroll">
+      <div id="gridInner"></div>
+      <div class="empty-state" id="emptyState">
+        <div class="glyph">▢ ▢ ▢</div>
+        <h2>No images yet</h2>
+        <p>Select a folder or a batch of images — any format (JPG, PNG, WEBP, GIF, BMP, iPhone HEIC, etc). The first image opens automatically so you can crop out unwanted text, then stamp your geotag over the bottom of it.</p>
+      </div>
+    </div>
+  </div>
+  <div id="inspector">
+    <div class="insp-section">
+      <h3>Geotag image</h3>
+      <div class="geotag-preview-box" id="geotagPreviewBox"><span class="placeholder">none uploaded</span></div>
+      <div class="stack">
+        <button id="btnUploadGeotag2" class="small">Upload / replace geotag</button>
+      </div>
+      <div class="insp-row" style="margin-top:10px;">
+        <span>Strip height</span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <input type="number" id="geotagHeightPct" min="1" max="100" step="1" value="25" style="width:52px;">
+          <span style="font-size:12px; color:var(--text-dim);">%</span>
+        </span>
+      </div>
+      <div class="insp-row" style="margin-top:8px;">
+        <span>Opacity</span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <input type="number" id="geotagOpacity" min="1" max="100" step="1" value="100" style="width:52px;">
+          <span style="font-size:12px; color:var(--text-dim);">%</span>
+        </span>
+      </div>
+    </div>
+    <div class="insp-section">
+      <h3>Batch</h3>
+      <div class="insp-row"><span>Loaded</span><span class="v" id="statLoaded">0</span></div>
+      <div class="insp-row"><span>Cropped</span><span class="v" id="statCropped">0</span></div>
+      <div class="insp-row"><span>Geotagged</span><span class="v" id="statTagged">0</span></div>
+      <div class="insp-row"><span>Selected</span><span class="v" id="statSelected">0</span></div>
+      <div class="stack" style="margin-top:10px;">
+        <button id="btnSelectAll" class="small ghost">Select all</button>
+        <button id="btnSelectNone" class="small ghost">Clear selection</button>
+      </div>
+    </div>
+    <div class="insp-section">
+      <h3>How it works</h3>
+      <p style="font-size:11.5px; color:var(--text-dim); line-height:1.6; margin:0;">
+        Open an image to optionally crop out unwanted text — the canvas is trimmed down, nothing is painted over or hidden.
+        Then stamp your geotag as a full-width strip covering the bottom of the photo. Untouched images are exported byte-for-byte at original quality.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Editor dialog -->
+<div id="overlay">
+  <div id="dialog">
+    <div id="dialogHead">
+      <span class="title" id="dialogTitle">image.jpg</span>
+      <span class="counter" id="dialogCounter">1 / 1</span>
+      <div class="grow"></div>
+      <span class="badge warn" id="badgeCropped" style="display:none;">cropped</span>
+      <span class="badge ok" id="badgeTagged" style="display:none;">geotagged</span>
+      <button id="btnPrevImg" class="small ghost">&larr; Prev</button>
+      <button id="btnNextImg" class="small ghost">Next &rarr;</button>
+      <button id="btnCloseDialog" class="small ghost">Close (Esc)</button>
+    </div>
+    <div id="dialogBody">
+      <div id="stageWrap">
+        <canvas id="stageCanvas"></canvas>
+        <div id="cropBox">
+          <div class="handle h-nw"></div><div class="handle h-ne"></div>
+          <div class="handle h-sw"></div><div class="handle h-se"></div>
+        </div>
+        <div id="cropReadout"></div>
+      </div>
+      <div id="dialogSide">
+        <div class="stage-tab">
+          <h4>1 — Crop (optional)</h4>
+          <p class="hint">Drag on the image to draw a box around unwanted text, then trim. Skip if the photo is already clean.</p>
+          <div class="stack">
+            <button id="btnStartCrop" class="small">Draw crop box</button>
+            <button id="btnApplyCrop" class="small primary" disabled>Trim to selection</button>
+            <button id="btnCancelCrop" class="small ghost" disabled>Cancel selection</button>
+          </div>
+        </div>
+        <div class="stage-tab">
+          <h4>2 — Add geotag</h4>
+          <p class="hint">Covers the bottom % of the photo (set below), full width, stretched to fit.</p>
+          <div class="insp-row" style="margin-bottom:10px;">
+            <span>Strip height</span>
+            <span style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="geotagHeightPctDlg" min="1" max="100" step="1" value="25" style="width:52px;">
+              <span style="font-size:12px; color:var(--text-dim);">%</span>
+            </span>
+          </div>
+          <div class="insp-row" style="margin-bottom:10px;">
+            <span>Opacity</span>
+            <span style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="geotagOpacityDlg" min="1" max="100" step="1" value="100" style="width:52px;">
+              <span style="font-size:12px; color:var(--text-dim);">%</span>
+            </span>
+          </div>
+          <div class="stack">
+            <button id="btnApplyGeotagDlg" class="small primary">Add geotag</button>
+          </div>
+        </div>
+        <div class="stage-tab">
+          <h4>History</h4>
+          <div class="stack">
+            <button id="btnUndo" class="small ghost" disabled>Undo</button>
+            <button id="btnRedo" class="small ghost" disabled>Redo</button>
+            <button id="btnResetImg" class="small danger" disabled>Reset to original</button>
+          </div>
+        </div>
+        <div class="stage-tab">
+          <h4>Export</h4>
+          <div class="stack">
+            <button id="btnDownloadCurrent" class="small">Download this image</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="dialogFoot">
+      <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);" id="dimsReadout"></span>
+      <div class="grow"></div>
+      <button id="btnSaveNext" class="primary">Save &amp; next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   CONFIG
+   ========================================================================= */
+const CFG = {
+  thumbMax: 260,          // px, longest side of generated thumbnail
+  cardW: 172,
+  cardH: 118 + 44,        // thumb box + meta
+  cardGap: 12,
+  workerCount: Math.max(4, Math.min(12, (navigator.hardwareConcurrency || 4) * 2)),
+  historyLimit: 12,
+  jpegQuality: 0.95,
+};
+
+/* =========================================================================
+   UTILS
+   ========================================================================= */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function toast(msg, ms){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove('show'), ms || 2200);
+}
+
+function fmtBytes(n){
+  if(n < 1024) return n + ' B';
+  if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(1) + ' MB';
+}
+
+function uid(){ return 'img_' + Math.random().toString(36).slice(2, 10); }
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+/* yield control back to the event loop so the UI can repaint / stay responsive */
+function nextTick(){ return new Promise(res => setTimeout(res, 0)); }
+
+/* =========================================================================
+   GLOBAL STATE
+   ========================================================================= */
+const State = {
+  images: [],          // ordered list of image records
+  byId: new Map(),
+  selected: new Set(),
+  geotagBitmap: null,   // decoded ImageBitmap of the uploaded geotag
+  geotagURL: null,      // object URL for the small preview thumbnail
+  geotagFileName: null, // base filename (no extension) of the uploaded geotag image, used to name exported photos
+  geotagHeightPct: 25,  // user-configurable strip height, as % of image height (1-100)
+  geotagOpacity: 100,   // user-configurable opacity of the stamped geotag, 1-100 (%)
+  activeId: null,       // currently open image in dialog
+  gridScrollTop: 0,
+};
+
+/* Image record shape:
+{
+  id, file, name, type, originalW, originalH,
+  thumbURL, thumbLoading,
+  cropped, tagged,
+  workingCanvas,      // current full-res canvas (post crop/geotag), null until first edit
+  history: [{canvas, cropped, tagged}], historyIndex: -1
+}
+*/
+
+/* =========================================================================
+   THUMBNAIL QUEUE
+   Some sandboxed environments block constructing Workers from blob URLs
+   (SecurityError), so thumbnailing runs on the main thread instead. To
+   keep the UI responsive with large folders, work is broken into a
+   priority queue (visible cards first) with only a few decodes in
+   flight at once, and every image yields back to the event loop before
+   the next one starts.
+   ========================================================================= */
+const thumbQueue = [];        // ids waiting, in priority order
+const thumbQueueSet = new Set();
+let thumbActive = 0;
+const THUMB_CONCURRENCY = CFG.workerCount;
+
+function enqueueThumb(id, priority){
+  if(thumbQueueSet.has(id)) return;
+  const rec = State.byId.get(id);
+  if(!rec || (rec.thumbURL && !rec.thumbLoading)) return;
+  thumbQueueSet.add(id);
+  if(priority) thumbQueue.unshift(id); else thumbQueue.push(id);
+  pumpThumbQueue();
+}
+
+function pumpThumbQueue(){
+  while(thumbActive < THUMB_CONCURRENCY && thumbQueue.length){
+    const id = thumbQueue.shift();
+    thumbQueueSet.delete(id);
+    const rec = State.byId.get(id);
+    if(!rec){ continue; }
+    thumbActive++;
+    generateThumbnail(rec).finally(() => {
+      thumbActive--;
+      pumpThumbQueue();
+    });
+  }
+}
+
+/* Read just the JPEG/PNG header to get pixel dimensions without doing a
+   full-resolution decode. Lets us ask createImageBitmap to decode straight
+   to thumbnail size (browsers can do a fast scaled JPEG decode) instead of
+   decoding the full photo and then throwing most of it away. Falls back
+   to null if parsing fails, and the caller does a normal full decode. */
+async function peekImageDimensions(file){
+  try{
+    const head = await file.slice(0, 262144).arrayBuffer(); // 256KB is plenty for headers
+    const dv = new DataView(head);
+    if(dv.byteLength > 24 && dv.getUint32(0) === 0x89504e47){ // PNG signature
+      return { width: dv.getUint32(16), height: dv.getUint32(20) };
+    }
+    if(dv.byteLength > 4 && dv.getUint16(0) === 0xFFD8){ // JPEG SOI
+      let off = 2;
+      while(off + 4 <= dv.byteLength){
+        if(dv.getUint8(off) !== 0xFF) break;
+        const marker = dv.getUint8(off+1);
+        if(marker === 0xD8 || marker === 0x01 || (marker >= 0xD0 && marker <= 0xD7)){ off += 2; continue; }
+        if(marker === 0xD9 || marker === 0xDA) break; // EOI / start-of-scan: dims not found in header window
+        const segLen = dv.getUint16(off+2);
+        const isSOF = (marker >= 0xC0 && marker <= 0xCF) && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC;
+        if(isSOF && off + 9 <= dv.byteLength){
+          return { height: dv.getUint16(off+5), width: dv.getUint16(off+7) };
+        }
+        off += 2 + segLen;
+      }
+    }
+  }catch(err){ /* fall through to full decode */ }
+  return null;
+}
+
+async function generateThumbnail(rec){
+  try{
+    const dims = await peekImageDimensions(rec.file);
+    let bitmap;
+    if(dims && dims.width && dims.height){
+      rec.originalW = dims.width; rec.originalH = dims.height;
+      const scale = Math.min(1, CFG.thumbMax / Math.max(dims.width, dims.height));
+      const tw = Math.max(1, Math.round(dims.width*scale));
+      const th = Math.max(1, Math.round(dims.height*scale));
+      // Decode straight to thumbnail resolution instead of full-res + downscale.
+      bitmap = await createImageBitmap(rec.file, { resizeWidth: tw, resizeHeight: th, resizeQuality: 'medium' });
+    } else {
+      // Couldn't read header cheaply (e.g. unusual file) — fall back to full decode.
+      bitmap = await createImageBitmap(rec.file);
+      rec.originalW = bitmap.width; rec.originalH = bitmap.height;
+      const scale = Math.min(1, CFG.thumbMax / Math.max(bitmap.width, bitmap.height));
+      const tw = Math.max(1, Math.round(bitmap.width*scale));
+      const th = Math.max(1, Math.round(bitmap.height*scale));
+      const full = bitmap;
+      bitmap = await createImageBitmap(full, { resizeWidth: tw, resizeHeight: th, resizeQuality: 'medium' });
+      full.close();
+    }
+    const c = document.createElement('canvas'); c.width=bitmap.width; c.height=bitmap.height;
+    c.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.82));
+    if(rec.thumbURL) URL.revokeObjectURL(rec.thumbURL);
+    rec.thumbURL = URL.createObjectURL(blob);
+  }catch(err){ console.error('Thumbnail failed for', rec.name, err); }
+  rec.thumbLoading = false;
+  updateCardThumb(rec.id);
+}
+
+/* =========================================================================
+   FILE LOADING
+   ========================================================================= */
+/* Browsers can natively decode these via createImageBitmap: jpeg, png,
+   gif, webp, bmp, ico/cur, and (in current Chrome/Firefox/Edge) avif.
+   SVG mostly works too. HEIC/HEIF (the format iPhones save photos in)
+   has NO native browser decoder, so we convert it with heic2any first.
+   Formats with no in-browser decoder anywhere (TIFF, RAW like CR2/NEF/
+   ARW, PSD) genuinely cannot be read by JS in a browser tab — those are
+   flagged and skipped rather than silently failing. */
+const NO_DECODER_EXT = /\.(tif|tiff|raw|cr2|cr3|nef|arw|dng|psd|psb)$/i;
+const HEIC_EXT_OR_TYPE = /image\/hei[cf]/i;
+const HEIC_EXT = /\.(heic|heif)$/i;
+
+/* Canvas.toBlob() can only reliably re-encode to PNG/JPEG/WebP. The
+   moment a record needs re-encoding (crop or geotag applied) any other
+   original format (gif/bmp/svg/ico/avif) is normalized to PNG so the
+   exported bytes actually match what toBlob produces, and the filename
+   extension is updated to match. */
+function normalizeExportFormat(rec){
+  if(/^image\/(png|jpe?g|webp)$/i.test(rec.type)) return;
+  rec.type = 'image/png';
+  const dot = rec.name.lastIndexOf('.');
+  rec.name = (dot > 0 ? rec.name.slice(0, dot) : rec.name) + '.png';
+}
+
+function isHeic(f){
+  return HEIC_EXT_OR_TYPE.test(f.type) || HEIC_EXT.test(f.name);
+}
+function isUndecodable(f){
+  return NO_DECODER_EXT.test(f.name);
+}
+function looksLikeImage(f){
+  return /^image\//i.test(f.type) || /\.(jpe?g|png|gif|webp|bmp|ico|cur|avif|svg|heic|heif|tiff?|raw|cr2|cr3|nef|arw|dng|psd|psb)$/i.test(f.name);
+}
+
+async function handleFileList(fileList){
+  const all = Array.from(fileList).filter(looksLikeImage);
+  const usable = all.filter(f => !isUndecodable(f));
+  const skipped = all.length - usable.length;
+  if(all.length === 0){ toast('No image files found in that selection.'); return; }
+  if(usable.length === 0){
+    toast(`Those ${all.length} file(s) are in a format no browser can decode (RAW/TIFF/PSD) — export them as JPG/PNG first.`);
+    return;
+  }
+
+  showProgress(true, `Reading ${usable.length} images…`);
+  const startCount = State.images.length;
+
+  for(let i=0;i<usable.length;i++){
+    const f = usable[i];
+    const rec = {
+      id: uid(),
+      file: f,               // may be swapped for a converted JPEG blob below (HEIC)
+      name: f.name,
+      type: f.type || (/\.png$/i.test(f.name) ? 'image/png' : 'image/jpeg'),
+      originalW: null, originalH: null,
+      thumbURL: null, thumbLoading: true,
+      cropped: false, tagged: false,
+      workingCanvas: null,
+      history: [], historyIndex: -1,
+      converting: isHeic(f),
+    };
+    State.images.push(rec);
+    State.byId.set(rec.id, rec);
+    if(i % 200 === 0){
+      setProgress((i/usable.length)*100);
+      await nextTick();
+    }
+  }
+  showProgress(false);
+  renderGrid();
+  updateStats();
+  updateGlobalButtons();
+  toast(`Loaded ${usable.length} images.` + (skipped ? ` Skipped ${skipped} unsupported file(s).` : ''));
+
+  const newRecs = State.images.slice(startCount);
+
+  // HEIC/HEIF has no native browser decoder — convert to JPEG first,
+  // one at a time (heic2any is memory-heavy), before thumbnailing/use.
+  for(const rec of newRecs){
+    if(!rec.converting) continue;
+    try{
+      if(typeof window.heic2any !== 'function') throw new Error('heic2any library not loaded');
+      const jpegBlob = await window.heic2any({ blob: rec.file, toType: 'image/jpeg', quality: 0.92 });
+      rec.file = jpegBlob;
+      rec.type = 'image/jpeg';
+      rec.name = rec.name.replace(/\.hei[cf]$/i, '.jpg');
+    }catch(err){
+      console.error('HEIC conversion failed for', rec.name, err);
+      rec.conversionFailed = true;
+    }
+    rec.converting = false;
+  }
+
+  // queue thumbnails, prioritizing the ones currently in view
+  for(const rec of newRecs){
+    if(rec.conversionFailed){
+      toast(`Could not convert ${rec.name} (corrupt or unsupported HEIC variant).`);
+      continue;
+    }
+    enqueueThumb(rec.id, false);
+  }
+  requestVirtualRender(); // will prioritize visible ones
+
+  // Match the "upload → review one by one" flow: open the first newly
+  // added image straight into the editor so crop/geotag can happen
+  // right away instead of hunting for it in the grid.
+  if(newRecs.length && !$('#overlay').classList.contains('open')){
+    const first = newRecs.find(r => !r.conversionFailed) || newRecs[0];
+    if(first && !first.conversionFailed) openDialog(first.id);
+  }
+}
+
+/* =========================================================================
+   GEOTAG UPLOAD
+   ========================================================================= */
+async function handleGeotagFile(file){
+  if(!file) return;
+  try{
+    let src = file;
+    if(isHeic(file)){
+      if(typeof window.heic2any !== 'function') throw new Error('heic2any library not loaded');
+      src = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    }
+    const bitmap = await createImageBitmap(src);
+    if(State.geotagBitmap) State.geotagBitmap.close();
+    State.geotagBitmap = bitmap;
+    if(State.geotagURL) URL.revokeObjectURL(State.geotagURL);
+    State.geotagURL = URL.createObjectURL(src);
+    // Remember the geotag file's own base name (no extension) so tagged
+    // photos are exported under this name instead of their original name.
+    const gDot = file.name.lastIndexOf('.');
+    State.geotagFileName = gDot > 0 ? file.name.slice(0, gDot) : file.name;
+    const box = $('#geotagPreviewBox');
+    box.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = State.geotagURL;
+    box.appendChild(img);
+    $('#btnStampAll').disabled = State.images.length === 0;
+    toast('Geotag image ready. It will be stamped over the bottom of each photo.');
+  }catch(err){
+    console.error(err);
+    toast('Could not read that geotag image — try exporting it as a JPG or PNG first.');
+  }
+}
+
+/* =========================================================================
+   VIRTUALIZED GRID
+   Only renders DOM cards for rows near the viewport so folders with
+   thousands of images stay smooth to scroll.
+   ========================================================================= */
+let gridCards = new Map(); // id -> DOM node currently mounted
+let rafPending = false;
+
+function gridMetrics(){
+  const scroller = $('#gridScroll');
+  const width = scroller.clientWidth - 32; // minus padding
+  const cols = Math.max(1, Math.floor((width + CFG.cardGap) / (CFG.cardW + CFG.cardGap)));
+  const rows = Math.ceil(State.images.length / cols);
+  const rowH = CFG.cardH + CFG.cardGap;
+  return { cols, rows, rowH, width };
+}
+
+function renderGrid(){
+  $('#emptyState').style.display = State.images.length ? 'none' : 'flex';
+  const { cols, rows, rowH } = gridMetrics();
+  const inner = $('#gridInner');
+  inner.style.height = (rows * rowH) + 'px';
+  requestVirtualRender();
+}
+
+function requestVirtualRender(){
+  if(rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; virtualRender(); });
+}
+
+function virtualRender(){
+  if(State.images.length === 0) return;
+  const scroller = $('#gridScroll');
+  const { cols, rowH } = gridMetrics();
+  const scrollTop = scroller.scrollTop;
+  const viewH = scroller.clientHeight;
+  const buffer = rowH * 3;
+  const firstRow = Math.max(0, Math.floor((scrollTop - buffer) / rowH));
+  const lastRow = Math.ceil((scrollTop + viewH + buffer) / rowH);
+  const firstIdx = firstRow * cols;
+  const lastIdx = Math.min(State.images.length, (lastRow + 1) * cols);
+
+  const needed = new Set();
+  for(let idx = firstIdx; idx < lastIdx; idx++){
+    const rec = State.images[idx];
+    if(!rec) continue;
+    needed.add(rec.id);
+    let node = gridCards.get(rec.id);
+    const row = Math.floor(idx / cols);
+    const col = idx % cols;
+    const top = row * rowH;
+    const left = col * (CFG.cardW + CFG.cardGap);
+    if(!node){
+      node = buildCard(rec);
+      gridCards.set(rec.id, node);
+      $('#gridInner').appendChild(node);
+    }
+    node.style.top = top + 'px';
+    node.style.left = left + 'px';
+    // decode thumbnail with priority now that it's visible
+    if(rec.thumbLoading && !rec.thumbURL){
+      enqueueThumb(rec.id, true);
+    }
+  }
+  // unmount off-screen cards to keep DOM light
+  for(const [id, node] of gridCards){
+    if(!needed.has(id)){
+      node.remove();
+      gridCards.delete(id);
+    }
+  }
+}
+
+function buildCard(rec){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.id = rec.id;
+  card.style.width = CFG.cardW + 'px';
+
+  const box = document.createElement('div');
+  box.className = 'thumb-box';
+  box.innerHTML = rec.thumbURL
+    ? `<img src="${rec.thumbURL}" loading="lazy">`
+    : `<div class="spinner"></div>`;
+  box.addEventListener('click', () => openDialog(rec.id));
+
+  const check = document.createElement('div');
+  check.className = 'check';
+  check.addEventListener('click', (e) => { e.stopPropagation(); toggleSelect(rec.id); });
+  box.appendChild(check);
+
+  if(rec.tagged){
+    const f = document.createElement('div'); f.className='flag tagged'; f.textContent='TAGGED'; box.appendChild(f);
+  } else if(rec.cropped){
+    const f = document.createElement('div'); f.className='flag cropped'; f.textContent='CROPPED'; box.appendChild(f);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `<div class="name">${escapeHtml(rec.name)}</div><div class="dims">${rec.originalW ? rec.originalW+'×'+rec.originalH : '—'}</div>`;
+
+  card.appendChild(box);
+  card.appendChild(meta);
+  if(State.selected.has(rec.id)) card.classList.add('selected');
+  return card;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function updateCardThumb(id){
+  const node = gridCards.get(id);
+  const rec = State.byId.get(id);
+  if(!node || !rec) return;
+  const box = node.querySelector('.thumb-box');
+  const existingImg = box.querySelector('img');
+  if(rec.thumbURL && !existingImg){
+    const img = document.createElement('img');
+    img.src = rec.thumbURL;
+    box.insertBefore(img, box.firstChild);
+    const spin = box.querySelector('.spinner');
+    if(spin) spin.remove();
+  }
+  const dims = node.querySelector('.dims');
+  if(dims && rec.originalW) dims.textContent = rec.originalW + '×' + rec.originalH;
+  refreshCardFlags(id);
+}
+
+function refreshCardFlags(id){
+  const node = gridCards.get(id);
+  const rec = State.byId.get(id);
+  if(!node || !rec) return;
+  const box = node.querySelector('.thumb-box');
+  let flag = box.querySelector('.flag');
+  if(flag) flag.remove();
+  if(rec.tagged){
+    flag = document.createElement('div'); flag.className='flag tagged'; flag.textContent='TAGGED'; box.appendChild(flag);
+  } else if(rec.cropped){
+    flag = document.createElement('div'); flag.className='flag cropped'; flag.textContent='CROPPED'; box.appendChild(flag);
+  }
+  node.classList.toggle('selected', State.selected.has(id));
+}
+
+function toggleSelect(id){
+  if(State.selected.has(id)) State.selected.delete(id); else State.selected.add(id);
+  const node = gridCards.get(id);
+  if(node) node.classList.toggle('selected', State.selected.has(id));
+  updateStats();
+  updateGlobalButtons();
+}
+
+$('#gridScroll').addEventListener('scroll', () => requestVirtualRender());
+window.addEventListener('resize', () => { renderGrid(); });
+
+/* =========================================================================
+   STATS / GLOBAL BUTTON STATE
+   ========================================================================= */
+function updateStats(){
+  const loaded = State.images.length;
+  const cropped = State.images.filter(r=>r.cropped).length;
+  const tagged = State.images.filter(r=>r.tagged).length;
+  $('#statLoaded').textContent = loaded;
+  $('#statCropped').textContent = cropped;
+  $('#statTagged').textContent = tagged;
+  $('#statSelected').textContent = State.selected.size;
+  $('#statusline').textContent = loaded
+    ? `${loaded} images · ${tagged} geotagged · ${cropped} cropped`
+    : 'No images loaded';
+}
+
+function updateGlobalButtons(){
+  $('#btnStampAll').disabled = !(State.images.length && State.geotagBitmap);
+  $('#btnDownloadSelected').disabled = State.selected.size === 0;
+  $('#btnDownloadAll').disabled = State.images.length === 0;
+}
+
+/* =========================================================================
+   BULK "ADD GEOTAG TO ALL"
+   Stamps every image that doesn't already have a geotag. Runs in the
+   main thread but yields regularly so the UI never locks up; typical
+   folders (hundreds of images) finish in well under a minute.
+   ========================================================================= */
+async function stampAll(){
+  if(!State.geotagBitmap){ toast('Upload a geotag image first.'); return; }
+  const targets = State.images.filter(r => !r.tagged);
+  if(targets.length === 0){ toast('Every image already has a geotag.'); return; }
+
+  showProgress(true, `Stamping geotag on ${targets.length} images…`);
+  const t0 = performance.now();
+  for(let i=0;i<targets.length;i++){
+    const rec = targets[i];
+    try{
+      await applyGeotagToRecord(rec);
+    }catch(err){
+      console.error('Failed on', rec.name, err);
+    }
+    if(i % 5 === 0 || i === targets.length-1){
+      setProgress(((i+1)/targets.length)*100);
+      const el = document.getElementById('progressLabel');
+      el.textContent = `${i+1} / ${targets.length}`;
+      await nextTick();
+    }
+  }
+  showProgress(false);
+  const secs = ((performance.now()-t0)/1000).toFixed(1);
+  toast(`Geotag added to ${targets.length} images in ${secs}s.`);
+  updateStats();
+  updateGlobalButtons();
+}
+
+/* Decode the record's current pixels (working canvas if it has one, else
+   the original file), then overlay the geotag on the bottom portion of
+   the photo — covering that % of the image's height (State.geotagHeightPct,
+   default 25) at the chosen opacity (State.geotagOpacity, default 100 =
+   fully opaque). The canvas size is NOT changed; the geotag is painted
+   directly over the bottom slice of the photo. If the record was already
+   tagged, first revert to the pre-geotag base (rec.preGeotagCanvas) so
+   re-stamping with a new height/opacity REPLACES the covered area cleanly
+   instead of blending onto an already-stamped strip. */
+async function applyGeotagToRecord(rec){
+  let sourceCanvas = (rec.tagged && rec.preGeotagCanvas) ? rec.preGeotagCanvas : rec.workingCanvas;
+  if(!sourceCanvas){
+    const bitmap = await createImageBitmap(rec.file);
+    sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = bitmap.width;
+    sourceCanvas.height = bitmap.height;
+    sourceCanvas.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+    normalizeExportFormat(rec);
+  }
+  // Cover the bottom of the photo with the geotag: full width of the
+  // image, height set by the user as a % of the ORIGINAL image height
+  // (State.geotagHeightPct, default 25) so repeated stamps don't compound.
+  // The entire geotag source image is drawn (no source cropping) — it is
+  // stretched to fit the destination box, so none of its content is lost.
+  const g = State.geotagBitmap;
+  const baseH = rec.originalH || sourceCanvas.height;
+  const drawW = sourceCanvas.width;
+  const heightPct = (State.geotagHeightPct || 25) / 100;
+  const drawH = Math.max(1, Math.round(baseH * heightPct));
+
+  // Remember the pre-geotag base (clone, so later edits to `out` can't
+  // mutate it) so a future height/opacity change can replace the covered
+  // area cleanly rather than stamping on top of an already-stamped strip.
+  rec.preGeotagCanvas = cloneCanvas(sourceCanvas);
+
+  const out = document.createElement('canvas');
+  out.width = sourceCanvas.width;
+  out.height = sourceCanvas.height;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(sourceCanvas, 0, 0);
+  const opacity = clamp((State.geotagOpacity ?? 100) / 100, 0.01, 1);
+  ctx.globalAlpha = opacity;
+  ctx.drawImage(g, 0, sourceCanvas.height - drawH, drawW, drawH);
+  ctx.globalAlpha = 1;
+
+  rec.workingCanvas = out;
+  rec.tagged = true;
+  updateCardThumb(rec.id);
+}
+
+/* =========================================================================
+   EDITOR DIALOG
+   ========================================================================= */
+const Dlg = {
+  canvas: null, ctx: null,
+  displayScale: 1,
+  sourceCanvas: null,   // current full-res pixel source being edited
+  cropRect: null,       // {x,y,w,h} in DISPLAY coords while drawing/adjusting
+  cropMode: false,
+  dragState: null,
+};
+
+function openDialog(id){
+  State.activeId = id;
+  $('#overlay').classList.add('open');
+  $('#geotagHeightPctDlg').value = State.geotagHeightPct;
+  $('#geotagOpacityDlg').value = State.geotagOpacity;
+  loadRecordIntoDialog(id);
+  document.addEventListener('keydown', onDialogKey);
+}
+
+function closeDialog(){
+  $('#overlay').classList.remove('open');
+  document.removeEventListener('keydown', onDialogKey);
+  renderGrid(); // reflect any flag changes
+  updateStats();
+}
+
+async function loadRecordIntoDialog(id){
+  const rec = State.byId.get(id);
+  if(!rec) return;
+  $('#dialogTitle').textContent = rec.name;
+  const idx = State.images.indexOf(rec);
+  $('#dialogCounter').textContent = `${idx+1} / ${State.images.length}`;
+  $('#badgeCropped').style.display = rec.cropped ? 'inline-block' : 'none';
+  $('#badgeTagged').style.display = rec.tagged ? 'inline-block' : 'none';
+
+  let canvas = rec.workingCanvas;
+  if(!canvas){
+    showProgress(true, 'Opening image…');
+    const bitmap = await createImageBitmap(rec.file);
+    canvas = document.createElement('canvas');
+    canvas.width = bitmap.width; canvas.height = bitmap.height;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+    normalizeExportFormat(rec);
+    rec.workingCanvas = canvas;
+    rec.history = [{ canvas: cloneCanvas(canvas), cropped:false, tagged:false }];
+    rec.historyIndex = 0;
+    showProgress(false);
+  }
+  Dlg.sourceCanvas = canvas;
+  cancelCropMode();
+  drawStage();
+  updateHistoryButtons(rec);
+  $('#dimsReadout').textContent = `${canvas.width} × ${canvas.height}px`;
+}
+
+function cloneCanvas(src){
+  const c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c;
+}
+
+function drawStage(){
+  const wrap = $('#stageWrap');
+  const maxW = wrap.clientWidth - 40;
+  const maxH = wrap.clientHeight - 40;
+  const src = Dlg.sourceCanvas;
+  const scale = Math.min(maxW / src.width, maxH / src.height, 1);
+  Dlg.displayScale = scale;
+  const canvas = $('#stageCanvas');
+  canvas.width = Math.round(src.width * scale * devicePixelRatio);
+  canvas.height = Math.round(src.height * scale * devicePixelRatio);
+  canvas.style.width = Math.round(src.width * scale) + 'px';
+  canvas.style.height = Math.round(src.height * scale) + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, 0, 0, canvas.width/devicePixelRatio, canvas.height/devicePixelRatio);
+}
+
+/* ---- crop tool ---- */
+function startCropMode(){
+  Dlg.cropMode = true;
+  $('#cropBox').style.display = 'block';
+  $('#cropReadout').style.display = 'block';
+  const canvas = $('#stageCanvas');
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  // default box: centered, 60% of image
+  const bw = w*0.6, bh = h*0.6;
+  Dlg.cropRect = { x:(w-bw)/2, y:(h-bh)/2, w:bw, h:bh };
+  positionCropBox();
+  $('#btnApplyCrop').disabled = false;
+  $('#btnCancelCrop').disabled = false;
+}
+
+function cancelCropMode(){
+  Dlg.cropMode = false;
+  Dlg.cropRect = null;
+  $('#cropBox').style.display = 'none';
+  $('#cropReadout').style.display = 'none';
+  $('#btnApplyCrop').disabled = true;
+  $('#btnCancelCrop').disabled = true;
+}
+
+function positionCropBox(){
+  const r = Dlg.cropRect;
+  const el = $('#cropBox');
+  const off = stageOffset(); // canvas is centered inside stageWrap — offset the box to match
+  el.style.left = (off.left + r.x) + 'px';
+  el.style.top = (off.top + r.y) + 'px';
+  el.style.width = r.w + 'px';
+  el.style.height = r.h + 'px';
+  const natW = Math.round(r.w / Dlg.displayScale);
+  const natH = Math.round(r.h / Dlg.displayScale);
+  $('#cropReadout').textContent = `${natW} × ${natH}px`;
+}
+
+function stageOffset(){
+  const canvas = $('#stageCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const wrapRect = $('#stageWrap').getBoundingClientRect();
+  return {
+    // offset of canvas relative to stageWrap (for absolute-positioning the crop box)
+    left: rect.left - wrapRect.left,
+    top:  rect.top  - wrapRect.top,
+    // viewport-space position of the canvas (for converting mouse clientX/Y into canvas-local coords)
+    canvasLeft: rect.left,
+    canvasTop:  rect.top,
+    w: rect.width, h: rect.height
+  };
+}
+
+$('#cropBox').addEventListener('pointerdown', (e) => {
+  const target = e.target;
+  const type = target.classList.contains('handle')
+    ? Array.from(target.classList).find(c=>c.startsWith('h-'))
+    : 'move';
+  Dlg.dragState = { type, startX:e.clientX, startY:e.clientY, rect:{...Dlg.cropRect}, pointerId:e.pointerId, el:target };
+  try { target.setPointerCapture(e.pointerId); } catch(_){}
+  e.preventDefault();
+  e.stopPropagation();
+});
+
+/* Click-and-drag straight on the photo to draw a fresh crop box, like a gallery app.
+   Works whether or not "Draw crop box" was pressed first. */
+$('#stageCanvas').addEventListener('pointerdown', (e) => {
+  if(!Dlg.sourceCanvas) return;
+  const off = stageOffset();
+  const startX = clamp(e.clientX - off.canvasLeft, 0, off.w);
+  const startY = clamp(e.clientY - off.canvasTop,  0, off.h);
+  Dlg.cropMode = true;
+  $('#cropBox').style.display = 'block';
+  $('#cropReadout').style.display = 'block';
+  $('#btnApplyCrop').disabled = false;
+  $('#btnCancelCrop').disabled = false;
+  Dlg.cropRect = { x:startX, y:startY, w:0, h:0 };
+  Dlg.dragState = { type:'new', originX:startX, originY:startY, off, pointerId:e.pointerId, el:e.currentTarget };
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch(_){}
+  positionCropBox();
+  e.preventDefault();
+});
+
+function onCropPointerMove(e){
+  if(!Dlg.dragState || !Dlg.cropRect) return;
+  const type = Dlg.dragState.type;
+
+  if(type === 'new'){
+    const off = Dlg.dragState.off;
+    const curX = clamp(e.clientX - off.canvasLeft, 0, off.w);
+    const curY = clamp(e.clientY - off.canvasTop,  0, off.h);
+
+    const ox = Dlg.dragState.originX, oy = Dlg.dragState.originY;
+    Dlg.cropRect = {
+      x: Math.min(ox, curX),
+      y: Math.min(oy, curY),
+      w: Math.abs(curX - ox),
+      h: Math.abs(curY - oy),
+    };
+    positionCropBox();
+    return;
+  }
+
+  const off = stageOffset();
+  const dx = e.clientX - Dlg.dragState.startX;
+  const dy = e.clientY - Dlg.dragState.startY;
+  const r0 = Dlg.dragState.rect;
+  let r = { ...r0 };
+  if(type === 'move'){
+    r.x = clamp(r0.x + dx, 0, off.w - r0.w);
+    r.y = clamp(r0.y + dy, 0, off.h - r0.h);
+  } else {
+    if(type.includes('w')){ r.x = clamp(r0.x + dx, 0, r0.x + r0.w - 20); r.w = r0.w - (r.x - r0.x); }
+    if(type.includes('e')){ r.w = clamp(r0.w + dx, 20, off.w - r0.x); }
+    if(type.includes('n')){ r.y = clamp(r0.y + dy, 0, r0.y + r0.h - 20); r.h = r0.h - (r.y - r0.y); }
+    if(type.includes('s')){ r.h = clamp(r0.h + dy, 20, off.h - r0.y); }
+  }
+  Dlg.cropRect = r;
+  positionCropBox();
+}
+
+function onCropPointerUp(){
+  if(Dlg.dragState && Dlg.dragState.type === 'new' && Dlg.cropRect &&
+     (Dlg.cropRect.w < 10 || Dlg.cropRect.h < 10)){
+    // treat as an accidental click, not a real selection
+    cancelCropMode();
+  }
+  if(Dlg.dragState && Dlg.dragState.el && Dlg.dragState.pointerId != null){
+    try { Dlg.dragState.el.releasePointerCapture(Dlg.dragState.pointerId); } catch(_){}
+  }
+  Dlg.dragState = null;
+}
+
+window.addEventListener('pointermove', onCropPointerMove);
+window.addEventListener('pointerup', onCropPointerUp);
+window.addEventListener('pointercancel', onCropPointerUp);
+
+function applyCrop(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec || !Dlg.cropRect) return;
+  const r = Dlg.cropRect;
+  const s = Dlg.displayScale;
+  const sx = Math.round(r.x / s);
+  const sy = Math.round(r.y / s);
+  const sw = Math.round(r.w / s);
+  const sh = Math.round(r.h / s);
+  const out = document.createElement('canvas');
+  out.width = sw; out.height = sh;
+  out.getContext('2d').drawImage(Dlg.sourceCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  rec.workingCanvas = out;
+  rec.cropped = true;
+  Dlg.sourceCanvas = out;
+  pushHistory(rec);
+  cancelCropMode();
+  drawStage();
+  $('#badgeCropped').style.display = 'inline-block';
+  $('#dimsReadout').textContent = `${out.width} × ${out.height}px`;
+  updateCardThumb(rec.id);
+  toast('Cropped — canvas trimmed to the selection.');
+}
+
+/* ---- geotag stamp (dialog) ---- */
+async function applyGeotagInDialog(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec) return;
+  if(!State.geotagBitmap){
+    toast('Upload a geotag image first (top bar, or the panel on the right).');
+    return;
+  }
+  await applyGeotagToRecord(rec);
+  Dlg.sourceCanvas = rec.workingCanvas;
+  pushHistory(rec);
+  drawStage();
+  $('#dimsReadout').textContent = `${rec.workingCanvas.width} × ${rec.workingCanvas.height}px`;
+  $('#badgeTagged').style.display = 'inline-block';
+  updateCardThumb(rec.id);
+  toast('Geotag added — covering the bottom of the photo.');
+}
+
+/* ---- history (per image) ---- */
+function pushHistory(rec){
+  rec.history = rec.history.slice(0, rec.historyIndex + 1);
+  rec.history.push({ canvas: cloneCanvas(rec.workingCanvas), cropped: rec.cropped, tagged: rec.tagged });
+  if(rec.history.length > CFG.historyLimit) rec.history.shift();
+  rec.historyIndex = rec.history.length - 1;
+  updateHistoryButtons(rec);
+}
+
+function updateHistoryButtons(rec){
+  $('#btnUndo').disabled = !(rec.historyIndex > 0);
+  $('#btnRedo').disabled = !(rec.historyIndex < rec.history.length - 1);
+  $('#btnResetImg').disabled = rec.history.length <= 1 && !rec.cropped && !rec.tagged;
+}
+
+function undo(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec || rec.historyIndex <= 0) return;
+  rec.historyIndex--;
+  const snap = rec.history[rec.historyIndex];
+  rec.workingCanvas = cloneCanvas(snap.canvas);
+  rec.cropped = snap.cropped; rec.tagged = snap.tagged;
+  Dlg.sourceCanvas = rec.workingCanvas;
+  cancelCropMode();
+  drawStage();
+  $('#badgeCropped').style.display = rec.cropped ? 'inline-block':'none';
+  $('#badgeTagged').style.display = rec.tagged ? 'inline-block':'none';
+  updateHistoryButtons(rec);
+  updateCardThumb(rec.id);
+}
+
+function redo(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec || rec.historyIndex >= rec.history.length-1) return;
+  rec.historyIndex++;
+  const snap = rec.history[rec.historyIndex];
+  rec.workingCanvas = cloneCanvas(snap.canvas);
+  rec.cropped = snap.cropped; rec.tagged = snap.tagged;
+  Dlg.sourceCanvas = rec.workingCanvas;
+  cancelCropMode();
+  drawStage();
+  $('#badgeCropped').style.display = rec.cropped ? 'inline-block':'none';
+  $('#badgeTagged').style.display = rec.tagged ? 'inline-block':'none';
+  updateHistoryButtons(rec);
+  updateCardThumb(rec.id);
+}
+
+async function resetImage(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec) return;
+  showProgress(true, 'Reverting to original…');
+  const bitmap = await createImageBitmap(rec.file);
+  const c = document.createElement('canvas');
+  c.width = bitmap.width; c.height = bitmap.height;
+  c.getContext('2d').drawImage(bitmap, 0, 0);
+  bitmap.close();
+  rec.workingCanvas = c;
+  rec.cropped = false; rec.tagged = false;
+  rec.history = [{ canvas: cloneCanvas(c), cropped:false, tagged:false }];
+  rec.historyIndex = 0;
+  Dlg.sourceCanvas = c;
+  cancelCropMode();
+  drawStage();
+  showProgress(false);
+  $('#badgeCropped').style.display = 'none';
+  $('#badgeTagged').style.display = 'none';
+  updateHistoryButtons(rec);
+  updateCardThumb(rec.id);
+  toast('Reset to the original image.');
+}
+
+/* ---- dialog nav / keyboard ---- */
+function stepImage(delta){
+  const idx = State.images.findIndex(r=>r.id===State.activeId);
+  const next = clamp(idx + delta, 0, State.images.length-1);
+  if(next !== idx){
+    State.activeId = State.images[next].id;
+    loadRecordIntoDialog(State.activeId);
+  }
+}
+
+function onDialogKey(e){
+  if(e.key === 'Escape'){ closeDialog(); return; }
+  if(e.key === 'ArrowRight' && !Dlg.cropMode){ stepImage(1); return; }
+  if(e.key === 'ArrowLeft' && !Dlg.cropMode){ stepImage(-1); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z'&&e.shiftKey))){ e.preventDefault(); redo(); return; }
+  if(e.key === 'Enter' && Dlg.cropMode){ applyCrop(); return; }
+}
+
+/* =========================================================================
+   PROGRESS / STATUS UI
+   ========================================================================= */
+function showProgress(on, label){
+  $('#progressWrap').classList.toggle('active', !!on);
+  const lbl = $('#progressLabel');
+  lbl.classList.toggle('show', !!on);
+  if(on){ setProgress(0); lbl.textContent = label || ''; }
+}
+function setProgress(pct){
+  $('#progressBar').style.width = clamp(pct,0,100) + '%';
+}
+
+/* =========================================================================
+   EXPORT
+   ========================================================================= */
+function recordBlob(rec){
+  return new Promise((resolve) => {
+    if(!rec.workingCanvas){
+      // never opened / edited — export the original file untouched, full quality
+      resolve(rec.file);
+      return;
+    }
+    rec.workingCanvas.toBlob((blob) => resolve(blob), rec.type, CFG.jpegQuality);
+  });
+}
+
+/* Tagged photos are exported under the geotag image's own filename
+   (keeping the photo's own file extension, e.g. .jpg/.png), since that's
+   the name the user uploaded it under. Untagged photos, or photos exported
+   before any geotag was ever uploaded, keep their original name. */
+function exportNameFor(rec){
+  if(rec.tagged && State.geotagFileName){
+    const dot = rec.name.lastIndexOf('.');
+    const ext = dot > 0 ? rec.name.slice(dot) : '';
+    return State.geotagFileName + ext;
+  }
+  return rec.name;
+}
+
+async function downloadCurrent(){
+  const rec = State.byId.get(State.activeId);
+  if(!rec) return;
+  const blob = await recordBlob(rec);
+  triggerDownload(blob, exportNameFor(rec));
+}
+
+function triggerDownload(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+async function downloadZip(records, label){
+  if(!window.JSZip){ toast('ZIP library failed to load.'); return; }
+  if(records.length === 0){ toast('Nothing to download.'); return; }
+  showProgress(true, `Zipping ${records.length} images…`);
+  const zip = new JSZip();
+  const usedNames = new Set();
+  for(let i=0;i<records.length;i++){
+    const rec = records[i];
+    const blob = await recordBlob(rec);
+    let name = exportNameFor(rec);
+    if(usedNames.has(name)){
+      const dot = name.lastIndexOf('.');
+      name = dot>0 ? `${name.slice(0,dot)}_${i}${name.slice(dot)}` : `${name}_${i}`;
+    }
+    usedNames.add(name);
+    zip.file(name, blob);
+    if(i % 8 === 0){
+      setProgress((i/records.length)*90);
+      $('#progressLabel').textContent = `${i+1} / ${records.length}`;
+      await nextTick();
+    }
+  }
+  setProgress(92);
+  $('#progressLabel').textContent = 'Compressing…';
+  const content = await zip.generateAsync({ type:'blob', compression:'STORE' }, (meta) => {
+    setProgress(92 + meta.percent*0.08);
+  });
+  showProgress(false);
+  triggerDownload(content, label + '.zip');
+  toast(`Downloaded ${records.length} images as ${label}.zip`);
+}
+
+/* =========================================================================
+   EVENT WIRING
+   ========================================================================= */
+$('#btnSelectFiles').addEventListener('click', () => $('#inputFiles').click());
+$('#btnSelectFolder').addEventListener('click', () => $('#inputFolder').click());
+$('#inputFiles').addEventListener('change', (e) => { handleFileList(e.target.files); e.target.value=''; });
+$('#inputFolder').addEventListener('change', (e) => { handleFileList(e.target.files); e.target.value=''; });
+
+$('#btnUploadGeotag').addEventListener('click', () => $('#inputGeotag').click());
+$('#btnUploadGeotag2').addEventListener('click', () => $('#inputGeotag').click());
+$('#inputGeotag').addEventListener('change', (e) => {
+  if(e.target.files[0]) handleGeotagFile(e.target.files[0]);
+  e.target.value = '';
+});
+
+/* User-configurable geotag strip height and opacity, each a % (1-100).
+   Two inputs control each value: one in the sidebar, one in the dialog's
+   "Add geotag" tab (next to the live preview). All four stay in sync.
+   If the image currently open in the dialog already has a geotag applied,
+   changing any of them re-stamps it immediately so the preview reflects
+   the new value without needing to click the button again. */
+function reapplyLiveIfTagged(){
+  const rec = State.byId.get(State.activeId);
+  const dialogOpen = $('#overlay').classList.contains('open');
+  if(rec && rec.tagged && dialogOpen){
+    applyGeotagToRecord(rec).then(() => {
+      Dlg.sourceCanvas = rec.workingCanvas;
+      pushHistory(rec);
+      drawStage();
+      $('#dimsReadout').textContent = `${rec.workingCanvas.width} × ${rec.workingCanvas.height}px`;
+      updateCardThumb(rec.id);
+    });
+  }
+}
+function setGeotagHeightPct(v){
+  if(!isFinite(v) || v <= 0) v = State.geotagHeightPct;
+  v = Math.min(100, Math.max(1, v));
+  State.geotagHeightPct = v;
+  $('#geotagHeightPct').value = v;
+  $('#geotagHeightPctDlg').value = v;
+  reapplyLiveIfTagged();
+}
+function setGeotagOpacity(v){
+  if(!isFinite(v) || v <= 0) v = State.geotagOpacity;
+  v = Math.min(100, Math.max(1, v));
+  State.geotagOpacity = v;
+  $('#geotagOpacity').value = v;
+  $('#geotagOpacityDlg').value = v;
+  reapplyLiveIfTagged();
+}
+$('#geotagHeightPct').addEventListener('change', (e) => {
+  setGeotagHeightPct(parseFloat(e.target.value));
+});
+$('#geotagHeightPctDlg').addEventListener('change', (e) => {
+  setGeotagHeightPct(parseFloat(e.target.value));
+});
+$('#geotagOpacity').addEventListener('change', (e) => {
+  setGeotagOpacity(parseFloat(e.target.value));
+});
+$('#geotagOpacityDlg').addEventListener('change', (e) => {
+  setGeotagOpacity(parseFloat(e.target.value));
+});
+
+$('#btnStampAll').addEventListener('click', stampAll);
+
+$('#btnSelectAll').addEventListener('click', () => {
+  State.images.forEach(r => State.selected.add(r.id));
+  for(const [,node] of gridCards) node.classList.add('selected');
+  updateStats(); updateGlobalButtons();
+});
+$('#btnSelectNone').addEventListener('click', () => {
+  State.selected.clear();
+  for(const [,node] of gridCards) node.classList.remove('selected');
+  updateStats(); updateGlobalButtons();
+});
+
+$('#btnDownloadSelected').addEventListener('click', () => {
+  const records = State.images.filter(r => State.selected.has(r.id));
+  downloadZip(records, 'geotag-studio-selected');
+});
+$('#btnDownloadAll').addEventListener('click', () => {
+  downloadZip(State.images, 'geotag-studio-all');
+});
+
+$('#btnCloseDialog').addEventListener('click', closeDialog);
+$('#overlay').addEventListener('click', (e) => { if(e.target.id === 'overlay') closeDialog(); });
+$('#btnPrevImg').addEventListener('click', () => stepImage(-1));
+$('#btnNextImg').addEventListener('click', () => stepImage(1));
+$('#btnSaveNext').addEventListener('click', () => {
+  const idx = State.images.findIndex(r=>r.id===State.activeId);
+  if(idx === State.images.length-1){ closeDialog(); toast('That was the last image.'); }
+  else stepImage(1);
+});
+
+$('#btnStartCrop').addEventListener('click', startCropMode);
+$('#btnApplyCrop').addEventListener('click', applyCrop);
+$('#btnCancelCrop').addEventListener('click', cancelCropMode);
+$('#btnApplyGeotagDlg').addEventListener('click', applyGeotagInDialog);
+$('#btnUndo').addEventListener('click', undo);
+$('#btnRedo').addEventListener('click', redo);
+$('#btnResetImg').addEventListener('click', resetImage);
+$('#btnDownloadCurrent').addEventListener('click', downloadCurrent);
+
+window.addEventListener('resize', () => {
+  if(!$('#overlay').classList.contains('open')) return;
+  const prev = Dlg.displayScale;
+  drawStage();
+  if(Dlg.cropRect && prev){
+    const ratio = Dlg.displayScale / prev;
+    Dlg.cropRect.x *= ratio; Dlg.cropRect.y *= ratio;
+    Dlg.cropRect.w *= ratio; Dlg.cropRect.h *= ratio;
+    positionCropBox();
+  }
+});
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
+});
+
+/* Drag & drop onto the grid area */
+const dropTargets = [$('#gridScroll')];
+dropTargets.forEach(el => {
+  el.addEventListener('dragover', (e) => { e.preventDefault(); });
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if(e.dataTransfer.files && e.dataTransfer.files.length){
+      handleFileList(e.dataTransfer.files);
+    }
+  });
+});
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+updateStats();
+updateGlobalButtons();
+
+})();
+</script>
+</body>
+</html>
