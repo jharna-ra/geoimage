@@ -312,6 +312,13 @@
           <span style="font-size:12px; color:var(--text-dim);">%</span>
         </span>
       </div>
+      <div class="insp-row" style="margin-top:8px;">
+        <span>Opacity</span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <input type="number" id="geotagOpacity" min="1" max="100" step="1" value="100" style="width:52px;">
+          <span style="font-size:12px; color:var(--text-dim);">%</span>
+        </span>
+      </div>
     </div>
     <div class="insp-section">
       <h3>Batch</h3>
@@ -373,6 +380,13 @@
             <span>Strip height</span>
             <span style="display:flex; align-items:center; gap:4px;">
               <input type="number" id="geotagHeightPctDlg" min="1" max="100" step="1" value="25" style="width:52px;">
+              <span style="font-size:12px; color:var(--text-dim);">%</span>
+            </span>
+          </div>
+          <div class="insp-row" style="margin-bottom:10px;">
+            <span>Opacity</span>
+            <span style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="geotagOpacityDlg" min="1" max="100" step="1" value="100" style="width:52px;">
               <span style="font-size:12px; color:var(--text-dim);">%</span>
             </span>
           </div>
@@ -461,6 +475,7 @@ const State = {
   geotagURL: null,      // object URL for the small preview thumbnail
   geotagFileName: null, // base filename (no extension) of the uploaded geotag image, used to name exported photos
   geotagHeightPct: 25,  // user-configurable strip height, as % of image height (1-100)
+  geotagOpacity: 100,   // user-configurable opacity of the stamped geotag, 1-100 (%)
   activeId: null,       // currently open image in dialog
   gridScrollTop: 0,
 };
@@ -938,11 +953,12 @@ async function stampAll(){
 /* Decode the record's current pixels (working canvas if it has one, else
    the original file), then overlay the geotag on the bottom portion of
    the photo — covering that % of the image's height (State.geotagHeightPct,
-   default 25). The canvas size is NOT changed; the geotag is painted
+   default 25) at the chosen opacity (State.geotagOpacity, default 100 =
+   fully opaque). The canvas size is NOT changed; the geotag is painted
    directly over the bottom slice of the photo. If the record was already
    tagged, first revert to the pre-geotag base (rec.preGeotagCanvas) so
-   re-stamping with a new height REPLACES the covered area cleanly instead
-   of covering an already-covered strip with a different-sized one. */
+   re-stamping with a new height/opacity REPLACES the covered area cleanly
+   instead of blending onto an already-stamped strip. */
 async function applyGeotagToRecord(rec){
   let sourceCanvas = (rec.tagged && rec.preGeotagCanvas) ? rec.preGeotagCanvas : rec.workingCanvas;
   if(!sourceCanvas){
@@ -966,8 +982,8 @@ async function applyGeotagToRecord(rec){
   const drawH = Math.max(1, Math.round(baseH * heightPct));
 
   // Remember the pre-geotag base (clone, so later edits to `out` can't
-  // mutate it) so a future height change can replace the covered area
-  // cleanly rather than stamping on top of an already-stamped strip.
+  // mutate it) so a future height/opacity change can replace the covered
+  // area cleanly rather than stamping on top of an already-stamped strip.
   rec.preGeotagCanvas = cloneCanvas(sourceCanvas);
 
   const out = document.createElement('canvas');
@@ -975,7 +991,10 @@ async function applyGeotagToRecord(rec){
   out.height = sourceCanvas.height;
   const ctx = out.getContext('2d');
   ctx.drawImage(sourceCanvas, 0, 0);
+  const opacity = clamp((State.geotagOpacity ?? 100) / 100, 0.01, 1);
+  ctx.globalAlpha = opacity;
   ctx.drawImage(g, 0, sourceCanvas.height - drawH, drawW, drawH);
+  ctx.globalAlpha = 1;
 
   rec.workingCanvas = out;
   rec.tagged = true;
@@ -998,6 +1017,7 @@ function openDialog(id){
   State.activeId = id;
   $('#overlay').classList.add('open');
   $('#geotagHeightPctDlg').value = State.geotagHeightPct;
+  $('#geotagOpacityDlg').value = State.geotagOpacity;
   loadRecordIntoDialog(id);
   document.addEventListener('keydown', onDialogKey);
 }
@@ -1436,20 +1456,13 @@ $('#inputGeotag').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-/* User-configurable geotag strip height, as a % of each image's height.
-   Two inputs control the same value: one in the sidebar, one in the
-   dialog's "Add geotag" tab (next to the live preview). Both stay in
-   sync. If the image currently open in the dialog already has a geotag
-   applied, changing either input re-stamps it immediately so the
-   preview reflects the new height without needing to click the button
-   again. */
-function setGeotagHeightPct(v){
-  if(!isFinite(v) || v <= 0) v = State.geotagHeightPct;
-  v = Math.min(100, Math.max(1, v));
-  State.geotagHeightPct = v;
-  $('#geotagHeightPct').value = v;
-  $('#geotagHeightPctDlg').value = v;
-
+/* User-configurable geotag strip height and opacity, each a % (1-100).
+   Two inputs control each value: one in the sidebar, one in the dialog's
+   "Add geotag" tab (next to the live preview). All four stay in sync.
+   If the image currently open in the dialog already has a geotag applied,
+   changing any of them re-stamps it immediately so the preview reflects
+   the new value without needing to click the button again. */
+function reapplyLiveIfTagged(){
   const rec = State.byId.get(State.activeId);
   const dialogOpen = $('#overlay').classList.contains('open');
   if(rec && rec.tagged && dialogOpen){
@@ -1462,11 +1475,33 @@ function setGeotagHeightPct(v){
     });
   }
 }
+function setGeotagHeightPct(v){
+  if(!isFinite(v) || v <= 0) v = State.geotagHeightPct;
+  v = Math.min(100, Math.max(1, v));
+  State.geotagHeightPct = v;
+  $('#geotagHeightPct').value = v;
+  $('#geotagHeightPctDlg').value = v;
+  reapplyLiveIfTagged();
+}
+function setGeotagOpacity(v){
+  if(!isFinite(v) || v <= 0) v = State.geotagOpacity;
+  v = Math.min(100, Math.max(1, v));
+  State.geotagOpacity = v;
+  $('#geotagOpacity').value = v;
+  $('#geotagOpacityDlg').value = v;
+  reapplyLiveIfTagged();
+}
 $('#geotagHeightPct').addEventListener('change', (e) => {
   setGeotagHeightPct(parseFloat(e.target.value));
 });
 $('#geotagHeightPctDlg').addEventListener('change', (e) => {
   setGeotagHeightPct(parseFloat(e.target.value));
+});
+$('#geotagOpacity').addEventListener('change', (e) => {
+  setGeotagOpacity(parseFloat(e.target.value));
+});
+$('#geotagOpacityDlg').addEventListener('change', (e) => {
+  setGeotagOpacity(parseFloat(e.target.value));
 });
 
 $('#btnStampAll').addEventListener('click', stampAll);
