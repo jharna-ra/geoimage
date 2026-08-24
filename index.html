@@ -1,1426 +1,1201 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+<title>Geotag Studio — Blur & Geotag</title>
 
-<title>Geotag Image Editor</title>
+<!-- HEIC / HEIF support -->
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
 <style>
 
-/* =========================================================
-   GLOBAL
-========================================================= */
+:root{
+  --bg:#14161a;
+  --panel:#1c1f26;
+  --panel2:#22262f;
+  --border:#303540;
+  --text:#eeeae3;
+  --muted:#9298a4;
+  --accent:#e8a33d;
+  --danger:#d9645a;
+}
 
-* {
-    box-sizing: border-box;
+*{
+  box-sizing:border-box;
 }
 
 html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
+body{
+  width:100%;
+  height:100%;
+  margin:0;
 }
 
-body {
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    background: #15171b;
-
-    color: #ffffff;
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  overflow:hidden;
 }
-
 
 /* =========================================================
-   HEADER
+   TOP BAR
 ========================================================= */
 
-header {
+#topbar{
+  height:56px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
 
-    min-height: 62px;
+  display:flex;
+  align-items:center;
 
-    background: #20232a;
-
-    border-bottom:
-        1px solid #363b46;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    padding:
-        10px 15px;
-
-    flex-wrap: wrap;
+  padding:0 18px;
+  gap:10px;
 }
 
-.logo {
-
-    font-size: 18px;
-
-    font-weight: bold;
-
-    margin-right: 15px;
+.logoDot{
+  width:10px;
+  height:10px;
+  border-radius:2px;
+  background:var(--accent);
 }
 
-button {
-
-    border:
-        1px solid #4b515d;
-
-    background: #292e38;
-
-    color: white;
-
-    padding:
-        9px 14px;
-
-    border-radius: 6px;
-
-    cursor: pointer;
-
-    font-size: 13px;
+.logo{
+  font-size:17px;
+  font-weight:700;
 }
 
-button:hover {
-
-    border-color: #e5a13a;
+.subtitle{
+  color:#666c77;
+  font-size:11px;
 }
 
-button:active {
-
-    transform: translateY(1px);
+#status{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:12px;
 }
-
-.primary {
-
-    background: #e5a13a;
-
-    color: #151515;
-
-    border-color: #e5a13a;
-
-    font-weight: bold;
-}
-
-.spacer {
-    flex: 1;
-}
-
-.status {
-
-    color: #aeb4bf;
-
-    font-size: 13px;
-}
-
-input[type="file"] {
-    display: none;
-}
-
 
 /* =========================================================
    MAIN
 ========================================================= */
 
-main {
+#main{
+  height:calc(100vh - 56px);
 
-    display: flex;
+  display:flex;
 
-    height:
-        calc(100vh - 62px);
-
-    min-height: 0;
+  min-height:0;
 }
-
 
 /* =========================================================
-   GALLERY
+   PREVIEW
 ========================================================= */
 
-.gallery {
+#previewArea{
+  flex:1;
 
-    flex: 1;
+  min-width:0;
 
-    min-width: 0;
+  position:relative;
 
-    overflow-y: auto;
+  display:flex;
 
-    padding: 18px;
+  align-items:center;
+  justify-content:center;
+
+  overflow:auto;
+
+  padding:25px;
+
+  background:
+    repeating-conic-gradient(
+      #191b20 0% 25%,
+      #14161a 0% 50%
+    ) 0 0 / 24px 24px;
 }
 
-.empty {
+/*
+IMPORTANT:
 
-    text-align: center;
+The wrapper is the exact visual size of the
+displayed canvas.
 
-    color: #9298a4;
+The selection rectangle is positioned relative
+to this wrapper.
+*/
 
-    padding:
-        20vh 20px;
+#canvasWrapper{
+  position:relative;
+
+  display:none;
+
+  flex-shrink:0;
+
+  line-height:0;
 }
 
-.empty-title {
+#previewCanvas{
+  display:block;
 
-    color: white;
+  max-width:calc(100vw - 380px);
+  max-height:calc(100vh - 110px);
 
-    font-size: 21px;
+  width:auto;
+  height:auto;
 
-    font-weight: bold;
+  box-shadow:
+    0 8px 35px rgba(0,0,0,.55);
 
-    margin-bottom: 10px;
+  touch-action:none;
 }
 
-.grid {
+/* =========================================================
+   SELECTION OVERLAY
+========================================================= */
 
-    display: grid;
+#selectionOverlay{
 
-    grid-template-columns:
-        repeat(
-            auto-fill,
-            minmax(190px, 1fr)
-        );
+  position:absolute;
 
-    gap: 14px;
+  display:none;
+
+  border:2px solid var(--accent);
+
+  background:rgba(232,163,61,.10);
+
+  box-shadow:
+    0 0 0 99999px rgba(0,0,0,.28),
+    inset 0 0 20px rgba(232,163,61,.08);
+
+  cursor:move;
+
+  z-index:10;
+
+  touch-action:none;
 }
 
-.card {
+.handle{
 
-    background: #20232a;
+  position:absolute;
 
-    border:
-        1px solid #343944;
+  width:15px;
+  height:15px;
 
-    border-radius: 7px;
+  background:var(--accent);
 
-    overflow: hidden;
+  border:2px solid #17130c;
 
-    cursor: pointer;
+  border-radius:3px;
+
+  z-index:20;
 }
 
-.card:hover {
-
-    border-color: #e5a13a;
+.handle.tl{
+  left:-8px;
+  top:-8px;
+  cursor:nwse-resize;
 }
 
-.card.selected {
-
-    border:
-        2px solid #e5a13a;
+.handle.tr{
+  right:-8px;
+  top:-8px;
+  cursor:nesw-resize;
 }
 
-.thumb {
-
-    height: 160px;
-
-    background: #0c0e11;
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
+.handle.bl{
+  left:-8px;
+  bottom:-8px;
+  cursor:nesw-resize;
 }
 
-.thumb img {
-
-    max-width: 100%;
-
-    max-height: 100%;
-
-    object-fit: contain;
+.handle.br{
+  right:-8px;
+  bottom:-8px;
+  cursor:nwse-resize;
 }
 
-.filename {
+.selectionLabel{
 
-    padding: 9px;
+  position:absolute;
 
-    font-size: 12px;
+  top:-30px;
+  left:0;
 
-    color: #c7cbd3;
+  background:var(--accent);
 
-    white-space: nowrap;
+  color:#181206;
 
-    overflow: hidden;
+  font-size:11px;
 
-    text-overflow: ellipsis;
+  font-weight:bold;
+
+  padding:5px 8px;
+
+  border-radius:4px;
+
+  white-space:nowrap;
+
+  line-height:normal;
 }
 
+/* =========================================================
+   EMPTY
+========================================================= */
+
+#empty{
+  text-align:center;
+
+  color:#606671;
+
+  max-width:380px;
+}
+
+#empty .icon{
+  font-size:40px;
+  margin-bottom:10px;
+}
+
+#empty h2{
+  color:#9a9fa8;
+  font-size:17px;
+  margin:0 0 8px;
+}
+
+#empty p{
+  font-size:13px;
+  line-height:1.5;
+  margin:0;
+}
+
+/* =========================================================
+   DIMENSIONS
+========================================================= */
+
+#dimensions{
+
+  position:absolute;
+
+  bottom:8px;
+  left:15px;
+
+  color:#606671;
+
+  font-size:11px;
+
+  font-family:monospace;
+}
 
 /* =========================================================
    SIDEBAR
 ========================================================= */
 
-.sidebar {
+#sidebar{
 
-    width: 290px;
+  width:330px;
 
-    background: #20232a;
+  flex-shrink:0;
 
-    border-left:
-        1px solid #343944;
+  background:var(--panel);
 
-    padding: 16px;
+  border-left:1px solid var(--border);
 
-    overflow-y: auto;
+  overflow-y:auto;
 }
 
-.section {
+.section{
 
-    border-bottom:
-        1px solid #343944;
+  padding:17px;
 
-    padding-bottom: 16px;
-
-    margin-bottom: 16px;
+  border-bottom:1px solid var(--border);
 }
 
-.section-title {
+.sectionTitle{
 
-    color: #8e95a1;
+  color:#646a75;
 
-    font-size: 12px;
+  text-transform:uppercase;
 
-    text-transform: uppercase;
+  letter-spacing:1px;
 
-    margin-bottom: 10px;
+  font-size:11px;
+
+  font-weight:bold;
+
+  margin-bottom:12px;
 }
 
-.geotag-preview {
+button{
 
-    width: 100%;
+  border:1px solid var(--border);
 
-    height: 120px;
+  background:var(--panel2);
 
-    background: #111318;
+  color:var(--text);
 
-    border:
-        1px dashed #454b57;
+  padding:10px 13px;
 
-    border-radius: 6px;
+  border-radius:5px;
 
-    display: flex;
+  font-size:13px;
 
-    justify-content: center;
+  cursor:pointer;
 
-    align-items: center;
-
-    overflow: hidden;
-
-    margin-bottom: 10px;
+  font-weight:500;
 }
 
-.geotag-preview img {
+button:hover:not(:disabled){
 
-    max-width: 95%;
-
-    max-height: 95%;
-
-    object-fit: contain;
+  border-color:var(--accent);
 }
 
-.muted {
+button:disabled{
 
-    color: #9298a4;
+  opacity:.4;
 
-    font-size: 12px;
+  cursor:not-allowed;
 }
 
+button.primary{
 
-/* =========================================================
-   EDITOR MODAL
-========================================================= */
+  background:var(--accent);
 
-#editorModal {
+  color:#181206;
 
-    position: fixed;
+  border-color:var(--accent);
 
-    inset: 0;
-
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.86
-        );
-
-    z-index: 100;
-
-    display: none;
-
-    padding: 12px;
+  font-weight:bold;
 }
 
-#editorModal.open {
-
-    display: flex;
+.full{
+  width:100%;
 }
 
-.editor {
+.row{
 
-    width: 100%;
+  display:flex;
 
-    height: 100%;
-
-    background: #20232a;
-
-    border:
-        1px solid #343944;
-
-    border-radius: 8px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    overflow: hidden;
+  gap:8px;
 }
 
-
-/* =========================================================
-   EDITOR HEADER
-========================================================= */
-
-.editor-header {
-
-    min-height: 52px;
-
-    padding:
-        9px 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    border-bottom:
-        1px solid #343944;
+.row button{
+  flex:1;
 }
 
+.stack{
 
-/* =========================================================
-   EDITOR BODY
-========================================================= */
+  display:flex;
 
-.editor-body {
+  flex-direction:column;
 
-    flex: 1;
-
-    min-height: 0;
-
-    display: flex;
+  gap:8px;
 }
-
-
-/* =========================================================
-   STAGE
-========================================================= */
-
-.stage-area {
-
-    flex: 1;
-
-    min-width: 0;
-
-    min-height: 0;
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    background: #0b0d10;
-
-    padding: 18px;
-
-    overflow: hidden;
-}
-
-.stage {
-
-    position: relative;
-
-    display: inline-block;
-
-    line-height: 0;
-
-    max-width: 100%;
-
-    max-height: 100%;
-}
-
-#mainCanvas {
-
-    display: block;
-
-    max-width: 100%;
-
-    max-height: 100%;
-
-    width: auto;
-
-    height: auto;
-
-    touch-action: none;
-
-    cursor: crosshair;
-
-    background: #111;
-}
-
-
-/* =========================================================
-   SELECTION
-========================================================= */
-
-#selectionBox {
-
-    position: absolute;
-
-    display: none;
-
-    border:
-        2px solid #e5a13a;
-
-    background:
-        rgba(
-            229,
-            161,
-            58,
-            0.10
-        );
-
-    cursor: move;
-
-    touch-action: none;
-}
-
-.selection-label {
-
-    position: absolute;
-
-    left: 5px;
-
-    top: 5px;
-
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.75
-        );
-
-    color: #e5a13a;
-
-    padding:
-        3px 5px;
-
-    font-family: monospace;
-
-    font-size: 10px;
-}
-
-.handle {
-
-    position: absolute;
-
-    width: 17px;
-
-    height: 17px;
-
-    background: #e5a13a;
-
-    border:
-        2px solid #111;
-
-    border-radius: 3px;
-}
-
-.handle.nw {
-
-    left: -9px;
-
-    top: -9px;
-
-    cursor: nwse-resize;
-}
-
-.handle.ne {
-
-    right: -9px;
-
-    top: -9px;
-
-    cursor: nesw-resize;
-}
-
-.handle.sw {
-
-    left: -9px;
-
-    bottom: -9px;
-
-    cursor: nesw-resize;
-}
-
-.handle.se {
-
-    right: -9px;
-
-    bottom: -9px;
-
-    cursor: nwse-resize;
-}
-
-
-/* =========================================================
-   CONTROLS
-========================================================= */
-
-.controls {
-
-    width: 320px;
-
-    overflow-y: auto;
-
-    border-left:
-        1px solid #343944;
-}
-
-.control-section {
-
-    padding: 16px;
-
-    border-bottom:
-        1px solid #343944;
-}
-
-.control-section h3 {
-
-    margin:
-        0 0 8px;
-
-    font-size: 14px;
-}
-
-.control-section p {
-
-    font-size: 11px;
-
-    color: #9298a4;
-
-    line-height: 1.5;
-}
-
-.control-section button {
-
-    width: 100%;
-
-    margin-top: 8px;
-}
-
 
 /* =========================================================
    SLIDERS
 ========================================================= */
 
-.slider-row {
+.slider{
 
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    margin-top: 15px;
-
-    margin-bottom: 6px;
+  margin-bottom:17px;
 }
 
-.slider-value {
-
-    color: #e5a13a;
-
-    font-family: monospace;
-
-    font-weight: bold;
+.slider:last-child{
+  margin-bottom:0;
 }
 
-input[type="range"] {
+.sliderHeader{
 
-    width: 100%;
+  display:flex;
 
-    accent-color: #e5a13a;
+  justify-content:space-between;
 
-    cursor: pointer;
+  margin-bottom:7px;
+
+  color:var(--muted);
+
+  font-size:12px;
 }
 
+.sliderValue{
+
+  color:var(--text);
+
+  font-family:monospace;
+}
+
+input[type=range]{
+
+  width:100%;
+
+  accent-color:var(--accent);
+
+  cursor:pointer;
+}
 
 /* =========================================================
-   EFFECT RADIO
+   GEOTAG PREVIEW
 ========================================================= */
 
-.effect-option {
+#geoPreview{
 
-    display: block;
+  height:70px;
 
-    margin:
-        9px 0;
+  margin-top:10px;
 
-    font-size: 13px;
+  border:1px dashed var(--border);
+
+  border-radius:5px;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  overflow:hidden;
+
+  background:
+    linear-gradient(
+      45deg,
+      #252831 25%,
+      transparent 25%
+    ) -8px 0/16px 16px,
+
+    linear-gradient(
+      -45deg,
+      #252831 25%,
+      transparent 25%
+    ) -8px 0/16px 16px,
+
+    #191b20;
 }
 
-.effect-option input {
+#geoPreview img{
 
-    accent-color: #e5a13a;
+  max-width:95%;
+  max-height:90%;
+
+  object-fit:contain;
 }
 
+.placeholder{
+
+  color:#606671;
+
+  font-size:11px;
+
+  font-family:monospace;
+}
 
 /* =========================================================
-   FOOTER
+   SEGMENT
 ========================================================= */
 
-.editor-footer {
+.segment{
 
-    min-height: 50px;
+  display:flex;
 
-    border-top:
-        1px solid #343944;
+  border:1px solid var(--border);
 
-    padding:
-        8px 13px;
+  border-radius:5px;
 
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
+  overflow:hidden;
 }
 
+.segment button{
+
+  flex:1;
+
+  border:0;
+
+  border-radius:0;
+}
+
+.segment button.active{
+
+  background:var(--accent);
+
+  color:#181206;
+}
+
+/* =========================================================
+   INFO
+========================================================= */
+
+.info{
+
+  color:#777d87;
+
+  font-size:11px;
+
+  line-height:1.5;
+
+  margin-top:9px;
+}
 
 /* =========================================================
    TOAST
 ========================================================= */
 
-#toast {
+#toast{
 
-    position: fixed;
+  position:fixed;
 
-    left: 50%;
+  left:50%;
 
-    bottom: 25px;
+  bottom:25px;
 
-    transform:
-        translate(
-            -50%,
-            20px
-        );
+  transform:translate(-50%,15px);
 
-    background: #292e38;
+  background:#252a32;
 
-    border:
-        1px solid #454b57;
+  border:1px solid var(--border);
 
-    color: white;
+  color:var(--text);
 
-    padding:
-        10px 16px;
+  padding:11px 17px;
 
-    border-radius: 6px;
+  border-radius:5px;
 
-    opacity: 0;
+  opacity:0;
 
-    pointer-events: none;
+  pointer-events:none;
 
-    transition: 0.2s;
+  transition:.2s;
 
-    z-index: 500;
+  z-index:1000;
 
-    max-width: 90%;
-
-    text-align: center;
+  font-size:13px;
 }
 
-#toast.show {
+#toast.show{
 
-    opacity: 1;
+  opacity:1;
 
-    transform:
-        translate(
-            -50%,
-            0
-        );
+  transform:translate(-50%,0);
 }
 
+#toast.error{
+
+  color:#ffaaa2;
+
+  border-color:var(--danger);
+}
 
 /* =========================================================
-   RESPONSIVE
+   MOBILE
 ========================================================= */
 
-@media (max-width: 900px) {
+@media(max-width:900px){
 
-    main {
+  body{
+    overflow:auto;
+  }
 
-        display: block;
+  #main{
 
-        height: auto;
+    height:auto;
 
-        min-height:
-            calc(100vh - 62px);
-    }
+    min-height:calc(100vh - 56px);
 
-    .gallery {
+    flex-direction:column;
+  }
 
-        min-height: 400px;
-    }
+  #previewArea{
 
-    .sidebar {
+    height:55vh;
 
-        width: 100%;
+    flex:none;
 
-        border-left: 0;
+    padding:15px;
+  }
 
-        border-top:
-            1px solid #343944;
-    }
+  #previewCanvas{
 
-    .editor-body {
+    max-width:calc(100vw - 30px);
 
-        display: block;
+    max-height:50vh;
+  }
 
-        overflow-y: auto;
-    }
+  #sidebar{
 
-    .stage-area {
+    width:100%;
 
-        height: 55vh;
-    }
+    border-left:0;
 
-    .controls {
+    border-top:1px solid var(--border);
+  }
 
-        width: 100%;
-
-        border-left: 0;
-    }
-
+  #status{
+    display:none;
+  }
 }
 
 </style>
-
 </head>
-
 
 <body>
 
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
 
-<!-- =======================================================
-     HEADER
-======================================================== -->
+<div id="topbar">
 
-<header>
+  <div class="logoDot"></div>
 
-    <div class="logo">
-        Geotag Image Editor
-    </div>
+  <div class="logo">
+    Geotag Studio
+  </div>
 
+  <div class="subtitle">
+    blur & stamp
+  </div>
 
-    <button id="uploadImageButton">
-        Upload Image
-    </button>
-
-
-    <button id="uploadFolderButton">
-        Upload Folder
-    </button>
-
-
-    <button id="uploadGeotagButton">
-        Upload Geotag
-    </button>
-
-
-    <span class="spacer"></span>
-
-
-    <span
-        id="status"
-        class="status"
-    >
-        No images uploaded
-    </span>
-
-
-    <input
-        id="imageInput"
-        type="file"
-        accept="image/*"
-        multiple
-    >
-
-
-    <input
-        id="folderInput"
-        type="file"
-        accept="image/*"
-        multiple
-        webkitdirectory
-    >
-
-
-    <input
-        id="geotagInput"
-        type="file"
-        accept="image/*"
-    >
-
-</header>
-
-
-<!-- =======================================================
-     MAIN
-======================================================== -->
-
-<main>
-
-
-    <section class="gallery">
-
-
-        <div
-            id="emptyMessage"
-            class="empty"
-        >
-
-            <div class="empty-title">
-                No images uploaded
-            </div>
-
-            <div>
-                Click "Upload Image" and select
-                an image from your File Manager.
-            </div>
-
-        </div>
-
-
-        <div
-            id="imageGrid"
-            class="grid"
-        ></div>
-
-
-    </section>
-
-
-    <aside class="sidebar">
-
-
-        <div class="section">
-
-
-            <div class="section-title">
-                Geotag
-            </div>
-
-
-            <div
-                id="geotagPreview"
-                class="geotag-preview"
-            >
-
-                <span class="muted">
-                    No geotag uploaded
-                </span>
-
-            </div>
-
-
-            <button id="sidebarGeotag">
-                Upload / Replace Geotag
-            </button>
-
-
-        </div>
-
-
-        <div class="section">
-
-            <div class="section-title">
-                Images
-            </div>
-
-            <div class="muted">
-
-                Uploaded:
-                <b id="imageCount">0</b>
-
-            </div>
-
-        </div>
-
-
-    </aside>
-
-
-</main>
-
-
-<!-- =======================================================
-     EDITOR
-======================================================== -->
-
-<div id="editorModal">
-
-
-    <div class="editor">
-
-
-        <!-- HEADER -->
-
-        <div class="editor-header">
-
-
-            <strong id="editorTitle">
-                Image
-            </strong>
-
-
-            <span
-                id="editorCounter"
-                class="muted"
-            ></span>
-
-
-            <span class="spacer"></span>
-
-
-            <button id="previousButton">
-                ← Previous
-            </button>
-
-
-            <button id="nextButton">
-                Next →
-            </button>
-
-
-            <button id="closeEditor">
-                Close
-            </button>
-
-
-        </div>
-
-
-        <!-- BODY -->
-
-        <div class="editor-body">
-
-
-            <!-- CANVAS -->
-
-            <div class="stage-area">
-
-
-                <div
-                    id="stage"
-                    class="stage"
-                >
-
-
-                    <canvas
-                        id="mainCanvas"
-                    ></canvas>
-
-
-                    <div
-                        id="selectionBox"
-                    >
-
-
-                        <span
-                            id="selectionLabel"
-                            class="selection-label"
-                        >
-                            0%
-                        </span>
-
-
-                        <span
-                            class="handle nw"
-                            data-handle="nw"
-                        ></span>
-
-
-                        <span
-                            class="handle ne"
-                            data-handle="ne"
-                        ></span>
-
-
-                        <span
-                            class="handle sw"
-                            data-handle="sw"
-                        ></span>
-
-
-                        <span
-                            class="handle se"
-                            data-handle="se"
-                        ></span>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-            <!-- CONTROLS -->
-
-            <aside class="controls">
-
-
-                <!-- ========================================
-                     AREA
-                ========================================= -->
-
-                <div class="control-section">
-
-
-                    <h3>
-                        1. Select Geotag Area
-                    </h3>
-
-
-                    <p>
-                        Select the area that should
-                        receive the privacy effect.
-                        A geotag is NOT required.
-                    </p>
-
-
-                    <button
-                        id="selectAreaButton"
-                        class="primary"
-                    >
-                        Select Geotag Area
-                    </button>
-
-
-                    <button
-                        id="resetSelectionButton"
-                    >
-                        Reset Area
-                    </button>
-
-
-                </div>
-
-
-                <!-- ========================================
-                     GREY BLUR
-                ========================================= -->
-
-                <div class="control-section">
-
-
-                    <h3>
-                        2. Grey Blur
-                    </h3>
-
-
-                    <label class="effect-option">
-
-                        <input
-                            type="radio"
-                            name="effect"
-                            value="greyblur"
-                            checked
-                        >
-
-                        Grey + Blur
-
-                    </label>
-
-
-                    <label class="effect-option">
-
-                        <input
-                            type="radio"
-                            name="effect"
-                            value="blur"
-                        >
-
-                        Blur Only
-
-                    </label>
-
-
-                    <label class="effect-option">
-
-                        <input
-                            type="radio"
-                            name="effect"
-                            value="grey"
-                        >
-
-                        Grey Only
-
-                    </label>
-
-
-                    <div class="slider-row">
-
-                        <span>
-                            Grey / Blur Strength
-                        </span>
-
-
-                        <span
-                            id="blurValue"
-                            class="slider-value"
-                        >
-                            50%
-                        </span>
-
-                    </div>
-
-
-                    <input
-                        id="blurRange"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value="50"
-                        step="1"
-                    >
-
-
-                    <button
-                        id="generateBlurButton"
-                        class="primary"
-                    >
-                        Generate Blur Image
-                    </button>
-
-
-                </div>
-
-
-                <!-- ========================================
-                     GEOTAG
-                ========================================= -->
-
-                <div class="control-section">
-
-
-                    <h3>
-                        3. Geotag
-                    </h3>
-
-
-                    <p>
-                        Uploading a geotag is completely
-                        independent from the blur.
-                    </p>
-
-
-                    <button id="addGeotagButton">
-                        Add Geotag
-                    </button>
-
-
-                    <!-- OPACITY -->
-
-                    <div class="slider-row">
-
-                        <span>
-                            Geotag Opacity
-                        </span>
-
-
-                        <span
-                            id="geotagOpacityValue"
-                            class="slider-value"
-                        >
-                            100%
-                        </span>
-
-                    </div>
-
-
-                    <input
-                        id="geotagOpacityRange"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value="100"
-                        step="1"
-                    >
-
-
-                    <!-- WIDTH -->
-
-                    <div class="slider-row">
-
-                        <span>
-                            Geotag Width
-                        </span>
-
-
-                        <span
-                            id="geotagWidthValue"
-                            class="slider-value"
-                        >
-                            80%
-                        </span>
-
-                    </div>
-
-
-                    <input
-                        id="geotagWidthRange"
-                        type="range"
-                        min="10"
-                        max="100"
-                        value="80"
-                        step="1"
-                    >
-
-
-                    <!-- HEIGHT -->
-
-                    <div class="slider-row">
-
-                        <span>
-                            Geotag Height
-                        </span>
-
-
-                        <span
-                            id="geotagHeightValue"
-                            class="slider-value"
-                        >
-                            80%
-                        </span>
-
-                    </div>
-
-
-                    <input
-                        id="geotagHeightRange"
-                        type="range"
-                        min="10"
-                        max="100"
-                        value="80"
-                        step="1"
-                    >
-
-
-                    <p>
-                        Width and height are measured
-                        relative to the selected area.
-                        The geotag is kept inside the
-                        selected rectangle.
-                    </p>
-
-
-                </div>
-
-
-                <!-- ========================================
-                     DOWNLOAD
-                ========================================= -->
-
-                <div class="control-section">
-
-
-                    <h3>
-                        4. Final Image
-                    </h3>
-
-
-                    <button
-                        id="downloadButton"
-                        class="primary"
-                    >
-                        Download Image
-                    </button>
-
-
-                    <button
-                        id="resetImageButton"
-                    >
-                        Reset Image
-                    </button>
-
-
-                </div>
-
-
-            </aside>
-
-
-        </div>
-
-
-        <!-- FOOTER -->
-
-        <div class="editor-footer">
-
-
-            <span
-                id="imageDimensions"
-                class="muted"
-            ></span>
-
-
-            <span class="spacer"></span>
-
-
-            <button
-                id="saveNextButton"
-                class="primary"
-            >
-                Save & Next →
-            </button>
-
-
-        </div>
-
-
-    </div>
-
+  <div id="status">
+    No image uploaded
+  </div>
 
 </div>
 
 
-<!-- TOAST -->
+<div id="main">
+
+<!-- =========================================================
+     PREVIEW
+========================================================= -->
+
+<div id="previewArea">
+
+  <div id="empty">
+
+    <div class="icon">
+      ▢
+    </div>
+
+    <h2>
+      No image uploaded
+    </h2>
+
+    <p>
+      Upload a photograph to begin.
+      Draw the exact area you want to blur,
+      generate the blur, then optionally
+      add a geotag.
+    </p>
+
+  </div>
+
+
+  <div id="canvasWrapper">
+
+    <canvas id="previewCanvas"></canvas>
+
+
+    <div id="selectionOverlay">
+
+      <div class="selectionLabel">
+        Blur Area
+      </div>
+
+      <div
+        class="handle tl"
+        data-handle="tl"
+      ></div>
+
+      <div
+        class="handle tr"
+        data-handle="tr"
+      ></div>
+
+      <div
+        class="handle bl"
+        data-handle="bl"
+      ></div>
+
+      <div
+        class="handle br"
+        data-handle="br"
+      ></div>
+
+    </div>
+
+  </div>
+
+
+  <div id="dimensions"></div>
+
+</div>
+
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<div id="sidebar">
+
+
+<!-- IMAGE -->
+
+<div class="section">
+
+  <div class="sectionTitle">
+    Image
+  </div>
+
+  <div class="stack">
+
+    <button
+      id="uploadImageBtn"
+      class="full"
+    >
+      Upload Image
+    </button>
+
+    <button
+      id="uploadGeoBtn"
+      class="full"
+    >
+      Upload Geotag
+    </button>
+
+  </div>
+
+
+  <div id="geoPreview">
+
+    <span class="placeholder">
+      no geotag uploaded
+    </span>
+
+  </div>
+
+</div>
+
+
+<!-- BLUR SELECTION -->
+
+<div class="section">
+
+  <div class="sectionTitle">
+    Blur Area
+  </div>
+
+
+  <button
+    id="selectAreaBtn"
+    class="full"
+  >
+    Select Blur Area
+  </button>
+
+
+  <button
+    id="clearSelectionBtn"
+    class="full"
+    style="margin-top:8px;"
+  >
+    Clear Selection
+  </button>
+
+
+  <div class="info">
+
+    Click Select Blur Area and then
+    drag over the exact part of the
+    photograph you want to blur.
+
+    You can move or resize the selected
+    rectangle using the handles.
+
+  </div>
+
+</div>
+
+
+<!-- BLUR SETTINGS -->
+
+<div class="section">
+
+  <div class="sectionTitle">
+    Blur Settings
+  </div>
+
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Blur Strength
+      </span>
+
+      <span
+        class="sliderValue"
+        id="blurStrengthValue"
+      >
+        50%
+      </span>
+
+    </div>
+
+
+    <input
+      id="blurStrength"
+      type="range"
+      min="0"
+      max="100"
+      value="50"
+    >
+
+  </div>
+
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Grey Effect
+      </span>
+
+      <span
+        class="sliderValue"
+        id="greyOpacityValue"
+      >
+        45%
+      </span>
+
+    </div>
+
+
+    <input
+      id="greyOpacity"
+      type="range"
+      min="0"
+      max="100"
+      value="45"
+    >
+
+  </div>
+
+
+  <button
+    id="generateBlurBtn"
+    class="primary full"
+  >
+    Generate Blur Image
+  </button>
+
+</div>
+
+
+<!-- GEOTAG -->
+
+<div class="section">
+
+  <div class="sectionTitle">
+    Geotag
+  </div>
+
+
+  <!-- HEIGHT -->
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Geotag Height
+      </span>
+
+      <span
+        class="sliderValue"
+        id="geoHeightValue"
+      >
+        20%
+      </span>
+
+    </div>
+
+
+    <input
+      id="geoHeight"
+      type="range"
+      min="5"
+      max="100"
+      value="20"
+    >
+
+  </div>
+
+
+  <!-- WIDTH -->
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Geotag Width
+      </span>
+
+      <span
+        class="sliderValue"
+        id="geoWidthValue"
+      >
+        100%
+      </span>
+
+    </div>
+
+
+    <input
+      id="geoWidth"
+      type="range"
+      min="5"
+      max="100"
+      value="100"
+    >
+
+  </div>
+
+
+  <!-- OPACITY -->
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Geotag Opacity
+      </span>
+
+      <span
+        class="sliderValue"
+        id="geoOpacityValue"
+      >
+        100%
+      </span>
+
+    </div>
+
+
+    <input
+      id="geoOpacity"
+      type="range"
+      min="0"
+      max="100"
+      value="100"
+    >
+
+  </div>
+
+
+  <!-- POSITION -->
+
+  <div class="slider">
+
+    <div class="sliderHeader">
+
+      <span>
+        Geotag Position
+      </span>
+
+    </div>
+
+
+    <div class="segment">
+
+      <button id="geoTop">
+        Top
+      </button>
+
+      <button
+        id="geoBottom"
+        class="active"
+      >
+        Bottom
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="info">
+
+    <b>Height</b> controls the actual
+    height of the geotag area.
+
+    <br><br>
+
+    <b>Width 100%</b> means the geotag
+    covers the complete width of the
+    original photograph.
+
+    <br><br>
+
+    <b>Position</b> only determines whether
+    the area is attached to the top or
+    bottom edge.
+
+  </div>
+
+
+  <button
+    id="addGeoBtn"
+    class="primary full"
+    style="margin-top:12px;"
+  >
+    Add Geotag
+  </button>
+
+</div>
+
+
+<!-- EXPORT -->
+
+<div class="section">
+
+  <div class="sectionTitle">
+    Export
+  </div>
+
+
+  <div class="row">
+
+    <button id="resetBtn">
+      Reset
+    </button>
+
+    <button
+      id="downloadBtn"
+      class="primary"
+    >
+      Download
+    </button>
+
+  </div>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     FILE INPUTS
+========================================================= -->
+
+<input
+  id="imageInput"
+  type="file"
+  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,.heic,.heif"
+  style="display:none;"
+>
+
+<input
+  id="geoInput"
+  type="file"
+  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,.heic,.heif"
+  style="display:none;"
+>
+
 
 <div id="toast"></div>
 
 
 <script>
+
+"use strict";
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const imageInput =
+  document.getElementById("imageInput");
+
+const geoInput =
+  document.getElementById("geoInput");
+
+const uploadImageBtn =
+  document.getElementById("uploadImageBtn");
+
+const uploadGeoBtn =
+  document.getElementById("uploadGeoBtn");
+
+const previewArea =
+  document.getElementById("previewArea");
+
+const previewCanvas =
+  document.getElementById("previewCanvas");
+
+const canvasWrapper =
+  document.getElementById("canvasWrapper");
+
+const selectionOverlay =
+  document.getElementById("selectionOverlay");
+
+const empty =
+  document.getElementById("empty");
+
+const dimensions =
+  document.getElementById("dimensions");
+
+const status =
+  document.getElementById("status");
+
+const selectAreaBtn =
+  document.getElementById("selectAreaBtn");
+
+const clearSelectionBtn =
+  document.getElementById("clearSelectionBtn");
+
+const generateBlurBtn =
+  document.getElementById("generateBlurBtn");
+
+const addGeoBtn =
+  document.getElementById("addGeoBtn");
+
+const resetBtn =
+  document.getElementById("resetBtn");
+
+const downloadBtn =
+  document.getElementById("downloadBtn");
+
+const geoPreview =
+  document.getElementById("geoPreview");
+
+const blurStrength =
+  document.getElementById("blurStrength");
+
+const greyOpacity =
+  document.getElementById("greyOpacity");
+
+const geoHeight =
+  document.getElementById("geoHeight");
+
+const geoWidth =
+  document.getElementById("geoWidth");
+
+const geoOpacity =
+  document.getElementById("geoOpacity");
+
+const geoTop =
+  document.getElementById("geoTop");
+
+const geoBottom =
+  document.getElementById("geoBottom");
+
 
 /* =========================================================
    STATE
@@ -1428,112 +1203,79 @@ input[type="range"] {
 
 const state = {
 
-    images: [],
+  image:null,
 
-    activeIndex: -1,
+  geotag:null,
 
-    geotagFile: null,
+  originalCanvas:null,
 
-    geotagURL: null,
+  blurredCanvas:null,
 
-    selection: null,
+  finalCanvas:null,
 
-    selecting: false,
+  selection:null,
 
-    interaction: null,
+  selecting:false,
 
-    effect: "greyblur",
+  blurStrength:50,
 
-    blurPercentage: 50,
+  greyOpacity:45,
 
-    geotagOpacity: 100,
+  geoHeight:20,
 
-    geotagWidth: 80,
+  geoWidth:100,
 
-    geotagHeight: 80,
+  geoOpacity:100,
 
-    generatedBlob: null
+  geoPosition:"bottom"
 
 };
-
-
-/* =========================================================
-   DOM
-========================================================= */
-
-const imageInput =
-    document.getElementById(
-        "imageInput"
-    );
-
-const folderInput =
-    document.getElementById(
-        "folderInput"
-    );
-
-const geotagInput =
-    document.getElementById(
-        "geotagInput"
-    );
-
-const canvas =
-    document.getElementById(
-        "mainCanvas"
-    );
-
-const ctx =
-    canvas.getContext(
-        "2d"
-    );
-
-const selectionBox =
-    document.getElementById(
-        "selectionBox"
-    );
-
-const editorModal =
-    document.getElementById(
-        "editorModal"
-    );
 
 
 /* =========================================================
    TOAST
 ========================================================= */
 
-function showToast(message) {
+function showToast(message,error=false){
 
-    const toast =
-        document.getElementById(
-            "toast"
-        );
+  const toast =
+    document.getElementById("toast");
 
+  toast.textContent =
+    message;
 
-    toast.textContent =
-        message;
+  toast.classList.toggle(
+    "error",
+    error
+  );
 
+  toast.classList.add("show");
 
-    toast.classList.add(
-        "show"
+  clearTimeout(
+    showToast.timer
+  );
+
+  showToast.timer =
+    setTimeout(
+      ()=>{
+        toast.classList.remove("show");
+      },
+      3000
     );
 
-
-    clearTimeout(
-        window.toastTimer
-    );
+}
 
 
-    window.toastTimer =
-        setTimeout(
-            () => {
+/* =========================================================
+   CLAMP
+========================================================= */
 
-                toast.classList.remove(
-                    "show"
-                );
+function clamp(value,min,max){
 
-            },
-            2600
-        );
+  return Math.max(
+    min,
+    Math.min(max,value)
+  );
 
 }
 
@@ -1542,2924 +1284,2299 @@ function showToast(message) {
    IMAGE VALIDATION
 ========================================================= */
 
-function isImageFile(file) {
+function validImage(file){
 
-    if (!file) {
-        return false;
-    }
+  if(!file){
+    return false;
+  }
 
+  const type =
+    (file.type || "").toLowerCase();
 
-    if (
-        file.type &&
-        file.type
-            .toLowerCase()
-            .startsWith("image/")
-    ) {
+  const name =
+    (file.name || "").toLowerCase();
 
-        return true;
+  const extension =
+    /\.(jpg|jpeg|png|webp|gif|bmp|heic|heif)$/i
+      .test(name);
 
-    }
-
-
-    return /\.(jpg|jpeg|png|webp|gif|bmp|tif|tiff|heic|heif)$/i
-        .test(
-            file.name
-        );
+  return (
+    type.startsWith("image/") ||
+    extension
+  );
 
 }
 
 
 /* =========================================================
-   LOAD IMAGE
+   LOAD NORMAL IMAGE
 ========================================================= */
 
-function loadImage(source) {
+function loadNormalImage(file){
 
-    return new Promise(
-        (resolve, reject) => {
+  return new Promise(
+    (resolve,reject)=>{
 
-            const img =
-                new Image();
+      const reader =
+        new FileReader();
+
+      reader.onload = function(){
+
+        const img =
+          new Image();
+
+        img.onload = function(){
+
+          resolve(img);
+
+        };
+
+        img.onerror = function(){
+
+          reject(
+            new Error(
+              "Browser could not decode image"
+            )
+          );
+
+        };
+
+        img.src =
+          reader.result;
+
+      };
+
+      reader.onerror = function(){
+
+        reject(
+          new Error(
+            "Could not read file"
+          )
+        );
+
+      };
+
+      reader.readAsDataURL(file);
+
+    }
+  );
+
+}
 
 
-            img.onload =
-                () => resolve(
-                    img
-                );
+/* =========================================================
+   LOAD IMAGE INCLUDING HEIC
+========================================================= */
 
+async function loadImageFile(file){
 
-            img.onerror =
-                () => reject(
-                    new Error(
-                        "Image could not be loaded."
-                    )
-                );
-
-
-            img.src =
-                source;
-
-        }
+  const isHEIC =
+    /\.(heic|heif)$/i.test(
+      file.name || ""
+    ) ||
+    /image\/hei[cf]/i.test(
+      file.type || ""
     );
 
-}
+
+  if(!isHEIC){
+
+    return await loadNormalImage(file);
+
+  }
 
 
-/* =========================================================
-   ESCAPE
-========================================================= */
+  /*
+    HEIC / HEIF conversion.
+  */
 
-function escapeHTML(value) {
+  if(
+    typeof window.heic2any !==
+    "function"
+  ){
 
-    return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+    throw new Error(
+      "HEIC converter did not load"
+    );
 
-}
+  }
 
 
-/* =========================================================
-   UPLOAD IMAGES
-========================================================= */
+  const converted =
+    await window.heic2any({
 
-async function uploadImages(fileList) {
+      blob:file,
 
-    const files =
-        Array.from(
-            fileList || []
-        );
+      toType:"image/jpeg",
 
+      quality:0.95
 
-    if (!files.length) {
-        return;
-    }
+    });
 
 
-    let successful =
-        0;
+  const blob =
+    Array.isArray(converted)
+      ? converted[0]
+      : converted;
 
 
-    for (
-        const file of files
-    ) {
-
-
-        if (
-            !isImageFile(file)
-        ) {
-
-            continue;
-
-        }
-
-
-        try {
-
-            const url =
-                URL.createObjectURL(
-                    file
-                );
-
-
-            const img =
-                await loadImage(
-                    url
-                );
-
-
-            state.images.push({
-
-                id:
-                    Date.now() +
-                    "_" +
-                    Math.random()
-                        .toString(36)
-                        .slice(2),
-
-                file:
-
-                    file,
-
-                name:
-
-                    file.name,
-
-                originalURL:
-
-                    url,
-
-                outputURL:
-
-                    null,
-
-                outputBlob:
-
-                    null,
-
-                width:
-
-                    img.naturalWidth,
-
-                height:
-
-                    img.naturalHeight
-
-            });
-
-
-            successful++;
-
-
-        } catch (error) {
-
-            console.error(
-                "Could not load image:",
-                file.name,
-                error
-            );
-
-        }
-
-    }
-
-
-    if (
-        successful === 0
-    ) {
-
-        showToast(
-            "No readable image was selected."
-        );
-
-        return;
-
-    }
-
-
-    renderGallery();
-
-
-    if (
-        state.activeIndex === -1
-    ) {
-
-        await openEditor(
-            0
-        );
-
-    }
+  return await loadNormalImage(
+    new File(
+      [blob],
+      "converted.jpg",
+      {
+        type:"image/jpeg"
+      }
+    )
+  );
 
 }
 
 
 /* =========================================================
-   RENDER GALLERY
+   COPY CANVAS
 ========================================================= */
 
-function renderGallery() {
+function copyCanvas(source){
 
-    const grid =
-        document.getElementById(
-            "imageGrid"
-        );
+  const canvas =
+    document.createElement("canvas");
 
+  canvas.width =
+    source.width;
 
-    const empty =
-        document.getElementById(
-            "emptyMessage"
-        );
+  canvas.height =
+    source.height;
 
+  const ctx =
+    canvas.getContext("2d");
 
-    const count =
-        document.getElementById(
-            "imageCount"
-        );
+  ctx.drawImage(
+    source,
+    0,
+    0
+  );
 
+  return canvas;
 
-    const status =
-        document.getElementById(
-            "status"
-        );
-
-
-    grid.innerHTML =
-        "";
+}
 
 
-    count.textContent =
-        state.images.length;
+/* =========================================================
+   CREATE ORIGINAL CANVAS
+========================================================= */
+
+function imageToCanvas(img){
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width =
+    img.naturalWidth ||
+    img.width;
+
+  canvas.height =
+    img.naturalHeight ||
+    img.height;
+
+  const ctx =
+    canvas.getContext("2d",{
+      willReadFrequently:false
+    });
+
+  ctx.drawImage(
+    img,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  return canvas;
+
+}
 
 
-    if (
-        state.images.length === 0
-    ) {
+/* =========================================================
+   SHOW CANVAS
+========================================================= */
 
-        empty.style.display =
-            "block";
+function showCanvas(canvas){
 
-
-        status.textContent =
-            "No images uploaded";
-
-
-        return;
-
-    }
+  if(!canvas){
+    return;
+  }
 
 
-    empty.style.display =
-        "none";
+  /*
+    Important:
 
+    previewCanvas keeps the REAL pixel dimensions.
+
+    CSS decides only how large it appears
+    on the screen.
+
+    This means download remains full resolution.
+  */
+
+  previewCanvas.width =
+    canvas.width;
+
+  previewCanvas.height =
+    canvas.height;
+
+
+  const ctx =
+    previewCanvas.getContext("2d");
+
+  ctx.clearRect(
+    0,
+    0,
+    previewCanvas.width,
+    previewCanvas.height
+  );
+
+  ctx.drawImage(
+    canvas,
+    0,
+    0
+  );
+
+
+  empty.style.display =
+    "none";
+
+  canvasWrapper.style.display =
+    "block";
+
+
+  dimensions.textContent =
+    canvas.width +
+    " × " +
+    canvas.height +
+    " px";
+
+
+  updateStatus();
+
+  requestAnimationFrame(
+    updateSelectionVisual
+  );
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function updateStatus(){
+
+  if(!state.originalCanvas){
 
     status.textContent =
-        state.images.length +
-        " image(s) uploaded";
+      "No image uploaded";
+
+    return;
+
+  }
 
 
-    state.images.forEach(
-        (
-            item,
-            index
-        ) => {
+  if(state.finalCanvas){
+
+    status.textContent =
+      "Final image · geotag added";
+
+    return;
+
+  }
 
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+  if(state.blurredCanvas){
+
+    status.textContent =
+      "Blur generated";
+
+    return;
+
+  }
 
 
-            card.className =
-                "card";
-
-
-            if (
-                index ===
-                state.activeIndex
-            ) {
-
-                card.classList.add(
-                    "selected"
-                );
-
-            }
-
-
-            const imageURL =
-                item.outputURL ||
-                item.originalURL;
-
-
-            card.innerHTML = `
-
-                <div class="thumb">
-
-                    <img
-                        src="${imageURL}"
-                        alt=""
-                    >
-
-                </div>
-
-                <div class="filename">
-                    ${escapeHTML(item.name)}
-                </div>
-
-            `;
-
-
-            card.addEventListener(
-                "click",
-                () => {
-
-                    openEditor(
-                        index
-                    );
-
-                }
-            );
-
-
-            grid.appendChild(
-                card
-            );
-
-        }
-    );
+  status.textContent =
+    state.originalCanvas.width +
+    " × " +
+    state.originalCanvas.height +
+    " · original";
 
 }
 
 
 /* =========================================================
-   OPEN EDITOR
+   UPLOAD MAIN IMAGE
 ========================================================= */
 
-async function openEditor(
-    index
-) {
+async function handleImage(file){
 
-    if (
-        index < 0 ||
-        index >=
-        state.images.length
-    ) {
-
-        return;
-
-    }
+  if(!file){
+    return;
+  }
 
 
-    state.activeIndex =
-        index;
+  if(!validImage(file)){
 
-
-    state.selection =
-        null;
-
-
-    state.selecting =
-        false;
-
-
-    state.interaction =
-        null;
-
-
-    state.generatedBlob =
-        null;
-
-
-    const item =
-        state.images[
-            index
-        ];
-
-
-    document.getElementById(
-        "editorTitle"
-    ).textContent =
-        item.name;
-
-
-    document.getElementById(
-        "editorCounter"
-    ).textContent =
-        `${index + 1} / ${state.images.length}`;
-
-
-    editorModal.classList.add(
-        "open"
+    showToast(
+      "Please select a valid image file.",
+      true
     );
 
+    return;
 
-    await drawCurrentImage();
-
-
-    hideSelection();
+  }
 
 
-    renderGallery();
+  try{
 
-}
-
-
-/* =========================================================
-   DRAW IMAGE
-========================================================= */
-
-async function drawCurrentImage() {
-
-    const item =
-        state.images[
-            state.activeIndex
-        ];
-
-
-    if (!item) {
-        return;
-    }
-
-
-    const source =
-        item.outputURL ||
-        item.originalURL;
+    showToast(
+      "Loading image..."
+    );
 
 
     const img =
-        await loadImage(
-            source
-        );
+      await loadImageFile(file);
 
 
-    canvas.width =
-        img.naturalWidth;
+    state.image =
+      img;
 
 
-    canvas.height =
-        img.naturalHeight;
+    state.originalCanvas =
+      imageToCanvas(img);
 
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
+    state.blurredCanvas =
+      null;
+
+    state.finalCanvas =
+      null;
+
+    state.selection =
+      null;
+
+    state.selecting =
+      false;
+
+
+    selectionOverlay.style.display =
+      "none";
+
+
+    showCanvas(
+      state.originalCanvas
     );
 
 
-    ctx.drawImage(
-        img,
-        0,
-        0
+    showToast(
+      "Image loaded successfully."
     );
 
+  }
+  catch(error){
 
-    document.getElementById(
-        "imageDimensions"
-    ).textContent =
-        `${canvas.width} × ${canvas.height} px`;
-
-
-    requestAnimationFrame(
-        updateSelectionBox
+    console.error(
+      "IMAGE LOAD ERROR:",
+      error
     );
+
+    showToast(
+      "Could not load this image. Try JPG, PNG or WEBP.",
+      true
+    );
+
+  }
 
 }
-
-
-/* =========================================================
-   SELECT AREA
-========================================================= */
-
-document
-    .getElementById(
-        "selectAreaButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            /*
-             IMPORTANT:
-             NO GEOTAG VALIDATION HERE.
-            */
-
-            if (
-                state.activeIndex === -1
-            ) {
-
-                showToast(
-                    "Please upload the image first."
-                );
-
-                return;
-
-            }
-
-
-            state.selecting =
-                true;
-
-
-            showToast(
-                "Drag on the image to select the area."
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   NORMALIZED COORDINATES
-========================================================= */
-
-function getNormalizedPoint(
-    event
-) {
-
-    const rect =
-        canvas.getBoundingClientRect();
-
-
-    let x =
-        (
-            event.clientX -
-            rect.left
-        ) /
-        rect.width;
-
-
-    let y =
-        (
-            event.clientY -
-            rect.top
-        ) /
-        rect.height;
-
-
-    x =
-        Math.max(
-            0,
-            Math.min(
-                1,
-                x
-            )
-        );
-
-
-    y =
-        Math.max(
-            0,
-            Math.min(
-                1,
-                y
-            )
-        );
-
-
-    return {
-        x,
-        y
-    };
-
-}
-
-
-/* =========================================================
-   CREATE SELECTION
-========================================================= */
-
-canvas.addEventListener(
-    "pointerdown",
-    event => {
-
-
-        if (
-            !state.selecting
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-
-        const point =
-            getNormalizedPoint(
-                event
-            );
-
-
-        state.selection = {
-
-            x:
-                point.x,
-
-            y:
-                point.y,
-
-            width:
-                0,
-
-            height:
-                0
-
-        };
-
-
-        state.interaction = {
-
-            type:
-                "create",
-
-            startX:
-                point.x,
-
-            startY:
-                point.y
-
-        };
-
-
-        showSelection();
-
-
-        window.addEventListener(
-            "pointermove",
-            createSelection
-        );
-
-
-        window.addEventListener(
-            "pointerup",
-            finishCreateSelection,
-            {
-                once:
-                    true
-            }
-        );
-
-    }
-);
-
-
-/* =========================================================
-   CREATE SELECTION MOVE
-========================================================= */
-
-function createSelection(
-    event
-) {
-
-    if (
-        !state.interaction ||
-        state.interaction.type !==
-            "create"
-    ) {
-
-        return;
-
-    }
-
-
-    const point =
-        getNormalizedPoint(
-            event
-        );
-
-
-    const startX =
-        state.interaction.startX;
-
-
-    const startY =
-        state.interaction.startY;
-
-
-    let x =
-        Math.min(
-            startX,
-            point.x
-        );
-
-
-    let y =
-        Math.min(
-            startY,
-            point.y
-        );
-
-
-    let width =
-        Math.abs(
-            point.x -
-            startX
-        );
-
-
-    let height =
-        Math.abs(
-            point.y -
-            startY
-        );
-
-
-    x =
-        Math.max(
-            0,
-            Math.min(
-                1,
-                x
-            )
-        );
-
-
-    y =
-        Math.max(
-            0,
-            Math.min(
-                1,
-                y
-            )
-        );
-
-
-    width =
-        Math.min(
-            width,
-            1 - x
-        );
-
-
-    height =
-        Math.min(
-            height,
-            1 - y
-        );
-
-
-    state.selection = {
-
-        x,
-        y,
-        width,
-        height
-
-    };
-
-
-    updateSelectionBox();
-
-}
-
-
-/* =========================================================
-   FINISH CREATE
-========================================================= */
-
-function finishCreateSelection() {
-
-    window.removeEventListener(
-        "pointermove",
-        createSelection
-    );
-
-
-    state.interaction =
-        null;
-
-
-    if (
-        state.selection &&
-        state.selection.width <
-            0.01
-    ) {
-
-        state.selection.width =
-            0.1;
-
-    }
-
-
-    if (
-        state.selection &&
-        state.selection.height <
-            0.01
-    ) {
-
-        state.selection.height =
-            0.1;
-
-    }
-
-
-    updateSelectionBox();
-
-}
-
-
-/* =========================================================
-   SHOW / HIDE
-========================================================= */
-
-function showSelection() {
-
-    selectionBox.style.display =
-        "block";
-
-}
-
-
-function hideSelection() {
-
-    selectionBox.style.display =
-        "none";
-
-}
-
-
-/* =========================================================
-   UPDATE SELECTION BOX
-========================================================= */
-
-function updateSelectionBox() {
-
-    if (
-        !state.selection
-    ) {
-
-        hideSelection();
-
-        return;
-
-    }
-
-
-    const rect =
-        canvas.getBoundingClientRect();
-
-
-    selectionBox.style.left =
-        (
-            state.selection.x *
-            rect.width
-        ) +
-        "px";
-
-
-    selectionBox.style.top =
-        (
-            state.selection.y *
-            rect.height
-        ) +
-        "px";
-
-
-    selectionBox.style.width =
-        (
-            state.selection.width *
-            rect.width
-        ) +
-        "px";
-
-
-    selectionBox.style.height =
-        (
-            state.selection.height *
-            rect.height
-        ) +
-        "px";
-
-
-    selectionBox.style.display =
-        "block";
-
-
-    document.getElementById(
-        "selectionLabel"
-    ).textContent =
-
-        Math.round(
-            state.selection.width *
-            100
-        ) +
-
-        "% × " +
-
-        Math.round(
-            state.selection.height *
-            100
-        ) +
-
-        "%";
-
-}
-
-
-/* =========================================================
-   MOVE / RESIZE SELECTION
-========================================================= */
-
-selectionBox.addEventListener(
-    "pointerdown",
-    event => {
-
-
-        if (
-            !state.selection ||
-            !state.selecting
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-
-        const point =
-            getNormalizedPoint(
-                event
-            );
-
-
-        const handle =
-            event.target.dataset.handle;
-
-
-        state.interaction = {
-
-            type:
-                handle ||
-                "move",
-
-            startX:
-                point.x,
-
-            startY:
-                point.y,
-
-            original:
-                {
-                    ...state.selection
-                }
-
-        };
-
-
-        window.addEventListener(
-            "pointermove",
-            moveSelection
-        );
-
-
-        window.addEventListener(
-            "pointerup",
-            finishMoveSelection,
-            {
-                once:
-                    true
-            }
-        );
-
-    }
-);
-
-
-/* =========================================================
-   MOVE / RESIZE
-========================================================= */
-
-function moveSelection(
-    event
-) {
-
-    if (
-        !state.interaction
-    ) {
-
-        return;
-
-    }
-
-
-    const point =
-        getNormalizedPoint(
-            event
-        );
-
-
-    const original =
-        state.interaction.original;
-
-
-    const dx =
-        point.x -
-        state.interaction.startX;
-
-
-    const dy =
-        point.y -
-        state.interaction.startY;
-
-
-    let x =
-        original.x;
-
-
-    let y =
-        original.y;
-
-
-    let width =
-        original.width;
-
-
-    let height =
-        original.height;
-
-
-    const type =
-        state.interaction.type;
-
-
-    if (
-        type ===
-        "move"
-    ) {
-
-
-        x =
-            Math.max(
-                0,
-                Math.min(
-                    1 - width,
-                    original.x + dx
-                )
-            );
-
-
-        y =
-            Math.max(
-                0,
-                Math.min(
-                    1 - height,
-                    original.y + dy
-                )
-            );
-
-
-    } else {
-
-
-        if (
-            type.includes("w")
-        ) {
-
-            const right =
-                original.x +
-                original.width;
-
-
-            x =
-                Math.max(
-                    0,
-                    Math.min(
-                        right - 0.01,
-                        original.x + dx
-                    )
-                );
-
-
-            width =
-                right -
-                x;
-
-        }
-
-
-        if (
-            type.includes("e")
-        ) {
-
-            width =
-                Math.max(
-                    0.01,
-                    Math.min(
-                        1 - original.x,
-                        original.width + dx
-                    )
-                );
-
-        }
-
-
-        if (
-            type.includes("n")
-        ) {
-
-            const bottom =
-                original.y +
-                original.height;
-
-
-            y =
-                Math.max(
-                    0,
-                    Math.min(
-                        bottom - 0.01,
-                        original.y + dy
-                    )
-                );
-
-
-            height =
-                bottom -
-                y;
-
-        }
-
-
-        if (
-            type.includes("s")
-        ) {
-
-            height =
-                Math.max(
-                    0.01,
-                    Math.min(
-                        1 - original.y,
-                        original.height + dy
-                    )
-                );
-
-        }
-
-    }
-
-
-    state.selection = {
-
-        x,
-        y,
-        width,
-        height
-
-    };
-
-
-    updateSelectionBox();
-
-}
-
-
-/* =========================================================
-   FINISH RESIZE
-========================================================= */
-
-function finishMoveSelection() {
-
-    window.removeEventListener(
-        "pointermove",
-        moveSelection
-    );
-
-
-    state.interaction =
-        null;
-
-}
-
-
-/* =========================================================
-   RESET AREA
-========================================================= */
-
-document
-    .getElementById(
-        "resetSelectionButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            state.selection =
-                null;
-
-
-            state.selecting =
-                false;
-
-
-            state.interaction =
-                null;
-
-
-            hideSelection();
-
-        }
-    );
-
-
-/* =========================================================
-   EFFECT TYPE
-========================================================= */
-
-document
-    .querySelectorAll(
-        'input[name="effect"]'
-    )
-    .forEach(
-        input => {
-
-            input.addEventListener(
-                "change",
-                event => {
-
-                    state.effect =
-                        event.target.value;
-
-                }
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   BLUR SLIDER
-========================================================= */
-
-document
-    .getElementById(
-        "blurRange"
-    )
-    .addEventListener(
-        "input",
-        event => {
-
-
-            state.blurPercentage =
-                Number(
-                    event.target.value
-                );
-
-
-            document.getElementById(
-                "blurValue"
-            ).textContent =
-                state.blurPercentage +
-                "%";
-
-        }
-    );
-
-
-/* =========================================================
-   GEOTAG OPACITY
-========================================================= */
-
-document
-    .getElementById(
-        "geotagOpacityRange"
-    )
-    .addEventListener(
-        "input",
-        event => {
-
-
-            state.geotagOpacity =
-                Number(
-                    event.target.value
-                );
-
-
-            document.getElementById(
-                "geotagOpacityValue"
-            ).textContent =
-                state.geotagOpacity +
-                "%";
-
-        }
-    );
-
-
-/* =========================================================
-   GEOTAG WIDTH
-========================================================= */
-
-document
-    .getElementById(
-        "geotagWidthRange"
-    )
-    .addEventListener(
-        "input",
-        event => {
-
-
-            state.geotagWidth =
-                Number(
-                    event.target.value
-                );
-
-
-            document.getElementById(
-                "geotagWidthValue"
-            ).textContent =
-                state.geotagWidth +
-                "%";
-
-        }
-    );
-
-
-/* =========================================================
-   GEOTAG HEIGHT
-========================================================= */
-
-document
-    .getElementById(
-        "geotagHeightRange"
-    )
-    .addEventListener(
-        "input",
-        event => {
-
-
-            state.geotagHeight =
-                Number(
-                    event.target.value
-                );
-
-
-            document.getElementById(
-                "geotagHeightValue"
-            ).textContent =
-                state.geotagHeight +
-                "%";
-
-        }
-    );
-
-
-/* =========================================================
-   GENERATE BLUR IMAGE
-========================================================= */
-
-document
-    .getElementById(
-        "generateBlurButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-
-            /*
-             IMPORTANT:
-
-             There is NO geotag check.
-
-             This button only requires:
-             1. Image
-             2. Selection
-            */
-
-
-            if (
-                state.activeIndex === -1
-            ) {
-
-                showToast(
-                    "Please upload the image first."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                !state.selection ||
-                state.selection.width <=
-                    0 ||
-                state.selection.height <=
-                    0
-            ) {
-
-                showToast(
-                    "Please select an area first."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-
-                const item =
-                    state.images[
-                        state.activeIndex
-                    ];
-
-
-                const source =
-                    item.outputURL ||
-                    item.originalURL;
-
-
-                const image =
-                    await loadImage(
-                        source
-                    );
-
-
-                /*
-                 =========================================
-                 OUTPUT CANVAS
-                 =========================================
-                */
-
-                const output =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                output.width =
-                    image.naturalWidth;
-
-
-                output.height =
-                    image.naturalHeight;
-
-
-                const outputCtx =
-                    output.getContext(
-                        "2d"
-                    );
-
-
-                outputCtx.imageSmoothingEnabled =
-                    true;
-
-
-                outputCtx.imageSmoothingQuality =
-                    "high";
-
-
-                /*
-                 Draw original.
-                */
-
-                outputCtx.drawImage(
-                    image,
-                    0,
-                    0
-                );
-
-
-                /*
-                 =========================================
-                 SELECTION PIXELS
-                 =========================================
-                */
-
-                const sx =
-                    Math.round(
-                        state.selection.x *
-                        image.naturalWidth
-                    );
-
-
-                const sy =
-                    Math.round(
-                        state.selection.y *
-                        image.naturalHeight
-                    );
-
-
-                const sw =
-                    Math.max(
-                        1,
-                        Math.round(
-                            state.selection.width *
-                            image.naturalWidth
-                        )
-                    );
-
-
-                const sh =
-                    Math.max(
-                        1,
-                        Math.round(
-                            state.selection.height *
-                            image.naturalHeight
-                        )
-                    );
-
-
-                /*
-                 =========================================
-                 ACTUAL BLUR
-                 
-                 We add padding around the selected
-                 region before applying blur.
-                 
-                 This is important because otherwise
-                 canvas blur can clip at the edges.
-                 =========================================
-                */
-
-                const percentage =
-                    state.blurPercentage /
-                    100;
-
-
-                /*
-                 0% = almost none
-                 100% = strong but usable
-                */
-
-                const blurRadius =
-                    Math.max(
-                        0,
-                        percentage * 32
-                    );
-
-
-                /*
-                 Padding needs to be at least
-                 approximately the blur radius.
-                */
-
-                const padding =
-                    Math.ceil(
-                        blurRadius * 2
-                    );
-
-
-                const cropX =
-                    Math.max(
-                        0,
-                        sx - padding
-                    );
-
-
-                const cropY =
-                    Math.max(
-                        0,
-                        sy - padding
-                    );
-
-
-                const cropRight =
-                    Math.min(
-                        image.naturalWidth,
-                        sx + sw + padding
-                    );
-
-
-                const cropBottom =
-                    Math.min(
-                        image.naturalHeight,
-                        sy + sh + padding
-                    );
-
-
-                const cropWidth =
-                    cropRight -
-                    cropX;
-
-
-                const cropHeight =
-                    cropBottom -
-                    cropY;
-
-
-                /*
-                 =========================================
-                 TEMP CANVAS
-                 =========================================
-                */
-
-                const blurCanvas =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                blurCanvas.width =
-                    cropWidth;
-
-
-                blurCanvas.height =
-                    cropHeight;
-
-
-                const blurCtx =
-                    blurCanvas.getContext(
-                        "2d"
-                    );
-
-
-                blurCtx.imageSmoothingEnabled =
-                    true;
-
-
-                blurCtx.imageSmoothingQuality =
-                    "high";
-
-
-                /*
-                 Draw source region.
-                */
-
-                blurCtx.drawImage(
-
-                    image,
-
-                    cropX,
-                    cropY,
-                    cropWidth,
-                    cropHeight,
-
-                    0,
-                    0,
-                    cropWidth,
-                    cropHeight
-
-                );
-
-
-                /*
-                 =========================================
-                 APPLY BLUR
-                 =========================================
-                */
-
-                if (
-                    state.effect !==
-                    "grey"
-                ) {
-
-
-                    if (
-                        blurRadius > 0
-                    ) {
-
-                        const blurred =
-                            document.createElement(
-                                "canvas"
-                            );
-
-
-                        blurred.width =
-                            cropWidth;
-
-
-                        blurred.height =
-                            cropHeight;
-
-
-                        const blurredCtx =
-                            blurred.getContext(
-                                "2d"
-                            );
-
-
-                        blurredCtx.imageSmoothingEnabled =
-                            true;
-
-
-                        blurredCtx.imageSmoothingQuality =
-                            "high";
-
-
-                        /*
-                         Draw with actual
-                         canvas filter.
-                        */
-
-                        blurredCtx.filter =
-                            `blur(${blurRadius}px)`;
-
-
-                        /*
-                         Expand slightly so
-                         the blur doesn't clip.
-                        */
-
-                        blurredCtx.drawImage(
-
-                            blurCanvas,
-
-                            -padding / 2,
-                            -padding / 2,
-                            cropWidth +
-                                padding,
-                            cropHeight +
-                                padding
-
-                        );
-
-
-                        /*
-                         Put blurred crop back.
-                        */
-
-                        outputCtx.drawImage(
-
-                            blurred,
-
-                            cropX,
-                            cropY
-
-                        );
-
-                    }
-
-                }
-
-
-                /*
-                 =========================================
-                 GREY OVERLAY
-                 =========================================
-                */
-
-                if (
-                    state.effect ===
-                        "greyblur" ||
-                    state.effect ===
-                        "grey"
-                ) {
-
-
-                    /*
-                     At 0%:
-                     transparent
-
-                     At 100%:
-                     approximately 60%
-                     grey.
-                    */
-
-                    const greyAlpha =
-                        percentage *
-                        0.60;
-
-
-                    if (
-                        greyAlpha > 0
-                    ) {
-
-                        outputCtx.save();
-
-
-                        outputCtx.fillStyle =
-                            `rgba(
-                                105,
-                                105,
-                                105,
-                                ${greyAlpha}
-                            )`;
-
-
-                        outputCtx.fillRect(
-
-                            sx,
-                            sy,
-                            sw,
-                            sh
-
-                        );
-
-
-                        outputCtx.restore();
-
-                    }
-
-                }
-
-
-                /*
-                 =========================================
-                 EXPORT REAL IMAGE
-                 =========================================
-                */
-
-                const blob =
-                    await new Promise(
-                        (
-                            resolve,
-                            reject
-                        ) => {
-
-
-                            output.toBlob(
-                                result => {
-
-                                    if (
-                                        result
-                                    ) {
-
-                                        resolve(
-                                            result
-                                        );
-
-                                    } else {
-
-                                        reject(
-                                            new Error(
-                                                "Canvas export failed."
-                                            )
-                                        );
-
-                                    }
-
-                                },
-                                "image/png"
-                            );
-
-                        }
-                    );
-
-
-                /*
-                 =========================================
-                 SAVE OUTPUT
-                 =========================================
-                */
-
-                if (
-                    item.outputURL
-                ) {
-
-                    URL.revokeObjectURL(
-                        item.outputURL
-                    );
-
-                }
-
-
-                item.outputBlob =
-                    blob;
-
-
-                item.outputURL =
-                    URL.createObjectURL(
-                        blob
-                    );
-
-
-                state.generatedBlob =
-                    blob;
-
-
-                /*
-                 Display generated image.
-                */
-
-                canvas.width =
-                    output.width;
-
-
-                canvas.height =
-                    output.height;
-
-
-                ctx.clearRect(
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
-
-                ctx.drawImage(
-                    output,
-                    0,
-                    0
-                );
-
-
-                state.selecting =
-                    false;
-
-
-                updateSelectionBox();
-
-
-                renderGallery();
-
-
-                showToast(
-                    "Grey blur image generated successfully."
-                );
-
-
-            } catch (
-                error
-            ) {
-
-
-                console.error(
-                    "Blur generation error:",
-                    error
-                );
-
-
-                showToast(
-                    "Could not generate the blur image."
-                );
-
-            }
-
-        }
-    );
 
 
 /* =========================================================
    UPLOAD GEOTAG
 ========================================================= */
 
-async function uploadGeotag(
-    file
-) {
+async function handleGeotag(file){
 
-    if (
-        !file ||
-        !isImageFile(file)
-    ) {
-
-        showToast(
-            "Please select a valid geotag image."
-        );
-
-        return;
-
-    }
+  if(!file){
+    return;
+  }
 
 
-    try {
+  if(!validImage(file)){
+
+    showToast(
+      "Please select a valid geotag image.",
+      true
+    );
+
+    return;
+
+  }
 
 
-        const url =
-            URL.createObjectURL(
-                file
-            );
+  try{
+
+    showToast(
+      "Loading geotag..."
+    );
 
 
-        await loadImage(
-            url
-        );
+    const img =
+      await loadImageFile(file);
 
 
-        if (
-            state.geotagURL
-        ) {
-
-            URL.revokeObjectURL(
-                state.geotagURL
-            );
-
-        }
+    state.geotag =
+      img;
 
 
-        state.geotagFile =
-            file;
+    geoPreview.innerHTML =
+      "";
 
 
-        state.geotagURL =
-            url;
+    const previewImg =
+      document.createElement("img");
+
+    previewImg.src =
+      img.src;
+
+    geoPreview.appendChild(
+      previewImg
+    );
 
 
-        document.getElementById(
-            "geotagPreview"
-        ).innerHTML = `
+    showToast(
+      "Geotag image loaded."
+    );
 
-            <img
-                src="${url}"
-                alt="Geotag"
-            >
+  }
+  catch(error){
 
-        `;
+    console.error(
+      "GEOTAG LOAD ERROR:",
+      error
+    );
 
+    showToast(
+      "Could not load the geotag image.",
+      true
+    );
 
-        showToast(
-            "Geotag uploaded successfully."
-        );
-
-
-    } catch (
-        error
-    ) {
-
-
-        console.error(
-            "Geotag load error:",
-            error
-        );
-
-
-        showToast(
-            "Could not read the geotag image."
-        );
-
-    }
+  }
 
 }
-
-
-/* =========================================================
-   ADD GEOTAG
-========================================================= */
-
-document
-    .getElementById(
-        "addGeotagButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-
-            /*
-             ONLY THIS OPERATION REQUIRES
-             GEOTAG IMAGE.
-            */
-
-
-            if (
-                state.activeIndex === -1
-            ) {
-
-                showToast(
-                    "Please upload the image first."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                !state.selection
-            ) {
-
-                showToast(
-                    "Please select an area first."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                !state.geotagURL
-            ) {
-
-                showToast(
-                    "Please upload the geotag image first."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-
-                const item =
-                    state.images[
-                        state.activeIndex
-                    ];
-
-
-                /*
-                 Use the generated blur
-                 if available.
-                */
-
-                const source =
-                    item.outputURL ||
-                    item.originalURL;
-
-
-                const base =
-                    await loadImage(
-                        source
-                    );
-
-
-                const geotag =
-                    await loadImage(
-                        state.geotagURL
-                    );
-
-
-                /*
-                 ======================================
-                 OUTPUT
-                 ======================================
-                */
-
-                const output =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                output.width =
-                    base.naturalWidth;
-
-
-                output.height =
-                    base.naturalHeight;
-
-
-                const outputCtx =
-                    output.getContext(
-                        "2d"
-                    );
-
-
-                outputCtx.imageSmoothingEnabled =
-                    true;
-
-
-                outputCtx.imageSmoothingQuality =
-                    "high";
-
-
-                outputCtx.drawImage(
-                    base,
-                    0,
-                    0
-                );
-
-
-                /*
-                 ======================================
-                 SELECTED AREA
-                 ======================================
-                */
-
-                const areaX =
-                    state.selection.x *
-                    output.width;
-
-
-                const areaY =
-                    state.selection.y *
-                    output.height;
-
-
-                const areaWidth =
-                    state.selection.width *
-                    output.width;
-
-
-                const areaHeight =
-                    state.selection.height *
-                    output.height;
-
-
-                /*
-                 ======================================
-                 GEOTAG SIZE
-                 ======================================
-
-                 Width % is relative to selected area.
-                 Height % is also relative to selected
-                 area.
-
-                 We then cap it to the selected area
-                 so it NEVER leaves the box.
-                */
-
-                let geotagWidth =
-                    areaWidth *
-                    (
-                        state.geotagWidth /
-                        100
-                    );
-
-
-                let geotagHeight =
-                    areaHeight *
-                    (
-                        state.geotagHeight /
-                        100
-                    );
-
-
-                /*
-                 Small safety margin.
-                */
-
-                const margin =
-                    Math.min(
-                        areaWidth,
-                        areaHeight
-                    ) *
-                    0.025;
-
-
-                const maxWidth =
-                    Math.max(
-                        1,
-                        areaWidth -
-                        margin * 2
-                    );
-
-
-                const maxHeight =
-                    Math.max(
-                        1,
-                        areaHeight -
-                        margin * 2
-                    );
-
-
-                geotagWidth =
-                    Math.min(
-                        geotagWidth,
-                        maxWidth
-                    );
-
-
-                geotagHeight =
-                    Math.min(
-                        geotagHeight,
-                        maxHeight
-                    );
-
-
-                /*
-                 ======================================
-                 CENTER GEOTAG
-                 ======================================
-                */
-
-                const geotagX =
-                    areaX +
-                    (
-                        areaWidth -
-                        geotagWidth
-                    ) /
-                    2;
-
-
-                const geotagY =
-                    areaY +
-                    (
-                        areaHeight -
-                        geotagHeight
-                    ) /
-                    2;
-
-
-                /*
-                 ======================================
-                 OPACITY
-                 ======================================
-                */
-
-                outputCtx.save();
-
-
-                outputCtx.globalAlpha =
-                    state.geotagOpacity /
-                    100;
-
-
-                outputCtx.drawImage(
-
-                    geotag,
-
-                    geotagX,
-                    geotagY,
-
-                    geotagWidth,
-                    geotagHeight
-
-                );
-
-
-                outputCtx.restore();
-
-
-                /*
-                 ======================================
-                 EXPORT
-                 ======================================
-                */
-
-                const blob =
-                    await new Promise(
-                        (
-                            resolve,
-                            reject
-                        ) => {
-
-
-                            output.toBlob(
-                                result => {
-
-                                    if (
-                                        result
-                                    ) {
-
-                                        resolve(
-                                            result
-                                        );
-
-                                    } else {
-
-                                        reject(
-                                            new Error(
-                                                "Geotag export failed."
-                                            )
-                                        );
-
-                                    }
-
-                                },
-                                "image/png"
-                            );
-
-                        }
-                    );
-
-
-                /*
-                 ======================================
-                 SAVE
-                 ======================================
-                */
-
-                if (
-                    item.outputURL
-                ) {
-
-                    URL.revokeObjectURL(
-                        item.outputURL
-                    );
-
-                }
-
-
-                item.outputBlob =
-                    blob;
-
-
-                item.outputURL =
-                    URL.createObjectURL(
-                        blob
-                    );
-
-
-                state.generatedBlob =
-                    blob;
-
-
-                /*
-                 Display final image.
-                */
-
-                canvas.width =
-                    output.width;
-
-
-                canvas.height =
-                    output.height;
-
-
-                ctx.clearRect(
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
-
-                ctx.drawImage(
-                    output,
-                    0,
-                    0
-                );
-
-
-                state.selecting =
-                    false;
-
-
-                updateSelectionBox();
-
-
-                renderGallery();
-
-
-                showToast(
-                    "Geotag added successfully."
-                );
-
-
-            } catch (
-                error
-            ) {
-
-
-                console.error(
-                    "Add geotag error:",
-                    error
-                );
-
-
-                showToast(
-                    "Could not add geotag."
-                );
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   DOWNLOAD
-========================================================= */
-
-document
-    .getElementById(
-        "downloadButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            if (
-                state.activeIndex === -1
-            ) {
-
-                showToast(
-                    "Please upload the image first."
-                );
-
-                return;
-
-            }
-
-
-            const item =
-                state.images[
-                    state.activeIndex
-                ];
-
-
-            if (
-                !item.outputBlob
-            ) {
-
-                showToast(
-                    "Generate the blur image first."
-                );
-
-                return;
-
-            }
-
-
-            const url =
-                URL.createObjectURL(
-                    item.outputBlob
-                );
-
-
-            const link =
-                document.createElement(
-                    "a"
-                );
-
-
-            link.href =
-                url;
-
-
-            link.download =
-                item.name
-                    .replace(
-                        /\.[^/.]+$/,
-                        ""
-                    ) +
-                "_processed.png";
-
-
-            document.body.appendChild(
-                link
-            );
-
-
-            link.click();
-
-
-            link.remove();
-
-
-            setTimeout(
-                () => {
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-                },
-                1000
-            );
-
-
-        }
-    );
-
-
-/* =========================================================
-   RESET IMAGE
-========================================================= */
-
-document
-    .getElementById(
-        "resetImageButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-
-            if (
-                state.activeIndex === -1
-            ) {
-
-                return;
-
-            }
-
-
-            const item =
-                state.images[
-                    state.activeIndex
-                ];
-
-
-            if (
-                item.outputURL
-            ) {
-
-                URL.revokeObjectURL(
-                    item.outputURL
-                );
-
-            }
-
-
-            item.outputURL =
-                null;
-
-
-            item.outputBlob =
-                null;
-
-
-            state.generatedBlob =
-                null;
-
-
-            state.selection =
-                null;
-
-
-            state.selecting =
-                false;
-
-
-            state.interaction =
-                null;
-
-
-            hideSelection();
-
-
-            await drawCurrentImage();
-
-
-            renderGallery();
-
-
-            showToast(
-                "Image reset."
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-document
-    .getElementById(
-        "previousButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            if (
-                state.activeIndex > 0
-            ) {
-
-                openEditor(
-                    state.activeIndex - 1
-                );
-
-            }
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "nextButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            if (
-                state.activeIndex <
-                state.images.length - 1
-            ) {
-
-                openEditor(
-                    state.activeIndex + 1
-                );
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   SAVE NEXT
-========================================================= */
-
-document
-    .getElementById(
-        "saveNextButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            if (
-                state.activeIndex <
-                state.images.length - 1
-            ) {
-
-                openEditor(
-                    state.activeIndex + 1
-                );
-
-            } else {
-
-                showToast(
-                    "This is the last image."
-                );
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   CLOSE
-========================================================= */
-
-document
-    .getElementById(
-        "closeEditor"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            editorModal.classList.remove(
-                "open"
-            );
-
-
-            renderGallery();
-
-        }
-    );
 
 
 /* =========================================================
    FILE BUTTONS
 ========================================================= */
 
-document
-    .getElementById(
-        "uploadImageButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            imageInput.click();
-
-        }
-    );
+uploadImageBtn.addEventListener(
+  "click",
+  ()=>{
+    imageInput.click();
+  }
+);
 
 
-document
-    .getElementById(
-        "uploadFolderButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
+uploadGeoBtn.addEventListener(
+  "click",
+  ()=>{
+    geoInput.click();
+  }
+);
 
-            folderInput.click();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "uploadGeotagButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            geotagInput.click();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "sidebarGeotag"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            geotagInput.click();
-
-        }
-    );
-
-
-/* =========================================================
-   IMAGE FILE EVENT
-========================================================= */
 
 imageInput.addEventListener(
-    "change",
-    event => {
+  "change",
+  async function(){
+
+    const file =
+      this.files &&
+      this.files[0];
+
+    await handleImage(file);
+
+    this.value = "";
+
+  }
+);
 
 
-        uploadImages(
-            event.target.files
-        );
+geoInput.addEventListener(
+  "change",
+  async function(){
 
+    const file =
+      this.files &&
+      this.files[0];
 
-        /*
-         Allows same file to be
-         selected again.
-        */
+    await handleGeotag(file);
 
-        event.target.value =
-            "";
+    this.value = "";
 
-    }
+  }
 );
 
 
 /* =========================================================
-   FOLDER EVENT
+   GET DISPLAYED CANVAS COORDINATE
 ========================================================= */
 
-folderInput.addEventListener(
-    "change",
-    event => {
+function getCanvasPoint(event){
+
+  const rect =
+    previewCanvas.getBoundingClientRect();
 
 
-        uploadImages(
-            event.target.files
-        );
+  if(
+    rect.width <= 0 ||
+    rect.height <= 0
+  ){
+
+    return {
+      x:0,
+      y:0
+    };
+
+  }
 
 
-        event.target.value =
-            "";
+  return {
 
-    }
-);
+    x:clamp(
+      (
+        event.clientX -
+        rect.left
+      ) / rect.width,
+      0,
+      1
+    ),
+
+    y:clamp(
+      (
+        event.clientY -
+        rect.top
+      ) / rect.height,
+      0,
+      1
+    )
+
+  };
+
+}
 
 
 /* =========================================================
-   GEOTAG EVENT
+   SELECT AREA MODE
 ========================================================= */
 
-geotagInput.addEventListener(
-    "change",
-    event => {
+function startSelection(){
+
+  if(!state.originalCanvas){
+
+    showToast(
+      "Please upload the image first.",
+      true
+    );
+
+    return;
+
+  }
 
 
-        if (
-            event.target.files &&
-            event.target.files[0]
-        ) {
+  /*
+    Clicking the button puts the app
+    into drawing mode.
 
-            uploadGeotag(
-                event.target.files[0]
-            );
+    It does NOT automatically choose
+    the final blur area.
+  */
 
-        }
+  state.selecting =
+    true;
 
 
-        event.target.value =
-            "";
+  selectionOverlay.style.display =
+    "none";
 
-    }
+
+  showToast(
+    "Now drag over the exact area you want to blur."
+  );
+
+}
+
+
+selectAreaBtn.addEventListener(
+  "click",
+  startSelection
 );
 
 
 /* =========================================================
-   WINDOW RESIZE
+   CLEAR SELECTION
+========================================================= */
+
+clearSelectionBtn.addEventListener(
+  "click",
+  ()=>{
+
+    state.selection =
+      null;
+
+    state.selecting =
+      false;
+
+    selectionOverlay.style.display =
+      "none";
+
+
+    showToast(
+      "Blur selection cleared."
+    );
+
+  }
+);
+
+
+/* =========================================================
+   DRAW NEW SELECTION
+========================================================= */
+
+let drawStart =
+  null;
+
+
+previewCanvas.addEventListener(
+  "pointerdown",
+  function(event){
+
+    /*
+      Only draw when Select Blur Area
+      mode is active.
+    */
+
+    if(!state.selecting){
+      return;
+    }
+
+
+    event.preventDefault();
+
+
+    const point =
+      getCanvasPoint(event);
+
+
+    drawStart =
+      point;
+
+
+    state.selection = {
+
+      x:point.x,
+
+      y:point.y,
+
+      width:0,
+
+      height:0
+
+    };
+
+
+    previewCanvas.setPointerCapture(
+      event.pointerId
+    );
+
+
+    updateSelectionVisual();
+
+  }
+);
+
+
+previewCanvas.addEventListener(
+  "pointermove",
+  function(event){
+
+    if(
+      !state.selecting ||
+      !drawStart
+    ){
+
+      return;
+
+    }
+
+
+    event.preventDefault();
+
+
+    const point =
+      getCanvasPoint(event);
+
+
+    let x =
+      Math.min(
+        drawStart.x,
+        point.x
+      );
+
+
+    let y =
+      Math.min(
+        drawStart.y,
+        point.y
+      );
+
+
+    let width =
+      Math.abs(
+        point.x -
+        drawStart.x
+      );
+
+
+    let height =
+      Math.abs(
+        point.y -
+        drawStart.y
+      );
+
+
+    x =
+      clamp(x,0,1);
+
+    y =
+      clamp(y,0,1);
+
+
+    width =
+      Math.min(
+        width,
+        1-x
+      );
+
+
+    height =
+      Math.min(
+        height,
+        1-y
+      );
+
+
+    state.selection = {
+
+      x,
+      y,
+      width,
+      height
+
+    };
+
+
+    updateSelectionVisual();
+
+  }
+);
+
+
+previewCanvas.addEventListener(
+  "pointerup",
+  finishDrawing
+);
+
+
+previewCanvas.addEventListener(
+  "pointercancel",
+  finishDrawing
+);
+
+
+function finishDrawing(event){
+
+  if(!state.selecting){
+    return;
+  }
+
+
+  drawStart =
+    null;
+
+
+  state.selecting =
+    false;
+
+
+  try{
+
+    previewCanvas.releasePointerCapture(
+      event.pointerId
+    );
+
+  }
+  catch(e){}
+
+
+  if(
+    !state.selection ||
+    state.selection.width < 0.01 ||
+    state.selection.height < 0.01
+  ){
+
+    state.selection =
+      null;
+
+    selectionOverlay.style.display =
+      "none";
+
+    showToast(
+      "Please draw a larger blur area.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  updateSelectionVisual();
+
+
+  showToast(
+    "Blur area selected."
+  );
+
+}
+
+
+/* =========================================================
+   SHOW SELECTION RECTANGLE
+========================================================= */
+
+function updateSelectionVisual(){
+
+  if(
+    !state.selection ||
+    !state.originalCanvas ||
+    canvasWrapper.style.display === "none"
+  ){
+
+    selectionOverlay.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  /*
+    Use the actual displayed canvas dimensions.
+
+    This fixes the alignment problem when
+    the original image is resized visually.
+  */
+
+  const canvasRect =
+    previewCanvas.getBoundingClientRect();
+
+  const wrapperRect =
+    canvasWrapper.getBoundingClientRect();
+
+
+  const offsetLeft =
+    canvasRect.left -
+    wrapperRect.left;
+
+  const offsetTop =
+    canvasRect.top -
+    wrapperRect.top;
+
+
+  const s =
+    state.selection;
+
+
+  selectionOverlay.style.display =
+    "block";
+
+
+  selectionOverlay.style.left =
+    (
+      offsetLeft +
+      s.x *
+      canvasRect.width
+    ) + "px";
+
+
+  selectionOverlay.style.top =
+    (
+      offsetTop +
+      s.y *
+      canvasRect.height
+    ) + "px";
+
+
+  selectionOverlay.style.width =
+    (
+      s.width *
+      canvasRect.width
+    ) + "px";
+
+
+  selectionOverlay.style.height =
+    (
+      s.height *
+      canvasRect.height
+    ) + "px";
+
+}
+
+
+/* =========================================================
+   RESIZE
 ========================================================= */
 
 window.addEventListener(
-    "resize",
-    () => {
-
-        requestAnimationFrame(
-            updateSelectionBox
-        );
-
-    }
+  "resize",
+  ()=>{
+    requestAnimationFrame(
+      updateSelectionVisual
+    );
+  }
 );
 
 
 /* =========================================================
-   INITIALIZE
+   MOVE / RESIZE EXISTING SELECTION
 ========================================================= */
 
-renderGallery();
+let interaction =
+  null;
+
+
+selectionOverlay.addEventListener(
+  "pointerdown",
+  function(event){
+
+    if(!state.selection){
+      return;
+    }
+
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+
+    const handle =
+      event.target.dataset.handle ||
+      null;
+
+
+    const point =
+      getCanvasPoint(event);
+
+
+    interaction = {
+
+      mode:
+        handle
+          ? "resize"
+          : "move",
+
+      handle,
+
+      start:point,
+
+      original:{
+        ...state.selection
+      }
+
+    };
+
+
+    selectionOverlay.setPointerCapture(
+      event.pointerId
+    );
+
+  }
+);
+
+
+selectionOverlay.addEventListener(
+  "pointermove",
+  function(event){
+
+    if(!interaction){
+      return;
+    }
+
+
+    event.preventDefault();
+
+
+    const point =
+      getCanvasPoint(event);
+
+
+    const dx =
+      point.x -
+      interaction.start.x;
+
+
+    const dy =
+      point.y -
+      interaction.start.y;
+
+
+    const original =
+      interaction.original;
+
+
+    /* ================= MOVE ================= */
+
+    if(
+      interaction.mode ===
+      "move"
+    ){
+
+      state.selection.x =
+        clamp(
+          original.x + dx,
+          0,
+          1-original.width
+        );
+
+
+      state.selection.y =
+        clamp(
+          original.y + dy,
+          0,
+          1-original.height
+        );
+
+    }
+
+
+    /* ================= RESIZE ================= */
+
+    else{
+
+      let x =
+        original.x;
+
+      let y =
+        original.y;
+
+      let right =
+        original.x +
+        original.width;
+
+      let bottom =
+        original.y +
+        original.height;
+
+
+      const handle =
+        interaction.handle;
+
+
+      if(handle.includes("l")){
+
+        x =
+          clamp(
+            original.x + dx,
+            0,
+            right-0.02
+          );
+
+      }
+
+
+      if(handle.includes("r")){
+
+        right =
+          clamp(
+            original.x +
+            original.width +
+            dx,
+            x+0.02,
+            1
+          );
+
+      }
+
+
+      if(handle.includes("t")){
+
+        y =
+          clamp(
+            original.y + dy,
+            0,
+            bottom-0.02
+          );
+
+      }
+
+
+      if(handle.includes("b")){
+
+        bottom =
+          clamp(
+            original.y +
+            original.height +
+            dy,
+            y+0.02,
+            1
+          );
+
+      }
+
+
+      state.selection = {
+
+        x,
+
+        y,
+
+        width:
+          right-x,
+
+        height:
+          bottom-y
+
+      };
+
+    }
+
+
+    updateSelectionVisual();
+
+  }
+);
+
+
+selectionOverlay.addEventListener(
+  "pointerup",
+  endInteraction
+);
+
+
+selectionOverlay.addEventListener(
+  "pointercancel",
+  endInteraction
+);
+
+
+function endInteraction(event){
+
+  interaction =
+    null;
+
+  try{
+
+    selectionOverlay.releasePointerCapture(
+      event.pointerId
+    );
+
+  }
+  catch(e){}
+
+}
+
+
+/* =========================================================
+   BLUR
+========================================================= */
+
+function generateBlur(){
+
+  if(!state.originalCanvas){
+
+    showToast(
+      "Please upload the image first.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  if(
+    !state.selection ||
+    state.selection.width < 0.01 ||
+    state.selection.height < 0.01
+  ){
+
+    showToast(
+      "Please select the area to blur first.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  const source =
+    state.originalCanvas;
+
+
+  const w =
+    source.width;
+
+  const h =
+    source.height;
+
+
+  /*
+    Convert normalized selection
+    to REAL image pixels.
+  */
+
+  const x =
+    Math.round(
+      state.selection.x *
+      w
+    );
+
+  const y =
+    Math.round(
+      state.selection.y *
+      h
+    );
+
+  const width =
+    Math.max(
+      1,
+      Math.round(
+        state.selection.width *
+        w
+      )
+    );
+
+  const height =
+    Math.max(
+      1,
+      Math.round(
+        state.selection.height *
+        h
+      )
+    );
+
+
+  /*
+    Start with completely untouched
+    original image.
+  */
+
+  const output =
+    copyCanvas(source);
+
+
+  const ctx =
+    output.getContext("2d");
+
+
+  /*
+    Blur strength.
+
+    0% = no blur
+    100% = strong blur
+  */
+
+  const blurPixels =
+    (
+      state.blurStrength /
+      100
+    ) * 45;
+
+
+  /* =======================================================
+     BLUR SELECTED REGION
+  ======================================================= */
+
+  if(blurPixels > 0){
+
+    /*
+      Padding around selection makes
+      the blur look natural at edges.
+    */
+
+    const padding =
+      Math.ceil(
+        blurPixels * 3
+      ) + 10;
+
+
+    const sampleX =
+      Math.max(
+        0,
+        x-padding
+      );
+
+
+    const sampleY =
+      Math.max(
+        0,
+        y-padding
+      );
+
+
+    const sampleRight =
+      Math.min(
+        w,
+        x+width+padding
+      );
+
+
+    const sampleBottom =
+      Math.min(
+        h,
+        y+height+padding
+      );
+
+
+    const sampleWidth =
+      Math.max(
+        1,
+        sampleRight-sampleX
+      );
+
+
+    const sampleHeight =
+      Math.max(
+        1,
+        sampleBottom-sampleY
+      );
+
+
+    const blurredCanvas =
+      document.createElement(
+        "canvas"
+      );
+
+
+    blurredCanvas.width =
+      sampleWidth;
+
+    blurredCanvas.height =
+      sampleHeight;
+
+
+    const bctx =
+      blurredCanvas.getContext(
+        "2d"
+      );
+
+
+    /*
+      Draw source into padded canvas
+      with real canvas blur.
+    */
+
+    bctx.filter =
+      `blur(${blurPixels}px)`;
+
+
+    bctx.drawImage(
+      source,
+
+      sampleX,
+      sampleY,
+      sampleWidth,
+      sampleHeight,
+
+      0,
+      0,
+      sampleWidth,
+      sampleHeight
+    );
+
+
+    bctx.filter =
+      "none";
+
+
+    /*
+      Position of selected region
+      inside blurred canvas.
+    */
+
+    const cropX =
+      x-sampleX;
+
+    const cropY =
+      y-sampleY;
+
+
+    /*
+      IMPORTANT:
+
+      Only the selected rectangle
+      is copied back.
+
+      Everything outside remains
+      completely untouched.
+    */
+
+    ctx.drawImage(
+
+      blurredCanvas,
+
+      cropX,
+      cropY,
+      width,
+      height,
+
+      x,
+      y,
+      width,
+      height
+
+    );
+
+  }
+
+
+  /* =======================================================
+     GREY EFFECT
+  ======================================================= */
+
+  const greyAlpha =
+    (
+      state.greyOpacity /
+      100
+    ) * 0.65;
+
+
+  if(greyAlpha > 0){
+
+    ctx.save();
+
+
+    ctx.fillStyle =
+      `rgba(128,128,128,${greyAlpha})`;
+
+
+    /*
+      Grey ONLY inside selected area.
+    */
+
+    ctx.fillRect(
+      x,
+      y,
+      width,
+      height
+    );
+
+
+    ctx.restore();
+
+  }
+
+
+  /*
+    Save processed image.
+  */
+
+  state.blurredCanvas =
+    output;
+
+  state.finalCanvas =
+    null;
+
+
+  showCanvas(
+    output
+  );
+
+
+  /*
+    Keep selection visible.
+  */
+
+  state.selecting =
+    false;
+
+
+  updateSelectionVisual();
+
+
+  showToast(
+    "Blur generated successfully."
+  );
+
+}
+
+
+/* =========================================================
+   BLUR BUTTON
+========================================================= */
+
+generateBlurBtn.addEventListener(
+  "click",
+  generateBlur
+);
+
+
+/* =========================================================
+   GEOTAG POSITION
+========================================================= */
+
+geoBottom.addEventListener(
+  "click",
+  ()=>{
+
+    state.geoPosition =
+      "bottom";
+
+    geoBottom.classList.add(
+      "active"
+    );
+
+    geoTop.classList.remove(
+      "active"
+    );
+
+  }
+);
+
+
+geoTop.addEventListener(
+  "click",
+  ()=>{
+
+    state.geoPosition =
+      "top";
+
+    geoTop.classList.add(
+      "active"
+    );
+
+    geoBottom.classList.remove(
+      "active"
+    );
+
+  }
+);
+
+
+/* =========================================================
+   ADD GEOTAG
+========================================================= */
+
+function addGeotag(){
+
+  if(!state.originalCanvas){
+
+    showToast(
+      "Please upload the image first.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  if(!state.geotag){
+
+    showToast(
+      "Please upload the geotag image first.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Use blurred image if available.
+  */
+
+  const source =
+    state.blurredCanvas ||
+    state.originalCanvas;
+
+
+  const output =
+    copyCanvas(source);
+
+
+  const ctx =
+    output.getContext("2d");
+
+
+  const w =
+    output.width;
+
+  const h =
+    output.height;
+
+
+  /* =======================================================
+     GEOTAG WIDTH
+  ======================================================= */
+
+  /*
+    This is the critical fix.
+
+    100% means:
+
+      tagWidth = image width
+
+    Therefore:
+
+      tagX = 0
+
+    and the geotag physically reaches
+    the left and right edges.
+  */
+
+  const tagWidth =
+    Math.max(
+      1,
+      Math.round(
+        w *
+        (
+          state.geoWidth /
+          100
+        )
+      )
+    );
+
+
+  const tagX =
+    Math.round(
+      (w-tagWidth)/2
+    );
+
+
+  /* =======================================================
+     GEOTAG HEIGHT
+  ======================================================= */
+
+  /*
+    Height is calculated independently.
+
+    It does NOT change width.
+
+    It does NOT change the Top/Bottom setting.
+
+    Example:
+
+    Photo height = 4000px
+
+    20% = 800px
+    30% = 1200px
+    50% = 2000px
+  */
+
+  const tagHeight =
+    Math.max(
+      1,
+      Math.round(
+        h *
+        (
+          state.geoHeight /
+          100
+        )
+      )
+    );
+
+
+  /* =======================================================
+     POSITION
+  ======================================================= */
+
+  let tagY;
+
+
+  if(
+    state.geoPosition ===
+    "top"
+  ){
+
+    /*
+      Always attached to TOP.
+    */
+
+    tagY = 0;
+
+  }
+  else{
+
+    /*
+      Always attached to BOTTOM.
+
+      Increasing height therefore makes
+      the geotag grow UPWARD while its
+      bottom edge stays at the bottom.
+    */
+
+    tagY =
+      h-tagHeight;
+
+  }
+
+
+  /* =======================================================
+     DRAW GEOTAG
+  ======================================================= */
+
+  ctx.save();
+
+
+  ctx.globalAlpha =
+    clamp(
+      state.geoOpacity/100,
+      0,
+      1
+    );
+
+
+  /*
+    VERY IMPORTANT:
+
+    We intentionally stretch the geotag
+    to EXACTLY the selected rectangle.
+
+    So:
+
+      Width 100%
+      =
+      full image width.
+
+    And:
+
+      Height 20%
+      =
+      actual 20% image height.
+
+    No aspect-ratio calculation is used
+    here because that was preventing the
+    geotag from reaching 100% width.
+  */
+
+  ctx.drawImage(
+
+    state.geotag,
+
+    tagX,
+    tagY,
+    tagWidth,
+    tagHeight
+
+  );
+
+
+  ctx.restore();
+
+
+  /*
+    Save final result.
+  */
+
+  state.finalCanvas =
+    output;
+
+
+  showCanvas(
+    output
+  );
+
+
+  updateStatus();
+
+
+  showToast(
+    "Geotag added successfully."
+  );
+
+}
+
+
+/* =========================================================
+   ADD GEOTAG BUTTON
+========================================================= */
+
+addGeoBtn.addEventListener(
+  "click",
+  addGeotag
+);
+
+
+/* =========================================================
+   SLIDERS
+========================================================= */
+
+blurStrength.addEventListener(
+  "input",
+  function(){
+
+    state.blurStrength =
+      Number(this.value);
+
+    document.getElementById(
+      "blurStrengthValue"
+    ).textContent =
+      this.value+"%";
+
+  }
+);
+
+
+greyOpacity.addEventListener(
+  "input",
+  function(){
+
+    state.greyOpacity =
+      Number(this.value);
+
+    document.getElementById(
+      "greyOpacityValue"
+    ).textContent =
+      this.value+"%";
+
+  }
+);
+
+
+geoHeight.addEventListener(
+  "input",
+  function(){
+
+    state.geoHeight =
+      Number(this.value);
+
+    document.getElementById(
+      "geoHeightValue"
+    ).textContent =
+      this.value+"%";
+
+  }
+);
+
+
+geoWidth.addEventListener(
+  "input",
+  function(){
+
+    state.geoWidth =
+      Number(this.value);
+
+    document.getElementById(
+      "geoWidthValue"
+    ).textContent =
+      this.value+"%";
+
+  }
+);
+
+
+geoOpacity.addEventListener(
+  "input",
+  function(){
+
+    state.geoOpacity =
+      Number(this.value);
+
+    document.getElementById(
+      "geoOpacityValue"
+    ).textContent =
+      this.value+"%";
+
+  }
+);
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+resetBtn.addEventListener(
+  "click",
+  function(){
+
+    state.blurredCanvas =
+      null;
+
+    state.finalCanvas =
+      null;
+
+    state.selection =
+      null;
+
+    state.selecting =
+      false;
+
+
+    state.blurStrength =
+      50;
+
+    state.greyOpacity =
+      45;
+
+    state.geoHeight =
+      20;
+
+    state.geoWidth =
+      100;
+
+    state.geoOpacity =
+      100;
+
+    state.geoPosition =
+      "bottom";
+
+
+    blurStrength.value =
+      50;
+
+    greyOpacity.value =
+      45;
+
+    geoHeight.value =
+      20;
+
+    geoWidth.value =
+      100;
+
+    geoOpacity.value =
+      100;
+
+
+    document.getElementById(
+      "blurStrengthValue"
+    ).textContent =
+      "50%";
+
+
+    document.getElementById(
+      "greyOpacityValue"
+    ).textContent =
+      "45%";
+
+
+    document.getElementById(
+      "geoHeightValue"
+    ).textContent =
+      "20%";
+
+
+    document.getElementById(
+      "geoWidthValue"
+    ).textContent =
+      "100%";
+
+
+    document.getElementById(
+      "geoOpacityValue"
+    ).textContent =
+      "100%";
+
+
+    geoBottom.classList.add(
+      "active"
+    );
+
+    geoTop.classList.remove(
+      "active"
+    );
+
+
+    selectionOverlay.style.display =
+      "none";
+
+
+    if(state.originalCanvas){
+
+      showCanvas(
+        state.originalCanvas
+      );
+
+    }
+
+
+    updateStatus();
+
+
+    showToast(
+      "Processing settings reset."
+    );
+
+  }
+);
+
+
+/* =========================================================
+   DOWNLOAD
+========================================================= */
+
+/*
+  Robust download implementation.
+
+  It tries:
+
+  1. canvas.toBlob()
+  2. dataURL fallback
+  3. normal anchor download
+
+  This avoids the common situation where
+  clicking Download appears to do nothing.
+*/
+
+async function downloadCanvas(canvas){
+
+  if(!canvas){
+
+    showToast(
+      "Please upload an image first.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    showToast(
+      "Preparing download..."
+    );
+
+
+    /*
+      First attempt: Blob.
+    */
+
+    const blob =
+      await new Promise(
+        (resolve)=>{
+          
+          canvas.toBlob(
+            resolve,
+            "image/png"
+          );
+
+        }
+      );
+
+
+    if(blob){
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      const link =
+        document.createElement("a");
+
+
+      link.href =
+        url;
+
+      link.download =
+        "geotag-studio-result.png";
+
+      link.style.display =
+        "none";
+
+
+      document.body.appendChild(
+        link
+      );
+
+
+      /*
+        Force browser download.
+      */
+
+      link.click();
+
+
+      document.body.removeChild(
+        link
+      );
+
+
+      /*
+        Do NOT revoke immediately.
+        Some browsers need time to start
+        the download.
+      */
+
+      setTimeout(
+        ()=>{
+          URL.revokeObjectURL(
+            url
+          );
+        },
+        5000
+      );
+
+
+      showToast(
+        "Image downloaded successfully."
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+      If toBlob returned null,
+      use data URL fallback.
+    */
+
+    throw new Error(
+      "toBlob returned null"
+    );
+
+  }
+  catch(error){
+
+    console.warn(
+      "Blob download failed:",
+      error
+    );
+
+
+    /*
+      FALLBACK
+
+      Convert canvas to PNG data URL.
+    */
+
+    try{
+
+      const dataUrl =
+        canvas.toDataURL(
+          "image/png"
+        );
+
+
+      const link =
+        document.createElement("a");
+
+
+      link.href =
+        dataUrl;
+
+      link.download =
+        "geotag-studio-result.png";
+
+
+      document.body.appendChild(
+        link
+      );
+
+
+      link.click();
+
+
+      document.body.removeChild(
+        link
+      );
+
+
+      showToast(
+        "Image downloaded."
+      );
+
+    }
+    catch(fallbackError){
+
+      console.error(
+        "Download failed:",
+        fallbackError
+      );
+
+
+      showToast(
+        "Download failed. Please try again.",
+        true
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   DOWNLOAD BUTTON
+========================================================= */
+
+downloadBtn.addEventListener(
+  "click",
+  function(){
+
+    const canvas =
+      state.finalCanvas ||
+      state.blurredCanvas ||
+      state.originalCanvas;
+
+
+    downloadCanvas(
+      canvas
+    );
+
+  }
+);
+
+
+/* =========================================================
+   KEYBOARD ESC
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  function(event){
+
+    if(event.key === "Escape"){
+
+      state.selecting =
+        false;
+
+      drawStart =
+        null;
+
+      showToast(
+        "Selection mode cancelled."
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+selectionOverlay.style.display =
+  "none";
 
 </script>
 
 </body>
-
 </html>
