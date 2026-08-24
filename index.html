@@ -1,62 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Geotag Image Editor</title>
 
 <style>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     background: #15171b;
+
     color: #ffffff;
 }
 
-/* HEADER */
+
+/* =========================================================
+   HEADER
+========================================================= */
 
 header {
+
     min-height: 62px;
+
     background: #20232a;
-    border-bottom: 1px solid #343944;
+
+    border-bottom:
+        1px solid #363b46;
+
     display: flex;
+
     align-items: center;
+
     gap: 8px;
-    padding: 10px 15px;
+
+    padding:
+        10px 15px;
+
     flex-wrap: wrap;
 }
 
 .logo {
+
     font-size: 18px;
+
     font-weight: bold;
+
     margin-right: 15px;
 }
 
-button,
-.file-button {
-    border: 1px solid #4a505c;
+button {
+
+    border:
+        1px solid #4b515d;
+
     background: #292e38;
+
     color: white;
-    padding: 9px 14px;
+
+    padding:
+        9px 14px;
+
     border-radius: 6px;
+
     cursor: pointer;
+
     font-size: 13px;
 }
 
-button:hover,
-.file-button:hover {
+button:hover {
+
     border-color: #e5a13a;
 }
 
+button:active {
+
+    transform: translateY(1px);
+}
+
 .primary {
-    background: #e5a13a !important;
-    border-color: #e5a13a !important;
-    color: #151515 !important;
+
+    background: #e5a13a;
+
+    color: #151515;
+
+    border-color: #e5a13a;
+
     font-weight: bold;
 }
 
@@ -65,7 +121,9 @@ button:hover,
 }
 
 .status {
+
     color: #aeb4bf;
+
     font-size: 13px;
 }
 
@@ -73,365 +131,707 @@ input[type="file"] {
     display: none;
 }
 
-/* MAIN */
+
+/* =========================================================
+   MAIN
+========================================================= */
 
 main {
+
     display: flex;
-    min-height: calc(100vh - 62px);
+
+    height:
+        calc(100vh - 62px);
+
+    min-height: 0;
 }
 
-/* GALLERY */
+
+/* =========================================================
+   GALLERY
+========================================================= */
 
 .gallery {
+
     flex: 1;
-    padding: 18px;
+
+    min-width: 0;
+
     overflow-y: auto;
+
+    padding: 18px;
 }
 
 .empty {
+
     text-align: center;
+
     color: #9298a4;
-    padding: 20vh 20px;
+
+    padding:
+        20vh 20px;
 }
 
 .empty-title {
+
     color: white;
+
     font-size: 21px;
+
     font-weight: bold;
+
     margin-bottom: 10px;
 }
 
 .grid {
+
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(190px, 1fr)
+        );
+
     gap: 14px;
 }
 
 .card {
+
     background: #20232a;
-    border: 1px solid #343944;
+
+    border:
+        1px solid #343944;
+
     border-radius: 7px;
+
     overflow: hidden;
+
     cursor: pointer;
 }
 
 .card:hover {
+
     border-color: #e5a13a;
 }
 
 .card.selected {
-    border: 2px solid #e5a13a;
+
+    border:
+        2px solid #e5a13a;
 }
 
 .thumb {
-    height: 150px;
-    background: #0d0f12;
+
+    height: 160px;
+
+    background: #0c0e11;
+
     display: flex;
+
     justify-content: center;
+
     align-items: center;
 }
 
 .thumb img {
+
     max-width: 100%;
+
     max-height: 100%;
+
     object-fit: contain;
 }
 
 .filename {
+
     padding: 9px;
+
     font-size: 12px;
+
     color: #c7cbd3;
+
     white-space: nowrap;
+
     overflow: hidden;
+
     text-overflow: ellipsis;
 }
 
-/* SIDEBAR */
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
 .sidebar {
+
     width: 290px;
+
     background: #20232a;
-    border-left: 1px solid #343944;
+
+    border-left:
+        1px solid #343944;
+
     padding: 16px;
+
+    overflow-y: auto;
 }
 
 .section {
-    border-bottom: 1px solid #343944;
+
+    border-bottom:
+        1px solid #343944;
+
     padding-bottom: 16px;
+
     margin-bottom: 16px;
 }
 
 .section-title {
+
     color: #8e95a1;
+
     font-size: 12px;
+
     text-transform: uppercase;
+
     margin-bottom: 10px;
 }
 
 .geotag-preview {
+
     width: 100%;
-    height: 110px;
+
+    height: 120px;
+
     background: #111318;
-    border: 1px dashed #454b57;
+
+    border:
+        1px dashed #454b57;
+
     border-radius: 6px;
+
     display: flex;
+
     justify-content: center;
+
     align-items: center;
-    margin-bottom: 10px;
+
     overflow: hidden;
+
+    margin-bottom: 10px;
 }
 
 .geotag-preview img {
+
     max-width: 95%;
+
     max-height: 95%;
+
     object-fit: contain;
 }
 
 .muted {
+
     color: #9298a4;
+
     font-size: 12px;
 }
 
-/* MODAL */
+
+/* =========================================================
+   EDITOR MODAL
+========================================================= */
 
 #editorModal {
+
     position: fixed;
+
     inset: 0;
-    background: rgba(0,0,0,.84);
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.86
+        );
+
     z-index: 100;
+
     display: none;
+
     padding: 12px;
 }
 
 #editorModal.open {
+
     display: flex;
 }
 
 .editor {
+
     width: 100%;
+
     height: 100%;
+
     background: #20232a;
-    border: 1px solid #343944;
+
+    border:
+        1px solid #343944;
+
     border-radius: 8px;
+
     display: flex;
+
     flex-direction: column;
+
     overflow: hidden;
 }
+
+
+/* =========================================================
+   EDITOR HEADER
+========================================================= */
 
 .editor-header {
-    min-height: 50px;
-    padding: 9px 13px;
+
+    min-height: 52px;
+
+    padding:
+        9px 13px;
+
     display: flex;
+
     align-items: center;
+
     gap: 8px;
-    border-bottom: 1px solid #343944;
+
+    border-bottom:
+        1px solid #343944;
 }
+
+
+/* =========================================================
+   EDITOR BODY
+========================================================= */
 
 .editor-body {
+
     flex: 1;
+
     min-height: 0;
+
     display: flex;
 }
 
+
+/* =========================================================
+   STAGE
+========================================================= */
+
 .stage-area {
+
     flex: 1;
+
     min-width: 0;
+
+    min-height: 0;
+
     display: flex;
+
     justify-content: center;
+
     align-items: center;
-    background: #0c0e11;
+
+    background: #0b0d10;
+
     padding: 18px;
+
     overflow: hidden;
 }
 
-/*
- IMPORTANT:
- The stage is sized from the canvas itself.
- This makes pointer coordinates reliable.
-*/
-
 .stage {
+
     position: relative;
+
     display: inline-block;
+
     line-height: 0;
+
     max-width: 100%;
+
     max-height: 100%;
 }
 
 #mainCanvas {
+
     display: block;
+
     max-width: 100%;
+
     max-height: 100%;
+
     width: auto;
+
     height: auto;
+
     touch-action: none;
+
     cursor: crosshair;
+
+    background: #111;
 }
 
-/* SELECTION */
+
+/* =========================================================
+   SELECTION
+========================================================= */
 
 #selectionBox {
+
     position: absolute;
+
     display: none;
-    border: 2px solid #e5a13a;
-    background: rgba(229,161,58,.12);
+
+    border:
+        2px solid #e5a13a;
+
+    background:
+        rgba(
+            229,
+            161,
+            58,
+            0.10
+        );
+
     cursor: move;
+
     touch-action: none;
 }
 
 .selection-label {
+
     position: absolute;
+
     left: 5px;
+
     top: 5px;
-    background: rgba(0,0,0,.75);
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.75
+        );
+
     color: #e5a13a;
-    padding: 3px 5px;
+
+    padding:
+        3px 5px;
+
     font-family: monospace;
+
     font-size: 10px;
 }
 
 .handle {
+
     position: absolute;
+
     width: 17px;
+
     height: 17px;
+
     background: #e5a13a;
-    border: 2px solid #111;
+
+    border:
+        2px solid #111;
+
     border-radius: 3px;
 }
 
 .handle.nw {
+
     left: -9px;
+
     top: -9px;
+
     cursor: nwse-resize;
 }
 
 .handle.ne {
+
     right: -9px;
+
     top: -9px;
+
     cursor: nesw-resize;
 }
 
 .handle.sw {
+
     left: -9px;
+
     bottom: -9px;
+
     cursor: nesw-resize;
 }
 
 .handle.se {
+
     right: -9px;
+
     bottom: -9px;
+
     cursor: nwse-resize;
 }
 
-/* CONTROLS */
+
+/* =========================================================
+   CONTROLS
+========================================================= */
 
 .controls {
-    width: 300px;
+
+    width: 320px;
+
     overflow-y: auto;
-    border-left: 1px solid #343944;
+
+    border-left:
+        1px solid #343944;
 }
 
 .control-section {
+
     padding: 16px;
-    border-bottom: 1px solid #343944;
+
+    border-bottom:
+        1px solid #343944;
 }
 
 .control-section h3 {
-    margin: 0 0 8px;
+
+    margin:
+        0 0 8px;
+
     font-size: 14px;
 }
 
 .control-section p {
+
     font-size: 11px;
+
     color: #9298a4;
+
     line-height: 1.5;
 }
 
 .control-section button {
+
     width: 100%;
+
     margin-top: 8px;
 }
 
-.effect-option {
-    display: block;
-    margin: 9px 0;
-    font-size: 13px;
+
+/* =========================================================
+   SLIDERS
+========================================================= */
+
+.slider-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 15px;
+
+    margin-bottom: 6px;
 }
 
-.range-value {
+.slider-value {
+
     color: #e5a13a;
+
     font-family: monospace;
+
+    font-weight: bold;
 }
 
 input[type="range"] {
+
     width: 100%;
+
+    accent-color: #e5a13a;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   EFFECT RADIO
+========================================================= */
+
+.effect-option {
+
+    display: block;
+
+    margin:
+        9px 0;
+
+    font-size: 13px;
+}
+
+.effect-option input {
+
     accent-color: #e5a13a;
 }
 
-/* FOOTER */
+
+/* =========================================================
+   FOOTER
+========================================================= */
 
 .editor-footer {
+
     min-height: 50px;
-    border-top: 1px solid #343944;
-    padding: 8px 13px;
+
+    border-top:
+        1px solid #343944;
+
+    padding:
+        8px 13px;
+
     display: flex;
+
     align-items: center;
+
     gap: 8px;
 }
 
-/* TOAST */
+
+/* =========================================================
+   TOAST
+========================================================= */
 
 #toast {
+
     position: fixed;
+
     left: 50%;
+
     bottom: 25px;
-    transform: translate(-50%, 20px);
+
+    transform:
+        translate(
+            -50%,
+            20px
+        );
+
     background: #292e38;
-    border: 1px solid #454b57;
+
+    border:
+        1px solid #454b57;
+
     color: white;
-    padding: 10px 16px;
+
+    padding:
+        10px 16px;
+
     border-radius: 6px;
+
     opacity: 0;
+
     pointer-events: none;
-    transition: .2s;
+
+    transition: 0.2s;
+
     z-index: 500;
+
+    max-width: 90%;
+
+    text-align: center;
 }
 
 #toast.show {
+
     opacity: 1;
-    transform: translate(-50%, 0);
+
+    transform:
+        translate(
+            -50%,
+            0
+        );
 }
 
-@media(max-width:850px) {
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
 
     main {
+
         display: block;
+
+        height: auto;
+
+        min-height:
+            calc(100vh - 62px);
+    }
+
+    .gallery {
+
+        min-height: 400px;
     }
 
     .sidebar {
+
         width: 100%;
+
         border-left: 0;
-        border-top: 1px solid #343944;
+
+        border-top:
+            1px solid #343944;
     }
 
     .editor-body {
+
         display: block;
+
         overflow-y: auto;
     }
 
     .stage-area {
+
         height: 55vh;
     }
 
     .controls {
+
         width: 100%;
+
         border-left: 0;
     }
+
 }
+
 </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =======================================================
+     HEADER
+======================================================== -->
 
 <header>
 
@@ -439,23 +839,32 @@ input[type="range"] {
         Geotag Image Editor
     </div>
 
+
     <button id="uploadImageButton">
         Upload Image
     </button>
+
 
     <button id="uploadFolderButton">
         Upload Folder
     </button>
 
+
     <button id="uploadGeotagButton">
         Upload Geotag
     </button>
 
+
     <span class="spacer"></span>
 
-    <span id="status" class="status">
+
+    <span
+        id="status"
+        class="status"
+    >
         No images uploaded
     </span>
+
 
     <input
         id="imageInput"
@@ -464,6 +873,7 @@ input[type="range"] {
         multiple
     >
 
+
     <input
         id="folderInput"
         type="file"
@@ -471,6 +881,7 @@ input[type="range"] {
         multiple
         webkitdirectory
     >
+
 
     <input
         id="geotagInput"
@@ -481,48 +892,69 @@ input[type="range"] {
 </header>
 
 
+<!-- =======================================================
+     MAIN
+======================================================== -->
+
 <main>
+
 
     <section class="gallery">
 
-        <div id="emptyMessage" class="empty">
+
+        <div
+            id="emptyMessage"
+            class="empty"
+        >
 
             <div class="empty-title">
                 No images uploaded
             </div>
 
             <div>
-                Click "Upload Image" and choose an image from
-                your file manager.
+                Click "Upload Image" and select
+                an image from your File Manager.
             </div>
 
         </div>
 
-        <div id="imageGrid" class="grid"></div>
+
+        <div
+            id="imageGrid"
+            class="grid"
+        ></div>
+
 
     </section>
 
 
     <aside class="sidebar">
 
+
         <div class="section">
+
 
             <div class="section-title">
                 Geotag
             </div>
 
+
             <div
                 id="geotagPreview"
                 class="geotag-preview"
             >
+
                 <span class="muted">
                     No geotag uploaded
                 </span>
+
             </div>
+
 
             <button id="sidebarGeotag">
                 Upload / Replace Geotag
             </button>
+
 
         </div>
 
@@ -534,106 +966,158 @@ input[type="range"] {
             </div>
 
             <div class="muted">
+
                 Uploaded:
                 <b id="imageCount">0</b>
+
             </div>
 
         </div>
 
+
     </aside>
+
 
 </main>
 
 
-<!-- EDITOR -->
+<!-- =======================================================
+     EDITOR
+======================================================== -->
 
 <div id="editorModal">
 
+
     <div class="editor">
 
+
+        <!-- HEADER -->
+
         <div class="editor-header">
+
 
             <strong id="editorTitle">
                 Image
             </strong>
 
-            <span id="editorCounter" class="muted"></span>
+
+            <span
+                id="editorCounter"
+                class="muted"
+            ></span>
+
 
             <span class="spacer"></span>
+
 
             <button id="previousButton">
                 ← Previous
             </button>
 
+
             <button id="nextButton">
                 Next →
             </button>
+
 
             <button id="closeEditor">
                 Close
             </button>
 
+
         </div>
 
 
+        <!-- BODY -->
+
         <div class="editor-body">
+
+
+            <!-- CANVAS -->
 
             <div class="stage-area">
 
-                <div id="stage" class="stage">
 
-                    <canvas id="mainCanvas"></canvas>
+                <div
+                    id="stage"
+                    class="stage"
+                >
 
-                    <div id="selectionBox">
+
+                    <canvas
+                        id="mainCanvas"
+                    ></canvas>
+
+
+                    <div
+                        id="selectionBox"
+                    >
+
 
                         <span
-                            class="selection-label"
                             id="selectionLabel"
+                            class="selection-label"
                         >
                             0%
                         </span>
+
 
                         <span
                             class="handle nw"
                             data-handle="nw"
                         ></span>
 
+
                         <span
                             class="handle ne"
                             data-handle="ne"
                         ></span>
+
 
                         <span
                             class="handle sw"
                             data-handle="sw"
                         ></span>
 
+
                         <span
                             class="handle se"
                             data-handle="se"
                         ></span>
 
+
                     </div>
 
+
                 </div>
+
 
             </div>
 
 
+            <!-- CONTROLS -->
+
             <aside class="controls">
 
-                <!-- SELECTION -->
+
+                <!-- ========================================
+                     AREA
+                ========================================= -->
 
                 <div class="control-section">
+
 
                     <h3>
                         1. Select Geotag Area
                     </h3>
 
+
                     <p>
-                        Select the area on the photograph.
-                        A geotag is NOT required for this step.
+                        Select the area that should
+                        receive the privacy effect.
+                        A geotag is NOT required.
                     </p>
+
 
                     <button
                         id="selectAreaButton"
@@ -642,69 +1126,85 @@ input[type="range"] {
                         Select Geotag Area
                     </button>
 
-                    <button id="resetSelectionButton">
+
+                    <button
+                        id="resetSelectionButton"
+                    >
                         Reset Area
                     </button>
+
 
                 </div>
 
 
-                <!-- EFFECT -->
+                <!-- ========================================
+                     GREY BLUR
+                ========================================= -->
 
                 <div class="control-section">
 
+
                     <h3>
-                        2. Grey / Blur Effect
+                        2. Grey Blur
                     </h3>
 
+
                     <label class="effect-option">
+
                         <input
                             type="radio"
                             name="effect"
                             value="greyblur"
                             checked
                         >
-                        Grey Blur
+
+                        Grey + Blur
+
                     </label>
 
+
                     <label class="effect-option">
+
                         <input
                             type="radio"
                             name="effect"
                             value="blur"
                         >
+
                         Blur Only
+
                     </label>
 
+
                     <label class="effect-option">
+
                         <input
                             type="radio"
                             name="effect"
                             value="grey"
                         >
+
                         Grey Only
+
                     </label>
 
-                    <div
-                        style="
-                        display:flex;
-                        justify-content:space-between;
-                        margin-top:15px;
-                        "
-                    >
+
+                    <div class="slider-row">
 
                         <span>
-                            Blur Strength
+                            Grey / Blur Strength
                         </span>
+
 
                         <span
                             id="blurValue"
-                            class="range-value"
+                            class="slider-value"
                         >
                             50%
                         </span>
 
                     </div>
+
 
                     <input
                         id="blurRange"
@@ -712,6 +1212,7 @@ input[type="range"] {
                         min="0"
                         max="100"
                         value="50"
+                        step="1"
                     >
 
 
@@ -722,57 +1223,180 @@ input[type="range"] {
                         Generate Blur Image
                     </button>
 
+
                 </div>
 
 
-                <!-- GEOTAG -->
+                <!-- ========================================
+                     GEOTAG
+                ========================================= -->
 
                 <div class="control-section">
 
+
                     <h3>
-                        3. Add Geotag
+                        3. Geotag
                     </h3>
 
+
                     <p>
-                        Uploading a geotag is independent from
-                        selecting and generating the blur.
+                        Uploading a geotag is completely
+                        independent from the blur.
                     </p>
+
 
                     <button id="addGeotagButton">
                         Add Geotag
                     </button>
 
+
+                    <!-- OPACITY -->
+
+                    <div class="slider-row">
+
+                        <span>
+                            Geotag Opacity
+                        </span>
+
+
+                        <span
+                            id="geotagOpacityValue"
+                            class="slider-value"
+                        >
+                            100%
+                        </span>
+
+                    </div>
+
+
+                    <input
+                        id="geotagOpacityRange"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="100"
+                        step="1"
+                    >
+
+
+                    <!-- WIDTH -->
+
+                    <div class="slider-row">
+
+                        <span>
+                            Geotag Width
+                        </span>
+
+
+                        <span
+                            id="geotagWidthValue"
+                            class="slider-value"
+                        >
+                            80%
+                        </span>
+
+                    </div>
+
+
+                    <input
+                        id="geotagWidthRange"
+                        type="range"
+                        min="10"
+                        max="100"
+                        value="80"
+                        step="1"
+                    >
+
+
+                    <!-- HEIGHT -->
+
+                    <div class="slider-row">
+
+                        <span>
+                            Geotag Height
+                        </span>
+
+
+                        <span
+                            id="geotagHeightValue"
+                            class="slider-value"
+                        >
+                            80%
+                        </span>
+
+                    </div>
+
+
+                    <input
+                        id="geotagHeightRange"
+                        type="range"
+                        min="10"
+                        max="100"
+                        value="80"
+                        step="1"
+                    >
+
+
+                    <p>
+                        Width and height are measured
+                        relative to the selected area.
+                        The geotag is kept inside the
+                        selected rectangle.
+                    </p>
+
+
                 </div>
 
 
-                <!-- DOWNLOAD -->
+                <!-- ========================================
+                     DOWNLOAD
+                ========================================= -->
 
                 <div class="control-section">
 
+
                     <h3>
-                        4. Download
+                        4. Final Image
                     </h3>
 
-                    <button id="downloadButton">
+
+                    <button
+                        id="downloadButton"
+                        class="primary"
+                    >
                         Download Image
                     </button>
 
-                    <button id="resetImageButton">
+
+                    <button
+                        id="resetImageButton"
+                    >
                         Reset Image
                     </button>
 
+
                 </div>
 
+
             </aside>
+
 
         </div>
 
 
+        <!-- FOOTER -->
+
         <div class="editor-footer">
 
-            <span id="imageDimensions" class="muted"></span>
+
+            <span
+                id="imageDimensions"
+                class="muted"
+            ></span>
+
 
             <span class="spacer"></span>
+
 
             <button
                 id="saveNextButton"
@@ -781,21 +1405,26 @@ input[type="range"] {
                 Save & Next →
             </button>
 
+
         </div>
+
 
     </div>
 
+
 </div>
 
+
+<!-- TOAST -->
 
 <div id="toast"></div>
 
 
 <script>
 
-/* ============================================================
-   APPLICATION STATE
-============================================================ */
+/* =========================================================
+   STATE
+========================================================= */
 
 const state = {
 
@@ -817,64 +1446,101 @@ const state = {
 
     blurPercentage: 50,
 
+    geotagOpacity: 100,
+
+    geotagWidth: 80,
+
+    geotagHeight: 80,
+
     generatedBlob: null
 
 };
 
 
-/* ============================================================
+/* =========================================================
    DOM
-============================================================ */
+========================================================= */
 
 const imageInput =
-    document.getElementById("imageInput");
+    document.getElementById(
+        "imageInput"
+    );
 
 const folderInput =
-    document.getElementById("folderInput");
+    document.getElementById(
+        "folderInput"
+    );
 
 const geotagInput =
-    document.getElementById("geotagInput");
+    document.getElementById(
+        "geotagInput"
+    );
 
 const canvas =
-    document.getElementById("mainCanvas");
+    document.getElementById(
+        "mainCanvas"
+    );
 
 const ctx =
-    canvas.getContext("2d");
+    canvas.getContext(
+        "2d"
+    );
 
 const selectionBox =
-    document.getElementById("selectionBox");
+    document.getElementById(
+        "selectionBox"
+    );
 
 const editorModal =
-    document.getElementById("editorModal");
+    document.getElementById(
+        "editorModal"
+    );
 
 
-/* ============================================================
+/* =========================================================
    TOAST
-============================================================ */
+========================================================= */
 
 function showToast(message) {
 
     const toast =
-        document.getElementById("toast");
+        document.getElementById(
+            "toast"
+        );
 
-    toast.textContent = message;
 
-    toast.classList.add("show");
+    toast.textContent =
+        message;
 
-    clearTimeout(window.toastTimer);
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        window.toastTimer
+    );
+
 
     window.toastTimer =
-        setTimeout(() => {
+        setTimeout(
+            () => {
 
-            toast.classList.remove("show");
+                toast.classList.remove(
+                    "show"
+                );
 
-        }, 2500);
+            },
+            2600
+        );
+
 }
 
 
-/* ============================================================
-   FILE VALIDATION
-============================================================ */
+/* =========================================================
+   IMAGE VALIDATION
+========================================================= */
 
 function isImageFile(file) {
 
@@ -882,125 +1548,190 @@ function isImageFile(file) {
         return false;
     }
 
+
     if (
         file.type &&
-        file.type.toLowerCase().startsWith("image/")
+        file.type
+            .toLowerCase()
+            .startsWith("image/")
     ) {
+
         return true;
+
     }
 
+
     return /\.(jpg|jpeg|png|webp|gif|bmp|tif|tiff|heic|heif)$/i
-        .test(file.name);
+        .test(
+            file.name
+        );
 
 }
 
 
-/* ============================================================
+/* =========================================================
    LOAD IMAGE
-============================================================ */
+========================================================= */
 
 function loadImage(source) {
 
-    return new Promise((resolve, reject) => {
+    return new Promise(
+        (resolve, reject) => {
 
-        const img = new Image();
+            const img =
+                new Image();
 
-        img.onload = () => resolve(img);
 
-        img.onerror = () =>
-            reject(
-                new Error(
-                    "The browser could not read this image."
-                )
-            );
+            img.onload =
+                () => resolve(
+                    img
+                );
 
-        img.src = source;
 
-    });
+            img.onerror =
+                () => reject(
+                    new Error(
+                        "Image could not be loaded."
+                    )
+                );
+
+
+            img.src =
+                source;
+
+        }
+    );
 
 }
 
 
-/* ============================================================
-   ESCAPE HTML
-============================================================ */
+/* =========================================================
+   ESCAPE
+========================================================= */
 
 function escapeHTML(value) {
 
     return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
 
 
-/* ============================================================
+/* =========================================================
    UPLOAD IMAGES
-============================================================ */
+========================================================= */
 
 async function uploadImages(fileList) {
 
     const files =
-        Array.from(fileList || []);
+        Array.from(
+            fileList || []
+        );
+
 
     if (!files.length) {
         return;
     }
 
-    let successful = 0;
 
-    for (const file of files) {
+    let successful =
+        0;
 
-        if (!isImageFile(file)) {
 
-            console.warn(
-                "Skipped non-image:",
-                file.name,
-                file.type
-            );
+    for (
+        const file of files
+    ) {
+
+
+        if (
+            !isImageFile(file)
+        ) {
 
             continue;
+
         }
+
 
         try {
 
-            const objectURL =
-                URL.createObjectURL(file);
+            const url =
+                URL.createObjectURL(
+                    file
+                );
+
 
             const img =
-                await loadImage(objectURL);
+                await loadImage(
+                    url
+                );
+
 
             state.images.push({
 
                 id:
-                    Date.now().toString() +
-                    Math.random().toString(36),
+                    Date.now() +
+                    "_" +
+                    Math.random()
+                        .toString(36)
+                        .slice(2),
 
-                file: file,
+                file:
 
-                name: file.name,
+                    file,
 
-                originalURL: objectURL,
+                name:
 
-                outputURL: null,
+                    file.name,
 
-                outputBlob: null,
+                originalURL:
 
-                width: img.naturalWidth,
+                    url,
 
-                height: img.naturalHeight
+                outputURL:
+
+                    null,
+
+                outputBlob:
+
+                    null,
+
+                width:
+
+                    img.naturalWidth,
+
+                height:
+
+                    img.naturalHeight
 
             });
 
+
             successful++;
+
 
         } catch (error) {
 
             console.error(
-                "Image loading error:",
+                "Could not load image:",
                 file.name,
                 error
             );
@@ -1010,10 +1741,12 @@ async function uploadImages(fileList) {
     }
 
 
-    if (!successful) {
+    if (
+        successful === 0
+    ) {
 
         showToast(
-            "No readable image was found."
+            "No readable image was selected."
         );
 
         return;
@@ -1024,154 +1757,217 @@ async function uploadImages(fileList) {
     renderGallery();
 
 
-    /*
-       Automatically open the first image
-       only if no image was previously open.
-    */
+    if (
+        state.activeIndex === -1
+    ) {
 
-    if (state.activeIndex === -1) {
-
-        openEditor(0);
+        await openEditor(
+            0
+        );
 
     }
 
 }
 
 
-/* ============================================================
+/* =========================================================
    RENDER GALLERY
-============================================================ */
+========================================================= */
 
 function renderGallery() {
 
     const grid =
-        document.getElementById("imageGrid");
+        document.getElementById(
+            "imageGrid"
+        );
+
 
     const empty =
-        document.getElementById("emptyMessage");
+        document.getElementById(
+            "emptyMessage"
+        );
+
 
     const count =
-        document.getElementById("imageCount");
+        document.getElementById(
+            "imageCount"
+        );
+
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
 
-    grid.innerHTML = "";
-
-
-    if (state.images.length === 0) {
-
-        empty.style.display = "block";
-
-        status.textContent =
-            "No images uploaded";
-
-    } else {
-
-        empty.style.display = "none";
-
-        status.textContent =
-            state.images.length +
-            " image(s) uploaded";
-
-    }
+    grid.innerHTML =
+        "";
 
 
     count.textContent =
         state.images.length;
 
 
-    state.images.forEach((item, index) => {
+    if (
+        state.images.length === 0
+    ) {
 
-        const card =
-            document.createElement("div");
-
-        card.className = "card";
+        empty.style.display =
+            "block";
 
 
-        if (index === state.activeIndex) {
+        status.textContent =
+            "No images uploaded";
 
-            card.classList.add("selected");
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    status.textContent =
+        state.images.length +
+        " image(s) uploaded";
+
+
+    state.images.forEach(
+        (
+            item,
+            index
+        ) => {
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "card";
+
+
+            if (
+                index ===
+                state.activeIndex
+            ) {
+
+                card.classList.add(
+                    "selected"
+                );
+
+            }
+
+
+            const imageURL =
+                item.outputURL ||
+                item.originalURL;
+
+
+            card.innerHTML = `
+
+                <div class="thumb">
+
+                    <img
+                        src="${imageURL}"
+                        alt=""
+                    >
+
+                </div>
+
+                <div class="filename">
+                    ${escapeHTML(item.name)}
+                </div>
+
+            `;
+
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    openEditor(
+                        index
+                    );
+
+                }
+            );
+
+
+            grid.appendChild(
+                card
+            );
 
         }
-
-
-        const imageURL =
-            item.outputURL ||
-            item.originalURL;
-
-
-        card.innerHTML = `
-
-            <div class="thumb">
-
-                <img
-                    src="${imageURL}"
-                    alt=""
-                >
-
-            </div>
-
-            <div class="filename">
-                ${escapeHTML(item.name)}
-            </div>
-
-        `;
-
-
-        card.addEventListener(
-            "click",
-            () => openEditor(index)
-        );
-
-
-        grid.appendChild(card);
-
-    });
+    );
 
 }
 
 
-/* ============================================================
+/* =========================================================
    OPEN EDITOR
-============================================================ */
+========================================================= */
 
-async function openEditor(index) {
+async function openEditor(
+    index
+) {
 
     if (
         index < 0 ||
-        index >= state.images.length
+        index >=
+        state.images.length
     ) {
+
         return;
+
     }
 
 
-    state.activeIndex = index;
+    state.activeIndex =
+        index;
 
-    state.selection = null;
 
-    state.selecting = false;
+    state.selection =
+        null;
 
-    state.interaction = null;
 
-    state.generatedBlob = null;
+    state.selecting =
+        false;
+
+
+    state.interaction =
+        null;
+
+
+    state.generatedBlob =
+        null;
 
 
     const item =
-        state.images[index];
+        state.images[
+            index
+        ];
 
 
-    editorModal.classList.add("open");
+    document.getElementById(
+        "editorTitle"
+    ).textContent =
+        item.name;
 
 
-    document.getElementById("editorTitle")
-        .textContent = item.name;
-
-
-    document.getElementById("editorCounter")
-        .textContent =
+    document.getElementById(
+        "editorCounter"
+    ).textContent =
         `${index + 1} / ${state.images.length}`;
+
+
+    editorModal.classList.add(
+        "open"
+    );
 
 
     await drawCurrentImage();
@@ -1185,14 +1981,17 @@ async function openEditor(index) {
 }
 
 
-/* ============================================================
-   DRAW CURRENT IMAGE
-============================================================ */
+/* =========================================================
+   DRAW IMAGE
+========================================================= */
 
 async function drawCurrentImage() {
 
     const item =
-        state.images[state.activeIndex];
+        state.images[
+            state.activeIndex
+        ];
+
 
     if (!item) {
         return;
@@ -1205,11 +2004,14 @@ async function drawCurrentImage() {
 
 
     const img =
-        await loadImage(source);
+        await loadImage(
+            source
+        );
 
 
     canvas.width =
         img.naturalWidth;
+
 
     canvas.height =
         img.naturalHeight;
@@ -1230,81 +2032,107 @@ async function drawCurrentImage() {
     );
 
 
-    document.getElementById("imageDimensions")
-        .textContent =
+    document.getElementById(
+        "imageDimensions"
+    ).textContent =
         `${canvas.width} × ${canvas.height} px`;
 
 
-    requestAnimationFrame(updateSelectionBox);
+    requestAnimationFrame(
+        updateSelectionBox
+    );
 
 }
 
 
-/* ============================================================
+/* =========================================================
    SELECT AREA
-============================================================ */
+========================================================= */
 
 document
-    .getElementById("selectAreaButton")
-    .addEventListener("click", () => {
+    .getElementById(
+        "selectAreaButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
 
-        /*
-         IMPORTANT:
-         There is NO geotag check here.
-        */
 
-        if (state.activeIndex === -1) {
+            /*
+             IMPORTANT:
+             NO GEOTAG VALIDATION HERE.
+            */
+
+            if (
+                state.activeIndex === -1
+            ) {
+
+                showToast(
+                    "Please upload the image first."
+                );
+
+                return;
+
+            }
+
+
+            state.selecting =
+                true;
+
 
             showToast(
-                "Please upload the image first."
+                "Drag on the image to select the area."
             );
 
-            return;
-
         }
+    );
 
 
-        state.selecting = true;
+/* =========================================================
+   NORMALIZED COORDINATES
+========================================================= */
 
-
-        showToast(
-            "Drag on the image to select an area."
-        );
-
-    });
-
-
-/* ============================================================
-   CANVAS COORDINATES
-============================================================ */
-
-function getNormalizedPoint(event) {
+function getNormalizedPoint(
+    event
+) {
 
     const rect =
         canvas.getBoundingClientRect();
 
 
     let x =
-        (event.clientX - rect.left) /
+        (
+            event.clientX -
+            rect.left
+        ) /
         rect.width;
 
 
     let y =
-        (event.clientY - rect.top) /
+        (
+            event.clientY -
+            rect.top
+        ) /
         rect.height;
 
 
     x =
         Math.max(
             0,
-            Math.min(1, x)
+            Math.min(
+                1,
+                x
+            )
         );
 
 
     y =
         Math.max(
             0,
-            Math.min(1, y)
+            Math.min(
+                1,
+                y
+            )
         );
 
 
@@ -1316,16 +2144,21 @@ function getNormalizedPoint(event) {
 }
 
 
-/* ============================================================
+/* =========================================================
    CREATE SELECTION
-============================================================ */
+========================================================= */
 
 canvas.addEventListener(
     "pointerdown",
     event => {
 
-        if (!state.selecting) {
+
+        if (
+            !state.selecting
+        ) {
+
             return;
+
         }
 
 
@@ -1333,29 +2166,38 @@ canvas.addEventListener(
 
 
         const point =
-            getNormalizedPoint(event);
+            getNormalizedPoint(
+                event
+            );
 
 
         state.selection = {
 
-            x: point.x,
+            x:
+                point.x,
 
-            y: point.y,
+            y:
+                point.y,
 
-            width: 0,
+            width:
+                0,
 
-            height: 0
+            height:
+                0
 
         };
 
 
         state.interaction = {
 
-            type: "create",
+            type:
+                "create",
 
-            startX: point.x,
+            startX:
+                point.x,
 
-            startY: point.y
+            startY:
+                point.y
 
         };
 
@@ -1372,33 +2214,44 @@ canvas.addEventListener(
         window.addEventListener(
             "pointerup",
             finishCreateSelection,
-            { once: true }
+            {
+                once:
+                    true
+            }
         );
 
     }
 );
 
 
-/* ============================================================
+/* =========================================================
    CREATE SELECTION MOVE
-============================================================ */
+========================================================= */
 
-function createSelection(event) {
+function createSelection(
+    event
+) {
 
     if (
         !state.interaction ||
-        state.interaction.type !== "create"
+        state.interaction.type !==
+            "create"
     ) {
+
         return;
+
     }
 
 
     const point =
-        getNormalizedPoint(event);
+        getNormalizedPoint(
+            event
+        );
 
 
     const startX =
         state.interaction.startX;
+
 
     const startY =
         state.interaction.startY;
@@ -1410,6 +2263,7 @@ function createSelection(event) {
             point.x
         );
 
+
     let y =
         Math.min(
             startY,
@@ -1419,18 +2273,36 @@ function createSelection(event) {
 
     let width =
         Math.abs(
-            point.x - startX
+            point.x -
+            startX
         );
 
 
     let height =
         Math.abs(
-            point.y - startY
+            point.y -
+            startY
         );
 
 
-    x = Math.max(0, Math.min(1, x));
-    y = Math.max(0, Math.min(1, y));
+    x =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                x
+            )
+        );
+
+
+    y =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                y
+            )
+        );
 
 
     width =
@@ -1462,9 +2334,9 @@ function createSelection(event) {
 }
 
 
-/* ============================================================
+/* =========================================================
    FINISH CREATE
-============================================================ */
+========================================================= */
 
 function finishCreateSelection() {
 
@@ -1474,49 +2346,30 @@ function finishCreateSelection() {
     );
 
 
-    state.interaction = null;
+    state.interaction =
+        null;
 
 
     if (
         state.selection &&
-        state.selection.width < 0.01
+        state.selection.width <
+            0.01
     ) {
 
-        state.selection.width = 0.8;
+        state.selection.width =
+            0.1;
 
     }
 
 
     if (
         state.selection &&
-        state.selection.height < 0.01
+        state.selection.height <
+            0.01
     ) {
 
-        state.selection.height = 0.2;
-
-    }
-
-
-    if (state.selection) {
-
-        state.selection.x =
-            Math.max(
-                0,
-                Math.min(
-                    1 - state.selection.width,
-                    state.selection.x
-                )
-            );
-
-
-        state.selection.y =
-            Math.max(
-                0,
-                Math.min(
-                    1 - state.selection.height,
-                    state.selection.y
-                )
-            );
+        state.selection.height =
+            0.1;
 
     }
 
@@ -1526,9 +2379,9 @@ function finishCreateSelection() {
 }
 
 
-/* ============================================================
-   SHOW / HIDE SELECTION
-============================================================ */
+/* =========================================================
+   SHOW / HIDE
+========================================================= */
 
 function showSelection() {
 
@@ -1546,13 +2399,15 @@ function hideSelection() {
 }
 
 
-/* ============================================================
+/* =========================================================
    UPDATE SELECTION BOX
-============================================================ */
+========================================================= */
 
 function updateSelectionBox() {
 
-    if (!state.selection) {
+    if (
+        !state.selection
+    ) {
 
         hideSelection();
 
@@ -1561,85 +2416,95 @@ function updateSelectionBox() {
     }
 
 
-    showSelection();
-
-
     const rect =
         canvas.getBoundingClientRect();
 
-
-    /*
-       Canvas can be scaled by CSS.
-       Convert image-normalized coordinates
-       into displayed canvas coordinates.
-    */
 
     selectionBox.style.left =
         (
             state.selection.x *
             rect.width
-        ) + "px";
+        ) +
+        "px";
 
 
     selectionBox.style.top =
         (
             state.selection.y *
             rect.height
-        ) + "px";
+        ) +
+        "px";
 
 
     selectionBox.style.width =
         (
             state.selection.width *
             rect.width
-        ) + "px";
+        ) +
+        "px";
 
 
     selectionBox.style.height =
         (
             state.selection.height *
             rect.height
-        ) + "px";
+        ) +
+        "px";
+
+
+    selectionBox.style.display =
+        "block";
 
 
     document.getElementById(
         "selectionLabel"
     ).textContent =
+
         Math.round(
-            state.selection.width * 100
+            state.selection.width *
+            100
         ) +
+
         "% × " +
+
         Math.round(
-            state.selection.height * 100
+            state.selection.height *
+            100
         ) +
+
         "%";
 
 }
 
 
-/* ============================================================
+/* =========================================================
    MOVE / RESIZE SELECTION
-============================================================ */
+========================================================= */
 
 selectionBox.addEventListener(
     "pointerdown",
     event => {
 
+
         if (
             !state.selection ||
             !state.selecting
         ) {
+
             return;
+
         }
 
 
-        event.stopPropagation();
-
         event.preventDefault();
+
+        event.stopPropagation();
 
 
         const point =
-            getNormalizedPoint(event);
+            getNormalizedPoint(
+                event
+            );
 
 
         const handle =
@@ -1675,26 +2540,37 @@ selectionBox.addEventListener(
         window.addEventListener(
             "pointerup",
             finishMoveSelection,
-            { once: true }
+            {
+                once:
+                    true
+            }
         );
 
     }
 );
 
 
-/* ============================================================
+/* =========================================================
    MOVE / RESIZE
-============================================================ */
+========================================================= */
 
-function moveSelection(event) {
+function moveSelection(
+    event
+) {
 
-    if (!state.interaction) {
+    if (
+        !state.interaction
+    ) {
+
         return;
+
     }
 
 
     const point =
-        getNormalizedPoint(event);
+        getNormalizedPoint(
+            event
+        );
 
 
     const original =
@@ -1714,20 +2590,28 @@ function moveSelection(event) {
     let x =
         original.x;
 
+
     let y =
         original.y;
 
+
     let width =
         original.width;
+
 
     let height =
         original.height;
 
 
+    const type =
+        state.interaction.type;
+
+
     if (
-        state.interaction.type ===
+        type ===
         "move"
     ) {
+
 
         x =
             Math.max(
@@ -1748,13 +2632,12 @@ function moveSelection(event) {
                 )
             );
 
+
     } else {
 
 
         if (
-            state.interaction.type.includes(
-                "w"
-            )
+            type.includes("w")
         ) {
 
             const right =
@@ -1766,27 +2649,26 @@ function moveSelection(event) {
                 Math.max(
                     0,
                     Math.min(
-                        right - 0.02,
+                        right - 0.01,
                         original.x + dx
                     )
                 );
 
 
             width =
-                right - x;
+                right -
+                x;
 
         }
 
 
         if (
-            state.interaction.type.includes(
-                "e"
-            )
+            type.includes("e")
         ) {
 
             width =
                 Math.max(
-                    0.02,
+                    0.01,
                     Math.min(
                         1 - original.x,
                         original.width + dx
@@ -1797,9 +2679,7 @@ function moveSelection(event) {
 
 
         if (
-            state.interaction.type.includes(
-                "n"
-            )
+            type.includes("n")
         ) {
 
             const bottom =
@@ -1811,27 +2691,26 @@ function moveSelection(event) {
                 Math.max(
                     0,
                     Math.min(
-                        bottom - 0.02,
+                        bottom - 0.01,
                         original.y + dy
                     )
                 );
 
 
             height =
-                bottom - y;
+                bottom -
+                y;
 
         }
 
 
         if (
-            state.interaction.type.includes(
-                "s"
-            )
+            type.includes("s")
         ) {
 
             height =
                 Math.max(
-                    0.02,
+                    0.01,
                     Math.min(
                         1 - original.y,
                         original.height + dy
@@ -1858,9 +2737,9 @@ function moveSelection(event) {
 }
 
 
-/* ============================================================
-   FINISH MOVE
-============================================================ */
+/* =========================================================
+   FINISH RESIZE
+========================================================= */
 
 function finishMoveSelection() {
 
@@ -1870,26 +2749,35 @@ function finishMoveSelection() {
     );
 
 
-    state.interaction = null;
+    state.interaction =
+        null;
 
 }
 
 
-/* ============================================================
-   RESET SELECTION
-============================================================ */
+/* =========================================================
+   RESET AREA
+========================================================= */
 
 document
-    .getElementById("resetSelectionButton")
+    .getElementById(
+        "resetSelectionButton"
+    )
     .addEventListener(
         "click",
         () => {
 
-            state.selection = null;
+            state.selection =
+                null;
 
-            state.selecting = false;
 
-            state.interaction = null;
+            state.selecting =
+                false;
+
+
+            state.interaction =
+                null;
+
 
             hideSelection();
 
@@ -1897,38 +2785,43 @@ document
     );
 
 
-/* ============================================================
-   EFFECT
-============================================================ */
+/* =========================================================
+   EFFECT TYPE
+========================================================= */
 
 document
     .querySelectorAll(
         'input[name="effect"]'
     )
-    .forEach(input => {
+    .forEach(
+        input => {
 
-        input.addEventListener(
-            "change",
-            event => {
+            input.addEventListener(
+                "change",
+                event => {
 
-                state.effect =
-                    event.target.value;
+                    state.effect =
+                        event.target.value;
 
-            }
-        );
+                }
+            );
 
-    });
+        }
+    );
 
 
-/* ============================================================
-   BLUR RANGE
-============================================================ */
+/* =========================================================
+   BLUR SLIDER
+========================================================= */
 
 document
-    .getElementById("blurRange")
+    .getElementById(
+        "blurRange"
+    )
     .addEventListener(
         "input",
         event => {
+
 
             state.blurPercentage =
                 Number(
@@ -1946,9 +2839,96 @@ document
     );
 
 
-/* ============================================================
+/* =========================================================
+   GEOTAG OPACITY
+========================================================= */
+
+document
+    .getElementById(
+        "geotagOpacityRange"
+    )
+    .addEventListener(
+        "input",
+        event => {
+
+
+            state.geotagOpacity =
+                Number(
+                    event.target.value
+                );
+
+
+            document.getElementById(
+                "geotagOpacityValue"
+            ).textContent =
+                state.geotagOpacity +
+                "%";
+
+        }
+    );
+
+
+/* =========================================================
+   GEOTAG WIDTH
+========================================================= */
+
+document
+    .getElementById(
+        "geotagWidthRange"
+    )
+    .addEventListener(
+        "input",
+        event => {
+
+
+            state.geotagWidth =
+                Number(
+                    event.target.value
+                );
+
+
+            document.getElementById(
+                "geotagWidthValue"
+            ).textContent =
+                state.geotagWidth +
+                "%";
+
+        }
+    );
+
+
+/* =========================================================
+   GEOTAG HEIGHT
+========================================================= */
+
+document
+    .getElementById(
+        "geotagHeightRange"
+    )
+    .addEventListener(
+        "input",
+        event => {
+
+
+            state.geotagHeight =
+                Number(
+                    event.target.value
+                );
+
+
+            document.getElementById(
+                "geotagHeightValue"
+            ).textContent =
+                state.geotagHeight +
+                "%";
+
+        }
+    );
+
+
+/* =========================================================
    GENERATE BLUR IMAGE
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -1958,10 +2938,17 @@ document
         "click",
         async () => {
 
+
             /*
              IMPORTANT:
-             NO GEOTAG CHECK HERE.
+
+             There is NO geotag check.
+
+             This button only requires:
+             1. Image
+             2. Selection
             */
+
 
             if (
                 state.activeIndex === -1
@@ -1978,8 +2965,10 @@ document
 
             if (
                 !state.selection ||
-                state.selection.width < 0.01 ||
-                state.selection.height < 0.01
+                state.selection.width <=
+                    0 ||
+                state.selection.height <=
+                    0
             ) {
 
                 showToast(
@@ -1992,6 +2981,7 @@ document
 
 
             try {
+
 
                 const item =
                     state.images[
@@ -2011,7 +3001,9 @@ document
 
 
                 /*
-                 Create output canvas.
+                 =========================================
+                 OUTPUT CANVAS
+                 =========================================
                 */
 
                 const output =
@@ -2023,19 +3015,30 @@ document
                 output.width =
                     image.naturalWidth;
 
+
                 output.height =
                     image.naturalHeight;
 
 
-                const outputContext =
-                    output.getContext("2d");
+                const outputCtx =
+                    output.getContext(
+                        "2d"
+                    );
+
+
+                outputCtx.imageSmoothingEnabled =
+                    true;
+
+
+                outputCtx.imageSmoothingQuality =
+                    "high";
 
 
                 /*
-                 Draw original image.
+                 Draw original.
                 */
 
-                outputContext.drawImage(
+                outputCtx.drawImage(
                     image,
                     0,
                     0
@@ -2043,61 +3046,182 @@ document
 
 
                 /*
-                 Convert normalized selection
-                 to actual pixels.
+                 =========================================
+                 SELECTION PIXELS
+                 =========================================
                 */
 
-                const x =
+                const sx =
                     Math.round(
                         state.selection.x *
-                        output.width
+                        image.naturalWidth
                     );
 
 
-                const y =
+                const sy =
                     Math.round(
                         state.selection.y *
-                        output.height
+                        image.naturalHeight
                     );
 
 
-                const width =
-                    Math.round(
-                        state.selection.width *
-                        output.width
+                const sw =
+                    Math.max(
+                        1,
+                        Math.round(
+                            state.selection.width *
+                            image.naturalWidth
+                        )
                     );
 
 
-                const height =
-                    Math.round(
-                        state.selection.height *
-                        output.height
+                const sh =
+                    Math.max(
+                        1,
+                        Math.round(
+                            state.selection.height *
+                            image.naturalHeight
+                        )
                     );
 
 
                 /*
-                 Create temporary canvas.
+                 =========================================
+                 ACTUAL BLUR
+                 
+                 We add padding around the selected
+                 region before applying blur.
+                 
+                 This is important because otherwise
+                 canvas blur can clip at the edges.
+                 =========================================
                 */
 
-                const temp =
+                const percentage =
+                    state.blurPercentage /
+                    100;
+
+
+                /*
+                 0% = almost none
+                 100% = strong but usable
+                */
+
+                const blurRadius =
+                    Math.max(
+                        0,
+                        percentage * 32
+                    );
+
+
+                /*
+                 Padding needs to be at least
+                 approximately the blur radius.
+                */
+
+                const padding =
+                    Math.ceil(
+                        blurRadius * 2
+                    );
+
+
+                const cropX =
+                    Math.max(
+                        0,
+                        sx - padding
+                    );
+
+
+                const cropY =
+                    Math.max(
+                        0,
+                        sy - padding
+                    );
+
+
+                const cropRight =
+                    Math.min(
+                        image.naturalWidth,
+                        sx + sw + padding
+                    );
+
+
+                const cropBottom =
+                    Math.min(
+                        image.naturalHeight,
+                        sy + sh + padding
+                    );
+
+
+                const cropWidth =
+                    cropRight -
+                    cropX;
+
+
+                const cropHeight =
+                    cropBottom -
+                    cropY;
+
+
+                /*
+                 =========================================
+                 TEMP CANVAS
+                 =========================================
+                */
+
+                const blurCanvas =
                     document.createElement(
                         "canvas"
                     );
 
 
-                temp.width =
-                    width;
-
-                temp.height =
-                    height;
+                blurCanvas.width =
+                    cropWidth;
 
 
-                const tempContext =
-                    temp.getContext("2d");
+                blurCanvas.height =
+                    cropHeight;
+
+
+                const blurCtx =
+                    blurCanvas.getContext(
+                        "2d"
+                    );
+
+
+                blurCtx.imageSmoothingEnabled =
+                    true;
+
+
+                blurCtx.imageSmoothingQuality =
+                    "high";
 
 
                 /*
-                 BLUR
+                 Draw source region.
+                */
+
+                blurCtx.drawImage(
+
+                    image,
+
+                    cropX,
+                    cropY,
+                    cropWidth,
+                    cropHeight,
+
+                    0,
+                    0,
+                    cropWidth,
+                    cropHeight
+
+                );
+
+
+                /*
+                 =========================================
+                 APPLY BLUR
+                 =========================================
                 */
 
                 if (
@@ -2105,93 +3229,159 @@ document
                     "grey"
                 ) {
 
-                    const blurAmount =
-                        Math.max(
-                            0.2,
-                            (
-                                state.blurPercentage /
-                                100
-                            ) * 25
+
+                    if (
+                        blurRadius > 0
+                    ) {
+
+                        const blurred =
+                            document.createElement(
+                                "canvas"
+                            );
+
+
+                        blurred.width =
+                            cropWidth;
+
+
+                        blurred.height =
+                            cropHeight;
+
+
+                        const blurredCtx =
+                            blurred.getContext(
+                                "2d"
+                            );
+
+
+                        blurredCtx.imageSmoothingEnabled =
+                            true;
+
+
+                        blurredCtx.imageSmoothingQuality =
+                            "high";
+
+
+                        /*
+                         Draw with actual
+                         canvas filter.
+                        */
+
+                        blurredCtx.filter =
+                            `blur(${blurRadius}px)`;
+
+
+                        /*
+                         Expand slightly so
+                         the blur doesn't clip.
+                        */
+
+                        blurredCtx.drawImage(
+
+                            blurCanvas,
+
+                            -padding / 2,
+                            -padding / 2,
+                            cropWidth +
+                                padding,
+                            cropHeight +
+                                padding
+
                         );
 
 
-                    tempContext.filter =
-                        `blur(${blurAmount}px)`;
+                        /*
+                         Put blurred crop back.
+                        */
+
+                        outputCtx.drawImage(
+
+                            blurred,
+
+                            cropX,
+                            cropY
+
+                        );
+
+                    }
 
                 }
 
 
                 /*
-                 Draw selected part.
-                */
-
-                tempContext.drawImage(
-
-                    image,
-
-                    x,
-                    y,
-                    width,
-                    height,
-
-                    0,
-                    0,
-                    width,
-                    height
-
-                );
-
-
-                /*
-                 Put processed region back.
-                */
-
-                outputContext.drawImage(
-                    temp,
-                    x,
-                    y
-                );
-
-
-                /*
-                 GREY EFFECT
+                 =========================================
+                 GREY OVERLAY
+                 =========================================
                 */
 
                 if (
                     state.effect ===
-                    "greyblur" ||
+                        "greyblur" ||
                     state.effect ===
-                    "grey"
+                        "grey"
                 ) {
 
-                    const opacity =
-                        (
-                            state.blurPercentage /
-                            100
-                        ) * 0.55;
+
+                    /*
+                     At 0%:
+                     transparent
+
+                     At 100%:
+                     approximately 60%
+                     grey.
+                    */
+
+                    const greyAlpha =
+                        percentage *
+                        0.60;
 
 
-                    outputContext.fillStyle =
-                        `rgba(100,100,100,${opacity})`;
+                    if (
+                        greyAlpha > 0
+                    ) {
+
+                        outputCtx.save();
 
 
-                    outputContext.fillRect(
-                        x,
-                        y,
-                        width,
-                        height
-                    );
+                        outputCtx.fillStyle =
+                            `rgba(
+                                105,
+                                105,
+                                105,
+                                ${greyAlpha}
+                            )`;
+
+
+                        outputCtx.fillRect(
+
+                            sx,
+                            sy,
+                            sw,
+                            sh
+
+                        );
+
+
+                        outputCtx.restore();
+
+                    }
 
                 }
 
 
                 /*
-                 Export actual processed image.
+                 =========================================
+                 EXPORT REAL IMAGE
+                 =========================================
                 */
 
                 const blob =
                     await new Promise(
-                        (resolve, reject) => {
+                        (
+                            resolve,
+                            reject
+                        ) => {
+
 
                             output.toBlob(
                                 result => {
@@ -2208,7 +3398,7 @@ document
 
                                         reject(
                                             new Error(
-                                                "Canvas export failed"
+                                                "Canvas export failed."
                                             )
                                         );
 
@@ -2222,12 +3412,10 @@ document
                     );
 
 
-                state.generatedBlob =
-                    blob;
-
-
                 /*
-                 Store output for current image.
+                 =========================================
+                 SAVE OUTPUT
+                 =========================================
                 */
 
                 if (
@@ -2251,12 +3439,17 @@ document
                     );
 
 
+                state.generatedBlob =
+                    blob;
+
+
                 /*
                  Display generated image.
                 */
 
                 canvas.width =
                     output.width;
+
 
                 canvas.height =
                     output.height;
@@ -2277,10 +3470,6 @@ document
                 );
 
 
-                /*
-                 Selection remains available.
-                */
-
                 state.selecting =
                     false;
 
@@ -2292,13 +3481,17 @@ document
 
 
                 showToast(
-                    "Blur image generated successfully."
+                    "Grey blur image generated successfully."
                 );
 
-            } catch (error) {
+
+            } catch (
+                error
+            ) {
+
 
                 console.error(
-                    "Generate blur error:",
+                    "Blur generation error:",
                     error
                 );
 
@@ -2313,11 +3506,13 @@ document
     );
 
 
-/* ============================================================
-   GEOTAG UPLOAD
-============================================================ */
+/* =========================================================
+   UPLOAD GEOTAG
+========================================================= */
 
-async function uploadGeotag(file) {
+async function uploadGeotag(
+    file
+) {
 
     if (
         !file ||
@@ -2335,11 +3530,16 @@ async function uploadGeotag(file) {
 
     try {
 
+
         const url =
-            URL.createObjectURL(file);
+            URL.createObjectURL(
+                file
+            );
 
 
-        await loadImage(url);
+        await loadImage(
+            url
+        );
 
 
         if (
@@ -2377,9 +3577,14 @@ async function uploadGeotag(file) {
             "Geotag uploaded successfully."
         );
 
-    } catch (error) {
+
+    } catch (
+        error
+    ) {
+
 
         console.error(
+            "Geotag load error:",
             error
         );
 
@@ -2393,9 +3598,9 @@ async function uploadGeotag(file) {
 }
 
 
-/* ============================================================
+/* =========================================================
    ADD GEOTAG
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -2405,10 +3610,12 @@ document
         "click",
         async () => {
 
+
             /*
              ONLY THIS OPERATION REQUIRES
-             THE GEOTAG.
+             GEOTAG IMAGE.
             */
+
 
             if (
                 state.activeIndex === -1
@@ -2423,7 +3630,9 @@ document
             }
 
 
-            if (!state.selection) {
+            if (
+                !state.selection
+            ) {
 
                 showToast(
                     "Please select an area first."
@@ -2434,7 +3643,9 @@ document
             }
 
 
-            if (!state.geotagURL) {
+            if (
+                !state.geotagURL
+            ) {
 
                 showToast(
                     "Please upload the geotag image first."
@@ -2447,6 +3658,7 @@ document
 
             try {
 
+
                 const item =
                     state.images[
                         state.activeIndex
@@ -2454,8 +3666,8 @@ document
 
 
                 /*
-                 Use generated blur image
-                 if it exists.
+                 Use the generated blur
+                 if available.
                 */
 
                 const source =
@@ -2475,6 +3687,12 @@ document
                     );
 
 
+                /*
+                 ======================================
+                 OUTPUT
+                 ======================================
+                */
+
                 const output =
                     document.createElement(
                         "canvas"
@@ -2484,15 +3702,26 @@ document
                 output.width =
                     base.naturalWidth;
 
+
                 output.height =
                     base.naturalHeight;
 
 
-                const outputContext =
-                    output.getContext("2d");
+                const outputCtx =
+                    output.getContext(
+                        "2d"
+                    );
 
 
-                outputContext.drawImage(
+                outputCtx.imageSmoothingEnabled =
+                    true;
+
+
+                outputCtx.imageSmoothingQuality =
+                    "high";
+
+
+                outputCtx.drawImage(
                     base,
                     0,
                     0
@@ -2500,7 +3729,9 @@ document
 
 
                 /*
-                 Selected area in pixels.
+                 ======================================
+                 SELECTED AREA
+                 ======================================
                 */
 
                 const areaX =
@@ -2524,54 +3755,80 @@ document
 
 
                 /*
-                 Margin.
+                 ======================================
+                 GEOTAG SIZE
+                 ======================================
+
+                 Width % is relative to selected area.
+                 Height % is also relative to selected
+                 area.
+
+                 We then cap it to the selected area
+                 so it NEVER leaves the box.
+                */
+
+                let geotagWidth =
+                    areaWidth *
+                    (
+                        state.geotagWidth /
+                        100
+                    );
+
+
+                let geotagHeight =
+                    areaHeight *
+                    (
+                        state.geotagHeight /
+                        100
+                    );
+
+
+                /*
+                 Small safety margin.
                 */
 
                 const margin =
                     Math.min(
                         areaWidth,
                         areaHeight
-                    ) * 0.05;
+                    ) *
+                    0.025;
 
 
-                const availableWidth =
-                    areaWidth -
-                    margin * 2;
-
-
-                const availableHeight =
-                    areaHeight -
-                    margin * 2;
-
-
-                /*
-                 Preserve geotag aspect ratio.
-                */
-
-                const scale =
-                    Math.min(
-
-                        availableWidth /
-                        geotag.naturalWidth,
-
-                        availableHeight /
-                        geotag.naturalHeight
-
+                const maxWidth =
+                    Math.max(
+                        1,
+                        areaWidth -
+                        margin * 2
                     );
 
 
-                const geotagWidth =
-                    geotag.naturalWidth *
-                    scale;
+                const maxHeight =
+                    Math.max(
+                        1,
+                        areaHeight -
+                        margin * 2
+                    );
 
 
-                const geotagHeight =
-                    geotag.naturalHeight *
-                    scale;
+                geotagWidth =
+                    Math.min(
+                        geotagWidth,
+                        maxWidth
+                    );
+
+
+                geotagHeight =
+                    Math.min(
+                        geotagHeight,
+                        maxHeight
+                    );
 
 
                 /*
-                 Center inside selected area.
+                 ======================================
+                 CENTER GEOTAG
+                 ======================================
                 */
 
                 const geotagX =
@@ -2579,7 +3836,8 @@ document
                     (
                         areaWidth -
                         geotagWidth
-                    ) / 2;
+                    ) /
+                    2;
 
 
                 const geotagY =
@@ -2587,14 +3845,25 @@ document
                     (
                         areaHeight -
                         geotagHeight
-                    ) / 2;
+                    ) /
+                    2;
 
 
                 /*
-                 Draw clear geotag on top.
+                 ======================================
+                 OPACITY
+                 ======================================
                 */
 
-                outputContext.drawImage(
+                outputCtx.save();
+
+
+                outputCtx.globalAlpha =
+                    state.geotagOpacity /
+                    100;
+
+
+                outputCtx.drawImage(
 
                     geotag,
 
@@ -2607,13 +3876,22 @@ document
                 );
 
 
+                outputCtx.restore();
+
+
                 /*
-                 Export.
+                 ======================================
+                 EXPORT
+                 ======================================
                 */
 
                 const blob =
                     await new Promise(
-                        (resolve, reject) => {
+                        (
+                            resolve,
+                            reject
+                        ) => {
+
 
                             output.toBlob(
                                 result => {
@@ -2630,7 +3908,7 @@ document
 
                                         reject(
                                             new Error(
-                                                "Export failed"
+                                                "Geotag export failed."
                                             )
                                         );
 
@@ -2644,9 +3922,11 @@ document
                     );
 
 
-                state.generatedBlob =
-                    blob;
-
+                /*
+                 ======================================
+                 SAVE
+                 ======================================
+                */
 
                 if (
                     item.outputURL
@@ -2669,12 +3949,17 @@ document
                     );
 
 
+                state.generatedBlob =
+                    blob;
+
+
                 /*
-                 Show final image.
+                 Display final image.
                 */
 
                 canvas.width =
                     output.width;
+
 
                 canvas.height =
                     output.height;
@@ -2699,6 +3984,9 @@ document
                     false;
 
 
+                updateSelectionBox();
+
+
                 renderGallery();
 
 
@@ -2706,16 +3994,20 @@ document
                     "Geotag added successfully."
                 );
 
-            } catch (error) {
+
+            } catch (
+                error
+            ) {
+
 
                 console.error(
-                    "Geotag error:",
+                    "Add geotag error:",
                     error
                 );
 
 
                 showToast(
-                    "Could not add the geotag."
+                    "Could not add geotag."
                 );
 
             }
@@ -2724,9 +4016,9 @@ document
     );
 
 
-/* ============================================================
+/* =========================================================
    DOWNLOAD
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -2735,6 +4027,7 @@ document
     .addEventListener(
         "click",
         () => {
+
 
             if (
                 state.activeIndex === -1
@@ -2755,11 +4048,9 @@ document
                 ];
 
 
-            const blob =
-                item.outputBlob;
-
-
-            if (!blob) {
+            if (
+                !item.outputBlob
+            ) {
 
                 showToast(
                     "Generate the blur image first."
@@ -2772,7 +4063,7 @@ document
 
             const url =
                 URL.createObjectURL(
-                    blob
+                    item.outputBlob
                 );
 
 
@@ -2807,18 +4098,24 @@ document
 
 
             setTimeout(
-                () =>
-                    URL.revokeObjectURL(url),
+                () => {
+
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                },
                 1000
             );
+
 
         }
     );
 
 
-/* ============================================================
+/* =========================================================
    RESET IMAGE
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -2828,10 +4125,13 @@ document
         "click",
         async () => {
 
+
             if (
                 state.activeIndex === -1
             ) {
+
                 return;
+
             }
 
 
@@ -2872,6 +4172,10 @@ document
                 false;
 
 
+            state.interaction =
+                null;
+
+
             hideSelection();
 
 
@@ -2889,36 +4193,9 @@ document
     );
 
 
-/* ============================================================
-   RESET AREA
-============================================================ */
-
-document
-    .getElementById(
-        "resetSelectionButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            state.selection =
-                null;
-
-            state.selecting =
-                false;
-
-            state.interaction =
-                null;
-
-            hideSelection();
-
-        }
-    );
-
-
-/* ============================================================
+/* =========================================================
    NAVIGATION
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -2927,6 +4204,7 @@ document
     .addEventListener(
         "click",
         () => {
+
 
             if (
                 state.activeIndex > 0
@@ -2950,6 +4228,7 @@ document
         "click",
         () => {
 
+
             if (
                 state.activeIndex <
                 state.images.length - 1
@@ -2965,9 +4244,9 @@ document
     );
 
 
-/* ============================================================
+/* =========================================================
    SAVE NEXT
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -2976,6 +4255,7 @@ document
     .addEventListener(
         "click",
         () => {
+
 
             if (
                 state.activeIndex <
@@ -2998,9 +4278,9 @@ document
     );
 
 
-/* ============================================================
+/* =========================================================
    CLOSE
-============================================================ */
+========================================================= */
 
 document
     .getElementById(
@@ -3014,15 +4294,16 @@ document
                 "open"
             );
 
+
             renderGallery();
 
         }
     );
 
 
-/* ============================================================
-   FILE INPUT BUTTONS
-============================================================ */
+/* =========================================================
+   FILE BUTTONS
+========================================================= */
 
 document
     .getElementById(
@@ -3030,7 +4311,11 @@ document
     )
     .addEventListener(
         "click",
-        () => imageInput.click()
+        () => {
+
+            imageInput.click();
+
+        }
     );
 
 
@@ -3040,7 +4325,11 @@ document
     )
     .addEventListener(
         "click",
-        () => folderInput.click()
+        () => {
+
+            folderInput.click();
+
+        }
     );
 
 
@@ -3050,7 +4339,11 @@ document
     )
     .addEventListener(
         "click",
-        () => geotagInput.click()
+        () => {
+
+            geotagInput.click();
+
+        }
     );
 
 
@@ -3060,49 +4353,69 @@ document
     )
     .addEventListener(
         "click",
-        () => geotagInput.click()
+        () => {
+
+            geotagInput.click();
+
+        }
     );
 
 
-/* ============================================================
-   FILE INPUT EVENTS
-============================================================ */
+/* =========================================================
+   IMAGE FILE EVENT
+========================================================= */
 
 imageInput.addEventListener(
     "change",
     event => {
 
+
         uploadImages(
             event.target.files
         );
 
+
         /*
-         Allows selecting the SAME image again.
+         Allows same file to be
+         selected again.
         */
 
-        event.target.value = "";
+        event.target.value =
+            "";
 
     }
 );
 
+
+/* =========================================================
+   FOLDER EVENT
+========================================================= */
 
 folderInput.addEventListener(
     "change",
     event => {
 
+
         uploadImages(
             event.target.files
         );
 
-        event.target.value = "";
+
+        event.target.value =
+            "";
 
     }
 );
 
 
+/* =========================================================
+   GEOTAG EVENT
+========================================================= */
+
 geotagInput.addEventListener(
     "change",
     event => {
+
 
         if (
             event.target.files &&
@@ -3115,15 +4428,17 @@ geotagInput.addEventListener(
 
         }
 
-        event.target.value = "";
+
+        event.target.value =
+            "";
 
     }
 );
 
 
-/* ============================================================
-   RESPONSIVE SELECTION
-============================================================ */
+/* =========================================================
+   WINDOW RESIZE
+========================================================= */
 
 window.addEventListener(
     "resize",
@@ -3137,13 +4452,14 @@ window.addEventListener(
 );
 
 
-/* ============================================================
+/* =========================================================
    INITIALIZE
-============================================================ */
+========================================================= */
 
 renderGallery();
 
 </script>
 
 </body>
+
 </html>
