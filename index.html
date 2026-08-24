@@ -4,25 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>GeoImage - Geotag Blur & Blend</title>
+<title>GeoImage</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-:root {
-    --bg: #14161a;
-    --panel: #1d2026;
-    --panel2: #242830;
-    --border: #353a44;
-    --text: #eeeeee;
-    --muted: #9299a5;
-    --accent: #e5a13b;
-    --green: #61c28f;
-    --danger: #e05d58;
-}
-
 * {
     box-sizing: border-box;
+}
+
+:root {
+    --bg: #121418;
+    --panel: #1b1f25;
+    --panel2: #242932;
+    --border: #353b45;
+    --text: #f2f2f2;
+    --muted: #9299a5;
+    --accent: #e4a044;
+    --green: #58c78d;
+    --red: #e05d5d;
 }
 
 html,
@@ -40,11 +40,11 @@ body {
 }
 
 button {
-    border: 1px solid var(--border);
     background: var(--panel2);
     color: var(--text);
-    padding: 9px 13px;
+    border: 1px solid var(--border);
     border-radius: 6px;
+    padding: 9px 13px;
     cursor: pointer;
 }
 
@@ -53,27 +53,22 @@ button:hover:not(:disabled) {
 }
 
 button:disabled {
-    opacity: 0.4;
+    opacity: .4;
     cursor: not-allowed;
 }
 
-button.primary {
+.primary {
     background: var(--accent);
-    color: #17120a;
+    color: #16120b;
     border-color: var(--accent);
     font-weight: bold;
 }
 
-button.green {
+.success {
     background: var(--green);
-    color: #08140d;
+    color: #07150d;
     border-color: var(--green);
     font-weight: bold;
-}
-
-button.danger {
-    color: var(--danger);
-    border-color: var(--danger);
 }
 
 input[type="file"] {
@@ -82,16 +77,16 @@ input[type="file"] {
 
 input[type="number"] {
     width: 65px;
-    background: #111318;
-    color: white;
+    padding: 6px;
     border: 1px solid var(--border);
     border-radius: 5px;
-    padding: 6px;
+    background: #101216;
+    color: white;
 }
 
-/* =========================================================
-   TOP BAR
-========================================================= */
+/* =====================================================
+TOP BAR
+===================================================== */
 
 #topbar {
     height: 60px;
@@ -107,22 +102,21 @@ input[type="number"] {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-right: 12px;
+    margin-right: 10px;
 }
 
-.logoDot {
+.logo-dot {
     width: 10px;
     height: 10px;
     background: var(--accent);
     border-radius: 2px;
 }
 
-.logoTitle {
+.logo-name {
     font-weight: bold;
-    font-size: 16px;
 }
 
-.logoSub {
+.logo-sub {
     color: var(--muted);
     font-size: 10px;
 }
@@ -136,9 +130,9 @@ input[type="number"] {
     font-size: 12px;
 }
 
-/* =========================================================
-   MAIN
-========================================================= */
+/* =====================================================
+MAIN
+===================================================== */
 
 #main {
     height: calc(100vh - 60px);
@@ -155,31 +149,29 @@ input[type="number"] {
 
 #grid {
     display: grid;
-    grid-template-columns: repeat(
-        auto-fill,
-        minmax(200px, 1fr)
-    );
+    grid-template-columns:
+        repeat(auto-fill, minmax(210px, 1fr));
     gap: 14px;
 }
 
-#emptyState {
-    min-height: 400px;
+#empty {
     height: 100%;
+    min-height: 400px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
     color: var(--muted);
     text-align: center;
 }
 
-#emptyState h2 {
+#empty h2 {
     color: var(--text);
 }
 
-/* =========================================================
-   IMAGE CARD
-========================================================= */
+/* =====================================================
+CARDS
+===================================================== */
 
 .card {
     background: var(--panel);
@@ -193,141 +185,152 @@ input[type="number"] {
     box-shadow: 0 0 0 1px var(--accent);
 }
 
-.thumbnail {
-    height: 150px;
-    background: #0f1115;
+.thumb {
+    height: 155px;
+    background: #0d0f12;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
 }
 
-.thumbnail img {
+.thumb img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
 }
 
-.cardInfo {
+.card-info {
     padding: 9px;
 }
 
-.fileName {
+.file-name {
     font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.fileSize {
-    margin-top: 4px;
+.file-size {
     color: var(--muted);
     font-size: 10px;
+    margin-top: 4px;
 }
 
-.tagStatus {
-    margin-top: 5px;
+.tag-status {
     font-size: 10px;
+    margin-top: 5px;
 }
 
-.cardButtons {
+.card-actions {
     display: flex;
     gap: 5px;
     padding: 0 9px 9px;
 }
 
-.cardButtons button {
+.card-actions button {
     flex: 1;
     font-size: 11px;
-    padding: 7px;
 }
 
-/* =========================================================
-   RIGHT PANEL
-========================================================= */
+/* =====================================================
+SIDEBAR
+===================================================== */
 
 #sidebar {
-    width: 290px;
+    width: 300px;
     flex-shrink: 0;
     background: var(--panel);
     border-left: 1px solid var(--border);
     overflow-y: auto;
 }
 
-.sidebarSection {
+.section {
     padding: 15px;
     border-bottom: 1px solid var(--border);
 }
 
-.sidebarTitle {
+.section-title {
+    font-size: 11px;
     color: var(--muted);
     text-transform: uppercase;
-    font-size: 11px;
     letter-spacing: 1px;
-    margin-bottom: 12px;
+    margin-bottom: 11px;
 }
 
-.geotagPreview {
+.geotag-preview {
     width: 100%;
-    height: 85px;
+    height: 95px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px dashed var(--border);
-    border-radius: 6px;
+
     overflow: hidden;
 
     background:
         linear-gradient(
             45deg,
-            #24272d 25%,
+            #292d34 25%,
             transparent 25%
-        ) -6px 0/12px 12px,
+        ) 0 0/12px 12px,
+
         linear-gradient(
             -45deg,
-            #24272d 25%,
+            #292d34 25%,
             transparent 25%
-        ) -6px 0/12px 12px,
-        #1a1c20;
+        ) 0 0/12px 12px,
+
+        #1a1d22;
 }
 
-.geotagPreview img {
-    max-width: 95%;
-    max-height: 90%;
+.geotag-preview img {
+    max-width: 96%;
+    max-height: 92%;
 }
 
-.geotagReady {
-    margin-top: 8px;
+.ready {
     color: var(--green);
     font-size: 11px;
+    margin-top: 8px;
 }
 
-.settingRow {
+.setting {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     margin: 10px 0;
     font-size: 12px;
     color: var(--muted);
 }
 
-.helpText {
-    color: var(--muted);
+.help {
     font-size: 11px;
     line-height: 1.5;
+    color: var(--muted);
 }
 
-/* =========================================================
-   EDITOR OVERLAY
-========================================================= */
+.full {
+    width: 100%;
+    margin-bottom: 7px;
+}
+
+/* =====================================================
+EDITOR OVERLAY
+===================================================== */
 
 #overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.82);
+
     display: none;
     align-items: center;
     justify-content: center;
+
+    background: rgba(0,0,0,.84);
+
     z-index: 100;
 }
 
@@ -338,77 +341,91 @@ input[type="number"] {
 #editor {
     width: min(1250px, 96vw);
     height: min(850px, 94vh);
+
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 9px;
+
     overflow: hidden;
+
     display: flex;
     flex-direction: column;
 }
 
-#editorHeader {
+#editor-header {
     height: 52px;
     flex-shrink: 0;
+
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+
     gap: 10px;
+    padding: 8px 12px;
+
     border-bottom: 1px solid var(--border);
 }
 
-#editorTitle {
+#editor-title {
     font-weight: bold;
 }
 
-#editorCounter {
+#editor-count {
     color: var(--muted);
     font-size: 11px;
 }
 
-#editorBody {
+#editor-body {
     flex: 1;
     min-height: 0;
+
     display: flex;
 }
 
 #stage {
     flex: 1;
     min-width: 0;
+
     position: relative;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     overflow: hidden;
 
     background:
         repeating-conic-gradient(
-            #1c1e23 0% 25%,
-            #14161a 0% 50%
-        ) 0 0/22px 22px;
+            #1d2025 0% 25%,
+            #15171b 0% 50%
+        ) 0 0 / 22px 22px;
 }
 
 #canvas {
     display: block;
+
     max-width: 100%;
     max-height: 100%;
-    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+
+    box-shadow:
+        0 8px 35px rgba(0,0,0,.5);
 }
 
-/* =========================================================
-   SELECTION BOX
-========================================================= */
+/* =====================================================
+SELECTION
+===================================================== */
 
 #selection {
     position: absolute;
+
     display: none;
 
     border: 2px solid white;
 
-    background: rgba(255, 255, 255, 0.035);
+    background:
+        rgba(255,255,255,.025);
 
     box-shadow:
-        0 0 0 99999px rgba(0, 0, 0, 0.15),
-        0 4px 15px rgba(0, 0, 0, 0.35);
+        0 0 0 99999px rgba(0,0,0,.18);
 
     cursor: move;
 
@@ -417,10 +434,14 @@ input[type="number"] {
 
 .handle {
     position: absolute;
+
     width: 18px;
     height: 18px;
+
     background: white;
+
     border: 1px solid #111;
+
     border-radius: 3px;
 }
 
@@ -448,94 +469,121 @@ input[type="number"] {
     cursor: nwse-resize;
 }
 
-#selectionInfo {
+#selection-info {
     position: absolute;
+
     left: 7px;
     bottom: 7px;
-    padding: 4px 7px;
-    border-radius: 4px;
-    background: rgba(10, 10, 10, 0.8);
+
+    background: rgba(0,0,0,.8);
+
     color: white;
+
+    padding: 4px 7px;
+
+    border-radius: 4px;
+
     font-family: monospace;
+
     font-size: 10px;
+
     pointer-events: none;
 }
 
-/* =========================================================
-   EDITOR CONTROLS
-========================================================= */
+/* =====================================================
+EDITOR CONTROLS
+===================================================== */
 
-#editorControls {
-    width: 280px;
+#controls {
+    width: 285px;
     flex-shrink: 0;
-    border-left: 1px solid var(--border);
+
     overflow-y: auto;
+
+    border-left: 1px solid var(--border);
 }
 
-.controlSection {
+.control-section {
     padding: 15px;
     border-bottom: 1px solid var(--border);
 }
 
-.controlTitle {
+.control-title {
     color: var(--muted);
     text-transform: uppercase;
-    font-size: 11px;
     letter-spacing: 1px;
+    font-size: 11px;
     margin-bottom: 10px;
 }
 
-.controlSection p {
+.control-section p {
     color: var(--muted);
     font-size: 11px;
     line-height: 1.5;
 }
 
-.controlButton {
-    width: 100%;
-    margin-bottom: 7px;
-}
+/* =====================================================
+FOOTER
+===================================================== */
 
-#editorFooter {
+#editor-footer {
     height: 55px;
     flex-shrink: 0;
+
     display: flex;
     align-items: center;
+
     gap: 8px;
+
     padding: 8px 12px;
+
     border-top: 1px solid var(--border);
 }
 
-/* =========================================================
-   TOAST
-========================================================= */
+/* =====================================================
+TOAST
+===================================================== */
 
 #toast {
     position: fixed;
+
     left: 50%;
     bottom: 25px;
-    transform: translate(-50%, 20px);
+
+    transform:
+        translate(-50%, 20px);
+
     opacity: 0;
+
     pointer-events: none;
-    background: #252a32;
+
+    background: #272c34;
+
     border: 1px solid var(--border);
-    padding: 10px 17px;
+
     border-radius: 6px;
+
+    padding: 10px 17px;
+
     font-size: 12px;
+
     z-index: 999;
-    transition: 0.2s;
+
+    transition: .2s;
 }
 
 #toast.show {
     opacity: 1;
-    transform: translate(-50%, 0);
+
+    transform:
+        translate(-50%, 0);
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
+/* =====================================================
+MOBILE
+===================================================== */
 
-@media (max-width: 850px) {
+@media(max-width:850px) {
 
     body {
         overflow: auto;
@@ -565,7 +613,7 @@ input[type="number"] {
         border-radius: 0;
     }
 
-    #editorBody {
+    #editor-body {
         flex-direction: column;
     }
 
@@ -573,7 +621,7 @@ input[type="number"] {
         min-height: 55vh;
     }
 
-    #editorControls {
+    #controls {
         width: 100%;
         max-height: 35vh;
         border-left: 0;
@@ -585,33 +633,35 @@ input[type="number"] {
 
 <body>
 
-<!-- =========================================================
-     TOP BAR
-========================================================= -->
+<!-- =====================================================
+TOP BAR
+===================================================== -->
 
-<div id="topbar">
+<header id="topbar">
 
     <div class="logo">
-        <span class="logoDot"></span>
 
-        <span class="logoTitle">
+        <span class="logo-dot"></span>
+
+        <span class="logo-name">
             GeoImage
         </span>
 
-        <span class="logoSub">
-            Blur & Blend
+        <span class="logo-sub">
+            Geotag Blend
         </span>
+
     </div>
 
-    <button id="uploadPhotoButton">
+    <button id="upload-photo">
         Upload Photos
     </button>
 
-    <button id="uploadFolderButton">
+    <button id="upload-folder">
         Upload Folder
     </button>
 
-    <button id="uploadGeotagButton">
+    <button id="upload-geotag">
         Upload Geotag
     </button>
 
@@ -621,28 +671,32 @@ input[type="number"] {
         No photos loaded
     </span>
 
-    <button id="downloadSelectedButton" disabled>
+    <button
+        id="download-selected"
+        disabled
+    >
         Download Selected
     </button>
 
-    <button id="downloadZipButton" disabled>
+    <button
+        id="download-zip"
+        disabled
+    >
         Download ZIP
     </button>
 
-</div>
-
-<!-- FILE INPUTS -->
+</header>
 
 <input
     type="file"
-    id="photoInput"
+    id="photo-input"
     accept="image/*"
     multiple
 >
 
 <input
     type="file"
-    id="folderInput"
+    id="folder-input"
     accept="image/*"
     multiple
     webkitdirectory
@@ -651,23 +705,23 @@ input[type="number"] {
 
 <input
     type="file"
-    id="geotagInput"
+    id="geotag-input"
     accept="image/png,image/jpeg,image/webp"
 >
 
-<!-- =========================================================
-     MAIN
-========================================================= -->
+<!-- =====================================================
+MAIN
+===================================================== -->
 
-<div id="main">
+<main id="main">
 
-    <div id="gallery">
+    <section id="gallery">
 
         <div id="grid"></div>
 
-        <div id="emptyState">
+        <div id="empty">
 
-            <div style="font-size:42px;">
+            <div style="font-size:45px">
                 📷
             </div>
 
@@ -676,33 +730,32 @@ input[type="number"] {
             </h2>
 
             <p>
-                First upload your photos.
-                You can upload the geotag separately.
+                Upload your photos to begin.
             </p>
 
         </div>
 
-    </div>
+    </section>
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+    <!-- =================================================
+    SIDEBAR
+    ================================================== -->
 
     <aside id="sidebar">
 
-        <div class="sidebarSection">
+        <div class="section">
 
-            <div class="sidebarTitle">
-                Geotag
+            <div class="section-title">
+                Geotag Image
             </div>
 
             <div
-                class="geotagPreview"
-                id="geotagPreview"
+                class="geotag-preview"
+                id="geotag-preview"
             >
 
                 <span
-                    id="geotagPlaceholder"
+                    id="geotag-placeholder"
                     style="
                         color:#777;
                         font-size:11px;
@@ -714,31 +767,31 @@ input[type="number"] {
             </div>
 
             <div
-                id="geotagReady"
-                class="geotagReady"
-                style="display:none;"
+                id="geotag-ready"
+                class="ready"
+                style="display:none"
             >
-                ✓ Geotag loaded and ready
+                ✓ Geotag loaded
             </div>
 
             <br>
 
             <button
-                id="sidebarGeotagButton"
-                class="controlButton"
+                class="full"
+                id="sidebar-geotag"
             >
                 Upload / Replace Geotag
             </button>
 
         </div>
 
-        <div class="sidebarSection">
+        <div class="section">
 
-            <div class="sidebarTitle">
+            <div class="section-title">
                 Blend Settings
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
 
                 <span>
                     Blur
@@ -746,18 +799,18 @@ input[type="number"] {
 
                 <span>
                     <input
-                        id="blurSetting"
+                        id="blur"
                         type="number"
-                        value="5"
                         min="0"
                         max="30"
+                        value="5"
                     >
                     px
                 </span>
 
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
 
                 <span>
                     Grey
@@ -765,18 +818,18 @@ input[type="number"] {
 
                 <span>
                     <input
-                        id="greySetting"
+                        id="grey"
                         type="number"
-                        value="24"
                         min="0"
                         max="100"
+                        value="24"
                     >
                     %
                 </span>
 
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
 
                 <span>
                     Geotag opacity
@@ -784,93 +837,79 @@ input[type="number"] {
 
                 <span>
                     <input
-                        id="opacitySetting"
+                        id="opacity"
                         type="number"
-                        value="86"
                         min="1"
                         max="100"
+                        value="86"
                     >
                     %
                 </span>
 
             </div>
 
-            <p class="helpText">
+            <p class="help">
 
-                Recommended:
-
-                <br>
-
-                Blur: <b>5px</b>
-
-                <br>
-
-                Grey: <b>24%</b>
-
-                <br>
-
-                Opacity: <b>86%</b>
+                The selected area is softly blurred
+                and mixed with a subtle transparent
+                grey layer before the geotag is placed.
 
             </p>
 
         </div>
 
-        <div class="sidebarSection">
+        <div class="section">
 
-            <div class="sidebarTitle">
+            <div class="section-title">
                 Statistics
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
                 <span>Photos</span>
-                <b id="photoCount">0</b>
+                <b id="photo-count">0</b>
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
                 <span>Selected</span>
-                <b id="selectedCount">0</b>
+                <b id="selected-count">0</b>
             </div>
 
-            <div class="settingRow">
+            <div class="setting">
                 <span>Geotagged</span>
-                <b id="taggedCount">0</b>
+                <b id="tagged-count">0</b>
             </div>
-
-            <br>
 
             <button
-                id="selectAllButton"
-                class="controlButton"
+                class="full"
+                id="select-all"
             >
                 Select All
             </button>
 
             <button
-                id="clearSelectionButton"
-                class="controlButton"
+                class="full"
+                id="clear-all"
             >
                 Clear Selection
             </button>
 
         </div>
 
-        <div class="sidebarSection">
+        <div class="section">
 
-            <div class="sidebarTitle">
+            <div class="section-title">
                 Batch
             </div>
 
-            <p class="helpText">
-
-                Batch processing places the geotag
-                in the bottom-right area of every
-                image.
-
+            <p class="help">
+                Applies the geotag automatically
+                in the bottom-right area of all
+                loaded photos.
             </p>
 
             <button
-                id="batchButton"
-                class="controlButton primary"
+                class="full primary"
+                id="batch"
                 disabled
             >
                 Apply To All
@@ -880,37 +919,33 @@ input[type="number"] {
 
     </aside>
 
-</div>
+</main>
 
-<!-- =========================================================
-     EDITOR
-========================================================= -->
+<!-- =====================================================
+EDITOR
+===================================================== -->
 
 <div id="overlay">
 
     <div id="editor">
 
-        <div id="editorHeader">
+        <div id="editor-header">
 
-            <b id="editorTitle">
+            <b id="editor-title">
                 Image Editor
             </b>
 
-            <span id="editorCounter"></span>
+            <span id="editor-count"></span>
 
             <div class="spacer"></div>
 
-            <button id="closeEditor">
+            <button id="close">
                 Close
             </button>
 
         </div>
 
-        <div id="editorBody">
-
-            <!-- =================================================
-                 IMAGE STAGE
-            ================================================== -->
+        <div id="editor-body">
 
             <div id="stage">
 
@@ -923,7 +958,7 @@ input[type="number"] {
                     <div class="handle sw"></div>
                     <div class="handle se"></div>
 
-                    <div id="selectionInfo">
+                    <div id="selection-info">
                         0 × 0
                     </div>
 
@@ -931,42 +966,38 @@ input[type="number"] {
 
             </div>
 
-            <!-- =================================================
-                 EDITOR CONTROL PANEL
-            ================================================== -->
+            <div id="controls">
 
-            <div id="editorControls">
+                <div class="control-section">
 
-                <div class="controlSection">
-
-                    <div class="controlTitle">
-                        Step 1 — Select Area
+                    <div class="control-title">
+                        Select Area
                     </div>
 
                     <p>
-                        Select the exact area where
-                        your transparent geotag should
-                        appear.
+                        Click the button below to
+                        create a box over the photo.
+                        Drag the box to position it.
                     </p>
 
                     <button
-                        id="selectAreaButton"
-                        class="controlButton primary"
+                        id="select-area"
+                        class="full primary"
                     >
                         Select Geotag Area
                     </button>
 
                     <button
-                        id="applyButton"
-                        class="controlButton green"
+                        id="apply"
+                        class="full success"
                         disabled
                     >
                         Apply Blur + Geotag
                     </button>
 
                     <button
-                        id="cancelButton"
-                        class="controlButton"
+                        id="cancel-selection"
+                        class="full"
                         disabled
                     >
                         Cancel Selection
@@ -974,13 +1005,13 @@ input[type="number"] {
 
                 </div>
 
-                <div class="controlSection">
+                <div class="control-section">
 
-                    <div class="controlTitle">
-                        Step 2 — Blend
+                    <div class="control-title">
+                        Appearance
                     </div>
 
-                    <div class="settingRow">
+                    <div class="setting">
 
                         <span>
                             Blur
@@ -988,18 +1019,18 @@ input[type="number"] {
 
                         <span>
                             <input
-                                id="editorBlur"
+                                id="editor-blur"
                                 type="number"
-                                value="5"
                                 min="0"
                                 max="30"
+                                value="5"
                             >
                             px
                         </span>
 
                     </div>
 
-                    <div class="settingRow">
+                    <div class="setting">
 
                         <span>
                             Grey
@@ -1007,18 +1038,18 @@ input[type="number"] {
 
                         <span>
                             <input
-                                id="editorGrey"
+                                id="editor-grey"
                                 type="number"
-                                value="24"
                                 min="0"
                                 max="100"
+                                value="24"
                             >
                             %
                         </span>
 
                     </div>
 
-                    <div class="settingRow">
+                    <div class="setting">
 
                         <span>
                             Opacity
@@ -1026,11 +1057,11 @@ input[type="number"] {
 
                         <span>
                             <input
-                                id="editorOpacity"
+                                id="editor-opacity"
                                 type="number"
-                                value="86"
                                 min="1"
                                 max="100"
+                                value="86"
                             >
                             %
                         </span>
@@ -1039,31 +1070,30 @@ input[type="number"] {
 
                 </div>
 
-                <div class="controlSection">
+                <div class="control-section">
 
-                    <div class="controlTitle">
-                        How it works
+                    <div class="control-title">
+                        Workflow
                     </div>
 
                     <p>
-                        The selected area is first
-                        softly blurred.
+                        1. Upload photo.
                     </p>
 
                     <p>
-                        A transparent grey layer is
-                        then added over the blur.
+                        2. Upload transparent geotag.
                     </p>
 
                     <p>
-                        Your transparent geotag is
-                        placed over the blended area.
+                        3. Click Select Geotag Area.
                     </p>
 
                     <p>
-                        This makes the geotag look
-                        naturally integrated instead of
-                        looking like a pasted rectangle.
+                        4. Move and resize the box.
+                    </p>
+
+                    <p>
+                        5. Click Apply Blur + Geotag.
                     </p>
 
                 </div>
@@ -1072,24 +1102,24 @@ input[type="number"] {
 
         </div>
 
-        <div id="editorFooter">
+        <div id="editor-footer">
 
-            <button id="previousButton">
+            <button id="previous">
                 ← Previous
             </button>
 
-            <button id="nextButton">
+            <button id="next">
                 Next →
             </button>
 
             <div class="spacer"></div>
 
-            <button id="resetButton">
+            <button id="reset">
                 Reset
             </button>
 
             <button
-                id="saveButton"
+                id="save"
                 class="primary"
             >
                 Save Image
@@ -1101,17 +1131,13 @@ input[type="number"] {
 
 </div>
 
-<!-- =========================================================
-     TOAST
-========================================================= -->
-
 <div id="toast"></div>
 
 <script>
 
-/* =========================================================
-   STATE
-========================================================= */
+/* =====================================================
+STATE
+===================================================== */
 
 const state = {
 
@@ -1119,9 +1145,9 @@ const state = {
 
     activeIndex: -1,
 
-    geotagFile: null,
+    geotagBitmap: null,
 
-    geotagBitmap: null
+    geotagFile: null
 
 };
 
@@ -1143,58 +1169,61 @@ const editor = {
 
 };
 
-/* =========================================================
-   HELPERS
-========================================================= */
+/* =====================================================
+HELPERS
+===================================================== */
 
 function $(id) {
+
     return document.getElementById(id);
+
 }
 
-function clamp(value, min, max) {
+function clamp(
+    value,
+    min,
+    max
+) {
 
     return Math.max(
         min,
-        Math.min(max, value)
-    );
-
-}
-
-function showToast(message) {
-
-    const toast = $("toast");
-
-    toast.textContent = message;
-
-    toast.classList.add("show");
-
-    clearTimeout(
-        showToast.timer
-    );
-
-    showToast.timer =
-        setTimeout(() => {
-
-            toast.classList.remove(
-                "show"
-            );
-
-        }, 2200);
-
-}
-
-function sleep(ms) {
-
-    return new Promise(
-        resolve => setTimeout(
-            resolve,
-            ms
+        Math.min(
+            max,
+            value
         )
     );
 
 }
 
-function cloneCanvas(source) {
+function toast(message) {
+
+    const el =
+        $("toast");
+
+    el.textContent =
+        message;
+
+    el.classList.add("show");
+
+    clearTimeout(
+        toast.timer
+    );
+
+    toast.timer =
+        setTimeout(
+            () => {
+                el.classList.remove(
+                    "show"
+                );
+            },
+            2200
+        );
+
+}
+
+function cloneCanvas(
+    source
+) {
 
     const canvas =
         document.createElement(
@@ -1208,7 +1237,9 @@ function cloneCanvas(source) {
         source.height;
 
     const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+            "2d"
+        );
 
     ctx.drawImage(
         source,
@@ -1220,41 +1251,62 @@ function cloneCanvas(source) {
 
 }
 
-function formatBytes(bytes) {
+function formatBytes(
+    bytes
+) {
 
     if(bytes < 1024) {
         return bytes + " B";
     }
 
     if(bytes < 1024 * 1024) {
+
         return (
             bytes / 1024
-        ).toFixed(1) + " KB";
+        ).toFixed(1) +
+        " KB";
+
     }
 
     return (
         bytes /
         (1024 * 1024)
-    ).toFixed(1) + " MB";
+    ).toFixed(1) +
+    " MB";
 
 }
 
-function escapeHTML(text) {
+function escapeHTML(
+    text
+) {
 
-    return text
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return String(text)
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        );
 
 }
 
-/* =========================================================
-   PHOTO UPLOAD
-========================================================= */
+/* =====================================================
+PHOTO LOADING
+===================================================== */
 
-async function loadPhoto(file) {
+async function loadPhoto(
+    file
+) {
 
     if(
         !file.type ||
@@ -1272,19 +1324,22 @@ async function loadPhoto(file) {
 
     try {
 
-        const img =
+        const image =
             new Image();
 
         await new Promise(
-            (resolve, reject) => {
+            (
+                resolve,
+                reject
+            ) => {
 
-                img.onload =
+                image.onload =
                     resolve;
 
-                img.onerror =
+                image.onerror =
                     reject;
 
-                img.src =
+                image.src =
                     url;
 
             }
@@ -1296,10 +1351,10 @@ async function loadPhoto(file) {
             );
 
         canvas.width =
-            img.naturalWidth;
+            image.naturalWidth;
 
         canvas.height =
-            img.naturalHeight;
+            image.naturalHeight;
 
         const ctx =
             canvas.getContext(
@@ -1307,21 +1362,16 @@ async function loadPhoto(file) {
             );
 
         ctx.drawImage(
-            img,
+            image,
             0,
             0
         );
 
         const photo = {
 
-            id:
-                Date.now() +
-                Math.random(),
+            file: file,
 
-            file,
-
-            name:
-                file.name,
+            name: file.name,
 
             originalCanvas:
                 cloneCanvas(
@@ -1337,13 +1387,11 @@ async function loadPhoto(file) {
 
             selected: false,
 
-            tagged: false,
-
-            blendRect: null
+            tagged: false
 
         };
 
-        createThumbnail(
+        makeThumbnail(
             photo
         );
 
@@ -1361,23 +1409,27 @@ async function loadPhoto(file) {
 
 }
 
-/* =========================================================
-   LOAD MULTIPLE PHOTOS
-========================================================= */
+/* =====================================================
+LOAD PHOTOS
+===================================================== */
 
-async function loadPhotos(files) {
+async function loadPhotos(
+    files
+) {
 
-    const images =
+    const list =
         Array.from(files)
-            .filter(file =>
-                file.type.startsWith(
-                    "image/"
-                )
+            .filter(
+                file =>
+                    file.type &&
+                    file.type.startsWith(
+                        "image/"
+                    )
             );
 
-    if(!images.length) {
+    if(!list.length) {
 
-        showToast(
+        toast(
             "No image files found."
         );
 
@@ -1386,7 +1438,7 @@ async function loadPhotos(files) {
     }
 
     for(
-        const file of images
+        const file of list
     ) {
 
         try {
@@ -1409,28 +1461,29 @@ async function loadPhotos(files) {
 
     /*
      * IMPORTANT:
-     * We do NOT clear the geotag here.
      *
-     * This means:
+     * We DO NOT touch
+     * state.geotagBitmap here.
      *
-     * Upload geotag first
-     * THEN upload photos
+     * This is what allows:
      *
-     * will continue to work.
+     * Upload Geotag
+     * then
+     * Upload Photo
      */
 
     if(
         state.activeIndex === -1 &&
-        state.photos.length
+        state.photos.length === 1
     ) {
 
         openEditor(0);
 
     }
 
-    showToast(
-        `${images.length} photo${
-            images.length === 1
+    toast(
+        `${list.length} photo${
+            list.length === 1
                 ? ""
                 : "s"
         } loaded`
@@ -1438,11 +1491,13 @@ async function loadPhotos(files) {
 
 }
 
-/* =========================================================
-   THUMBNAIL
-========================================================= */
+/* =====================================================
+THUMBNAIL
+===================================================== */
 
-function createThumbnail(photo) {
+function makeThumbnail(
+    photo
+) {
 
     const source =
         photo.workingCanvas;
@@ -1452,12 +1507,13 @@ function createThumbnail(photo) {
             "canvas"
         );
 
-    const maxWidth = 350;
+    const max =
+        350;
 
     const scale =
         Math.min(
             1,
-            maxWidth /
+            max /
             source.width
         );
 
@@ -1479,97 +1535,229 @@ function createThumbnail(photo) {
             )
         );
 
-    const ctx =
-        canvas.getContext(
-            "2d"
+    canvas
+        .getContext("2d")
+        .drawImage(
+            source,
+            0,
+            0,
+            canvas.width,
+            canvas.height
         );
-
-    ctx.drawImage(
-        source,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
 
     photo.thumbnail =
         canvas.toDataURL(
             "image/jpeg",
-            0.88
+            .9
         );
 
 }
 
-/* =========================================================
-   UI
-========================================================= */
+/* =====================================================
+GEOTAG UPLOAD
+===================================================== */
+
+async function loadGeotag(
+    file
+) {
+
+    if(!file) {
+        return;
+    }
+
+    try {
+
+        /*
+         * DIRECTLY DECODE THE FILE.
+         *
+         * This is important.
+         */
+
+        const bitmap =
+            await createImageBitmap(
+                file
+            );
+
+        /*
+         * Close previous bitmap.
+         */
+
+        if(
+            state.geotagBitmap &&
+            typeof
+                state.geotagBitmap.close
+                === "function"
+        ) {
+
+            try {
+
+                state.geotagBitmap.close();
+
+            } catch(error) {}
+
+        }
+
+        /*
+         * Store it.
+         */
+
+        state.geotagBitmap =
+            bitmap;
+
+        state.geotagFile =
+            file;
+
+        /*
+         * Preview.
+         */
+
+        const preview =
+            $("geotag-preview");
+
+        preview.innerHTML = "";
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+        const url =
+            URL.createObjectURL(
+                file
+            );
+
+        image.src =
+            url;
+
+        image.onload =
+            () => {
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            };
+
+        preview.appendChild(
+            image
+        );
+
+        $("geotag-ready")
+            .style
+            .display =
+            "block";
+
+        updateUI();
+
+        toast(
+            "✓ Geotag uploaded"
+        );
+
+        console.log(
+            "GEOTAG:",
+            bitmap.width,
+            bitmap.height
+        );
+
+    } catch(error) {
+
+        console.error(
+            "GEOTAG ERROR:",
+            error
+        );
+
+        state.geotagBitmap =
+            null;
+
+        state.geotagFile =
+            null;
+
+        $("geotag-ready")
+            .style
+            .display =
+            "none";
+
+        updateUI();
+
+        toast(
+            "Could not load geotag image."
+        );
+
+    }
+
+}
+
+/* =====================================================
+UPDATE UI
+===================================================== */
 
 function updateUI() {
 
     renderGrid();
 
-    $("photoCount").textContent =
+    const photoCount =
         state.photos.length;
 
-    $("selectedCount").textContent =
+    const selectedCount =
         state.photos.filter(
             photo =>
                 photo.selected
         ).length;
 
-    $("taggedCount").textContent =
+    const taggedCount =
         state.photos.filter(
             photo =>
                 photo.tagged
         ).length;
 
-    $("emptyState").style.display =
-        state.photos.length
+    $("photo-count").textContent =
+        photoCount;
+
+    $("selected-count").textContent =
+        selectedCount;
+
+    $("tagged-count").textContent =
+        taggedCount;
+
+    $("empty").style.display =
+        photoCount
             ? "none"
             : "flex";
 
-    const selected =
-        state.photos.filter(
-            photo =>
-                photo.selected
-        ).length;
-
-    $("downloadSelectedButton")
+    $("download-selected")
         .disabled =
-        selected === 0;
+        selectedCount === 0;
 
-    $("downloadZipButton")
+    $("download-zip")
         .disabled =
-        state.photos.length === 0;
+        photoCount === 0;
 
-    $("batchButton")
+    $("batch")
         .disabled =
-        state.photos.length === 0 ||
+        photoCount === 0 ||
         !state.geotagBitmap;
 
-    if(
-        state.photos.length === 0
-    ) {
+    if(photoCount === 0) {
 
         $("status").textContent =
             state.geotagBitmap
-                ? "Geotag ready • Upload photos"
+                ? "Geotag ready • Upload photo"
                 : "No photos loaded";
 
     } else {
 
         $("status").textContent =
             state.geotagBitmap
-                ? `${state.photos.length} photos • Geotag ready`
-                : `${state.photos.length} photos • Upload geotag`;
+                ? `${photoCount} photos • Geotag ready`
+                : `${photoCount} photos • Upload geotag`;
 
     }
 
 }
 
-/* =========================================================
-   GRID
-========================================================= */
+/* =====================================================
+GRID
+===================================================== */
 
 function renderGrid() {
 
@@ -1579,7 +1767,10 @@ function renderGrid() {
     grid.innerHTML = "";
 
     state.photos.forEach(
-        (photo, index) => {
+        (
+            photo,
+            index
+        ) => {
 
             const card =
                 document.createElement(
@@ -1594,13 +1785,13 @@ function renderGrid() {
                         : ""
                 );
 
-            const thumbnail =
+            const thumb =
                 document.createElement(
                     "div"
                 );
 
-            thumbnail.className =
-                "thumbnail";
+            thumb.className =
+                "thumb";
 
             const image =
                 document.createElement(
@@ -1610,11 +1801,11 @@ function renderGrid() {
             image.src =
                 photo.thumbnail;
 
-            thumbnail.appendChild(
+            thumb.appendChild(
                 image
             );
 
-            thumbnail.onclick =
+            thumb.onclick =
                 () =>
                     openEditor(
                         index
@@ -1626,17 +1817,17 @@ function renderGrid() {
                 );
 
             info.className =
-                "cardInfo";
+                "card-info";
 
             info.innerHTML = `
 
-                <div class="fileName">
+                <div class="file-name">
                     ${escapeHTML(
                         photo.name
                     )}
                 </div>
 
-                <div class="fileSize">
+                <div class="file-size">
                     ${
                         photo.workingCanvas.width
                     }
@@ -1645,13 +1836,15 @@ function renderGrid() {
                         photo.workingCanvas.height
                     }
                     ·
-                    ${formatBytes(
-                        photo.file.size
-                    )}
+                    ${
+                        formatBytes(
+                            photo.file.size
+                        )
+                    }
                 </div>
 
                 <div
-                    class="tagStatus"
+                    class="tag-status"
                     style="
                         color:
                         ${
@@ -1670,25 +1863,25 @@ function renderGrid() {
 
             `;
 
-            const buttons =
+            const actions =
                 document.createElement(
                     "div"
                 );
 
-            buttons.className =
-                "cardButtons";
+            actions.className =
+                "card-actions";
 
-            const selectButton =
+            const select =
                 document.createElement(
                     "button"
                 );
 
-            selectButton.textContent =
+            select.textContent =
                 photo.selected
                     ? "Selected"
                     : "Select";
 
-            selectButton.onclick =
+            select.onclick =
                 () => {
 
                     photo.selected =
@@ -1698,29 +1891,29 @@ function renderGrid() {
 
                 };
 
-            const editButton =
+            const edit =
                 document.createElement(
                     "button"
                 );
 
-            editButton.textContent =
+            edit.textContent =
                 "Edit";
 
-            editButton.onclick =
+            edit.onclick =
                 () =>
                     openEditor(
                         index
                     );
 
-            buttons.append(
-                selectButton,
-                editButton
+            actions.append(
+                select,
+                edit
             );
 
             card.append(
-                thumbnail,
+                thumb,
                 info,
-                buttons
+                actions
             );
 
             grid.appendChild(
@@ -1732,242 +1925,33 @@ function renderGrid() {
 
 }
 
-/* =========================================================
-   GEOTAG UPLOAD
-========================================================= */
+/* =====================================================
+OPEN EDITOR
+===================================================== */
 
-async function uploadGeotag(file) {
+function openEditor(
+    index
+) {
 
-    if(!file) {
-        return;
-    }
+    /*
+     * ONLY the photo is required
+     * to open the editor.
+     *
+     * The geotag is NOT required
+     * at this stage.
+     */
 
     if(
-        !file.type.startsWith(
-            "image/"
-        )
+        state.photos.length === 0
     ) {
 
-        showToast(
-            "Please select a PNG/JPG geotag."
+        toast(
+            "Please upload a photo first."
         );
 
         return;
 
     }
-
-    try {
-
-        /*
-         * THIS IS THE IMPORTANT FIX.
-         *
-         * Decode the uploaded FILE directly.
-         *
-         * We don't depend on an HTML image
-         * finishing at a later time.
-         */
-
-        const bitmap =
-            await createImageBitmap(
-                file
-            );
-
-        /*
-         * Close old bitmap.
-         */
-
-        if(
-            state.geotagBitmap &&
-            typeof state.geotagBitmap.close
-                === "function"
-        ) {
-
-            try {
-
-                state.geotagBitmap.close();
-
-            } catch(error) {}
-
-        }
-
-        /*
-         * Store geotag permanently
-         * in application state.
-         */
-
-        state.geotagBitmap =
-            bitmap;
-
-        state.geotagFile =
-            file;
-
-        /*
-         * Preview.
-         */
-
-        const preview =
-            $("geotagPreview");
-
-        preview.innerHTML = "";
-
-        const previewImage =
-            document.createElement(
-                "img"
-            );
-
-        const previewURL =
-            URL.createObjectURL(
-                file
-            );
-
-        previewImage.src =
-            previewURL;
-
-        previewImage.onload =
-            () => {
-
-                URL.revokeObjectURL(
-                    previewURL
-                );
-
-            };
-
-        preview.appendChild(
-            previewImage
-        );
-
-        /*
-         * Show READY.
-         */
-
-        $("geotagReady")
-            .style
-            .display =
-            "block";
-
-        /*
-         * Enable batch if photos
-         * are already present.
-         */
-
-        updateUI();
-
-        showToast(
-            "✓ Geotag uploaded successfully"
-        );
-
-        console.log(
-            "Geotag loaded:",
-            bitmap.width,
-            "x",
-            bitmap.height
-        );
-
-    } catch(error) {
-
-        console.error(
-            "Geotag error:",
-            error
-        );
-
-        state.geotagBitmap =
-            null;
-
-        state.geotagFile =
-            null;
-
-        $("geotagReady")
-            .style
-            .display =
-            "none";
-
-        updateUI();
-
-        showToast(
-            "Could not load geotag image."
-        );
-
-    }
-
-}
-
-/* =========================================================
-   FILE INPUT EVENTS
-========================================================= */
-
-$("uploadPhotoButton").onclick =
-    () =>
-        $("photoInput").click();
-
-$("uploadFolderButton").onclick =
-    () =>
-        $("folderInput").click();
-
-$("uploadGeotagButton").onclick =
-    () =>
-        $("geotagInput").click();
-
-$("sidebarGeotagButton").onclick =
-    () =>
-        $("geotagInput").click();
-
-$("photoInput").addEventListener(
-    "change",
-    async event => {
-
-        await loadPhotos(
-            event.target.files
-        );
-
-        event.target.value = "";
-
-    }
-);
-
-$("folderInput").addEventListener(
-    "change",
-    async event => {
-
-        await loadPhotos(
-            event.target.files
-        );
-
-        event.target.value = "";
-
-    }
-);
-
-$("geotagInput").addEventListener(
-    "change",
-    async event => {
-
-        const file =
-            event.target.files &&
-            event.target.files[0];
-
-        if(file) {
-
-            await uploadGeotag(
-                file
-            );
-
-        }
-
-        /*
-         * Allows uploading the SAME
-         * geotag again.
-         */
-
-        event.target.value = "";
-
-    }
-);
-
-/* =========================================================
-   OPEN EDITOR
-========================================================= */
-
-function openEditor(index) {
 
     if(
         index < 0 ||
@@ -1992,6 +1976,10 @@ function openEditor(index) {
             "2d"
         );
 
+    /*
+     * Use current working image.
+     */
+
     editor.sourceCanvas =
         cloneCanvas(
             photo.workingCanvas
@@ -2010,28 +1998,28 @@ function openEditor(index) {
         .classList
         .add("open");
 
-    $("editorTitle")
+    $("editor-title")
         .textContent =
         photo.name;
 
-    $("editorCounter")
+    $("editor-count")
         .textContent =
         `${index + 1} / ${
             state.photos.length
         }`;
 
     /*
-     * Copy sidebar settings.
+     * Copy settings.
      */
 
-    $("editorBlur").value =
-        $("blurSetting").value;
+    $("editor-blur").value =
+        $("blur").value;
 
-    $("editorGrey").value =
-        $("greySetting").value;
+    $("editor-grey").value =
+        $("grey").value;
 
-    $("editorOpacity").value =
-        $("opacitySetting").value;
+    $("editor-opacity").value =
+        $("opacity").value;
 
     drawEditor();
 
@@ -2039,9 +2027,9 @@ function openEditor(index) {
 
 }
 
-/* =========================================================
-   DRAW EDITOR
-========================================================= */
+/* =====================================================
+DRAW EDITOR
+===================================================== */
 
 function drawEditor() {
 
@@ -2053,10 +2041,16 @@ function drawEditor() {
         $("stage");
 
     const maxWidth =
-        stage.clientWidth - 30;
+        Math.max(
+            100,
+            stage.clientWidth - 30
+        );
 
     const maxHeight =
-        stage.clientHeight - 30;
+        Math.max(
+            100,
+            stage.clientHeight - 30
+        );
 
     const sourceWidth =
         editor.sourceCanvas.width;
@@ -2074,15 +2068,21 @@ function drawEditor() {
         );
 
     editor.canvas.width =
-        Math.round(
-            sourceWidth *
-            editor.scale
+        Math.max(
+            1,
+            Math.round(
+                sourceWidth *
+                editor.scale
+            )
         );
 
     editor.canvas.height =
-        Math.round(
-            sourceHeight *
-            editor.scale
+        Math.max(
+            1,
+            Math.round(
+                sourceHeight *
+                editor.scale
+            )
         );
 
     editor.canvas.style.width =
@@ -2116,9 +2116,9 @@ function drawEditor() {
 
 }
 
-/* =========================================================
-   GET CANVAS POSITION
-========================================================= */
+/* =====================================================
+CANVAS BOUNDS
+===================================================== */
 
 function getCanvasBounds() {
 
@@ -2154,25 +2154,25 @@ function getCanvasBounds() {
 
 }
 
-/* =========================================================
-   START SELECTION
-========================================================= */
+/* =====================================================
+SELECT GEOTAG AREA
+===================================================== */
 
 function startSelection() {
 
     /*
-     * Check PHOTO first.
+     * IMPORTANT:
+     *
+     * We first check whether there
+     * are photos.
      */
 
     if(
-        state.activeIndex === -1 ||
-        !state.photos[
-            state.activeIndex
-        ]
+        state.photos.length === 0
     ) {
 
-        showToast(
-            "Please upload and open a photo first."
+        toast(
+            "Please upload a photo first."
         );
 
         return;
@@ -2180,17 +2180,47 @@ function startSelection() {
     }
 
     /*
-     * Check GEOTAG second.
+     * If no active photo exists,
+     * automatically open first photo.
      */
 
     if(
-        !state.geotagBitmap ||
-        state.geotagBitmap.width <= 0 ||
-        state.geotagBitmap.height <= 0
+        state.activeIndex < 0 ||
+        !state.photos[
+            state.activeIndex
+        ]
     ) {
 
-        showToast(
-            "Please upload the geotag image first."
+        openEditor(0);
+
+    }
+
+    /*
+     * Verify editor image.
+     */
+
+    if(
+        !editor.sourceCanvas
+    ) {
+
+        toast(
+            "Please open the photo first."
+        );
+
+        return;
+
+    }
+
+    /*
+     * NOW check geotag.
+     */
+
+    if(
+        !state.geotagBitmap
+    ) {
+
+        toast(
+            "Please upload the geotag PNG/JPG first."
         );
 
         return;
@@ -2200,29 +2230,52 @@ function startSelection() {
     const bounds =
         getCanvasBounds();
 
-    const width =
-        bounds.width * 0.42;
+    if(
+        bounds.width <= 0 ||
+        bounds.height <= 0
+    ) {
 
-    const height =
-        bounds.height * 0.22;
+        toast(
+            "Photo is still loading. Try again."
+        );
+
+        return;
+
+    }
+
+    /*
+     * Default selection.
+     *
+     * Bottom-right.
+     */
+
+    const w =
+        Math.min(
+            bounds.width * .42,
+            bounds.width - 20
+        );
+
+    const h =
+        Math.min(
+            bounds.height * .22,
+            bounds.height - 20
+        );
 
     editor.selection = {
 
         x:
             bounds.width -
-            width -
-            20,
+            w -
+            10,
 
         y:
             bounds.height -
-            height -
-            20,
+            h -
+            10,
 
-        w:
-            width,
+        w: w,
 
-        h:
-            height
+        h: h
 
     };
 
@@ -2234,64 +2287,61 @@ function startSelection() {
         .display =
         "block";
 
-    $("cancelButton")
+    $("apply")
         .disabled =
         false;
 
-    $("applyButton")
+    $("cancel-selection")
         .disabled =
         false;
 
     positionSelection();
 
-    showToast(
-        "Drag the box and resize it."
+    toast(
+        "✓ Selection box ready"
     );
 
 }
 
-/* =========================================================
-   POSITION SELECTION
-========================================================= */
+/* =====================================================
+POSITION SELECTION
+===================================================== */
 
 function positionSelection() {
 
     if(
-        !editor.selection ||
-        editor.mode !== "select"
+        !editor.selection
     ) {
-
         return;
-
     }
 
     const bounds =
         getCanvasBounds();
 
-    const selection =
+    const box =
         $("selection");
 
-    selection.style.left =
+    box.style.left =
         (
             bounds.left +
             editor.selection.x
         ) + "px";
 
-    selection.style.top =
+    box.style.top =
         (
             bounds.top +
             editor.selection.y
         ) + "px";
 
-    selection.style.width =
+    box.style.width =
         editor.selection.w +
         "px";
 
-    selection.style.height =
+    box.style.height =
         editor.selection.h +
         "px";
 
-    $("selectionInfo")
+    $("selection-info")
         .textContent =
         `${Math.round(
             editor.selection.w /
@@ -2303,9 +2353,9 @@ function positionSelection() {
 
 }
 
-/* =========================================================
-   HIDE SELECTION
-========================================================= */
+/* =====================================================
+HIDE SELECTION
+===================================================== */
 
 function hideSelection() {
 
@@ -2314,21 +2364,22 @@ function hideSelection() {
         .display =
         "none";
 
-    $("cancelButton")
+    $("apply")
         .disabled =
         true;
 
-    $("applyButton")
+    $("cancel-selection")
         .disabled =
         true;
 
 }
 
-/* =========================================================
-   CANCEL
-========================================================= */
+/* =====================================================
+CANCEL SELECTION
+===================================================== */
 
-$("cancelButton").onclick =
+$("cancel-selection")
+    .onclick =
     () => {
 
         editor.selection =
@@ -2346,86 +2397,91 @@ $("cancelButton").onclick =
 
     };
 
-/* =========================================================
-   SELECTION DRAGGING
-========================================================= */
+/* =====================================================
+DRAG SELECTION
+===================================================== */
 
-$("selection").addEventListener(
-    "pointerdown",
-    event => {
+$("selection")
+    .addEventListener(
+        "pointerdown",
+        event => {
 
-        if(
-            editor.mode !== "select" ||
-            !editor.selection
-        ) {
+            if(
+                editor.mode !==
+                "select" ||
+                !editor.selection
+            ) {
 
-            return;
+                return;
+
+            }
+
+            let type =
+                "move";
+
+            const target =
+                event.target;
+
+            if(
+                target.classList
+                    .contains("nw")
+            ) {
+                type = "nw";
+            }
+
+            else if(
+                target.classList
+                    .contains("ne")
+            ) {
+                type = "ne";
+            }
+
+            else if(
+                target.classList
+                    .contains("sw")
+            ) {
+                type = "sw";
+            }
+
+            else if(
+                target.classList
+                    .contains("se")
+            ) {
+                type = "se";
+            }
+
+            editor.drag = {
+
+                type: type,
+
+                startX:
+                    event.clientX,
+
+                startY:
+                    event.clientY,
+
+                original:
+                    {
+                        ...editor.selection
+                    }
+
+            };
+
+            try {
+                event.currentTarget
+                    .setPointerCapture(
+                        event.pointerId
+                    );
+            } catch(error) {}
+
+            event.preventDefault();
 
         }
+    );
 
-        let type =
-            "move";
-
-        const target =
-            event.target;
-
-        if(
-            target.classList.contains(
-                "nw"
-            )
-        ) {
-            type = "nw";
-        }
-
-        if(
-            target.classList.contains(
-                "ne"
-            )
-        ) {
-            type = "ne";
-        }
-
-        if(
-            target.classList.contains(
-                "sw"
-            )
-        ) {
-            type = "sw";
-        }
-
-        if(
-            target.classList.contains(
-                "se"
-            )
-        ) {
-            type = "se";
-        }
-
-        editor.drag = {
-
-            type,
-
-            startX:
-                event.clientX,
-
-            startY:
-                event.clientY,
-
-            original:
-                {
-                    ...editor.selection
-                }
-
-        };
-
-        event.preventDefault();
-
-    }
-);
-
-/* =========================================================
-   DRAG MOVE
-========================================================= */
+/* =====================================================
+MOVE / RESIZE
+===================================================== */
 
 window.addEventListener(
     "pointermove",
@@ -2433,7 +2489,9 @@ window.addEventListener(
 
         if(
             !editor.drag ||
-            editor.mode !== "select"
+            !editor.selection ||
+            editor.mode !==
+                "select"
         ) {
 
             return;
@@ -2451,19 +2509,19 @@ window.addEventListener(
             event.clientY -
             drag.startY;
 
-        const original =
+        const old =
             drag.original;
 
         const bounds =
             getCanvasBounds();
 
+        const minSize =
+            35;
+
         const result =
             {
-                ...original
+                ...old
             };
-
-        const minimum =
-            35;
 
         /*
          * MOVE
@@ -2476,20 +2534,18 @@ window.addEventListener(
 
             result.x =
                 clamp(
-                    original.x +
-                        dx,
+                    old.x + dx,
                     0,
                     bounds.width -
-                        original.w
+                    old.w
                 );
 
             result.y =
                 clamp(
-                    original.y +
-                        dy,
+                    old.y + dy,
                     0,
                     bounds.height -
-                        original.h
+                    old.h
                 );
 
         }
@@ -2505,22 +2561,21 @@ window.addEventListener(
 
             const newX =
                 clamp(
-                    original.x +
-                        dx,
+                    old.x + dx,
                     0,
-                    original.x +
-                        original.w -
-                        minimum
+                    old.x +
+                    old.w -
+                    minSize
                 );
 
             result.x =
                 newX;
 
             result.w =
-                original.w -
+                old.w -
                 (
                     newX -
-                    original.x
+                    old.x
                 );
 
         }
@@ -2536,11 +2591,10 @@ window.addEventListener(
 
             result.w =
                 clamp(
-                    original.w +
-                        dx,
-                    minimum,
+                    old.w + dx,
+                    minSize,
                     bounds.width -
-                        original.x
+                    old.x
                 );
 
         }
@@ -2556,22 +2610,21 @@ window.addEventListener(
 
             const newY =
                 clamp(
-                    original.y +
-                        dy,
+                    old.y + dy,
                     0,
-                    original.y +
-                        original.h -
-                        minimum
+                    old.y +
+                    old.h -
+                    minSize
                 );
 
             result.y =
                 newY;
 
             result.h =
-                original.h -
+                old.h -
                 (
                     newY -
-                    original.y
+                    old.y
                 );
 
         }
@@ -2587,11 +2640,10 @@ window.addEventListener(
 
             result.h =
                 clamp(
-                    original.h +
-                        dy,
-                    minimum,
+                    old.h + dy,
+                    minSize,
                     bounds.height -
-                        original.y
+                    old.y
                 );
 
         }
@@ -2614,216 +2666,48 @@ window.addEventListener(
     }
 );
 
-/* =========================================================
-   CONVERT SELECTION TO REAL IMAGE
-========================================================= */
+/* =====================================================
+NATIVE RECT
+===================================================== */
 
-function getNativeSelection() {
-
-    const scale =
-        editor.scale;
+function nativeRect() {
 
     return {
 
         x:
             Math.round(
                 editor.selection.x /
-                scale
+                editor.scale
             ),
 
         y:
             Math.round(
                 editor.selection.y /
-                scale
+                editor.scale
             ),
 
         w:
             Math.round(
                 editor.selection.w /
-                scale
+                editor.scale
             ),
 
         h:
             Math.round(
                 editor.selection.h /
-                scale
+                editor.scale
             )
 
     };
 
 }
 
-/* =========================================================
-   BLUR REGION
-========================================================= */
-
-function applyBlurToRegion(
-    context,
-    source,
-    rect,
-    blur
-) {
-
-    if(
-        !rect ||
-        blur <= 0
-    ) {
-
-        return;
-
-    }
-
-    const padding =
-        Math.ceil(
-            blur * 3
-        );
-
-    const sx =
-        Math.max(
-            0,
-            rect.x -
-                padding
-        );
-
-    const sy =
-        Math.max(
-            0,
-            rect.y -
-                padding
-        );
-
-    const ex =
-        Math.min(
-            source.width,
-            rect.x +
-                rect.w +
-                padding
-        );
-
-    const ey =
-        Math.min(
-            source.height,
-            rect.y +
-                rect.h +
-                padding
-        );
-
-    const width =
-        ex - sx;
-
-    const height =
-        ey - sy;
-
-    if(
-        width <= 0 ||
-        height <= 0
-    ) {
-
-        return;
-
-    }
-
-    const temporary =
-        document.createElement(
-            "canvas"
-        );
-
-    temporary.width =
-        width;
-
-    temporary.height =
-        height;
-
-    const tempContext =
-        temporary.getContext(
-            "2d"
-        );
-
-    /*
-     * First draw normal.
-     */
-
-    tempContext.drawImage(
-        source,
-        sx,
-        sy,
-        width,
-        height,
-        0,
-        0,
-        width,
-        height
-    );
-
-    /*
-     * Clear and redraw with blur.
-     */
-
-    tempContext.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-    tempContext.filter =
-        `blur(${blur}px)`;
-
-    tempContext.drawImage(
-        source,
-        sx,
-        sy,
-        width,
-        height,
-        0,
-        0,
-        width,
-        height
-    );
-
-    tempContext.filter =
-        "none";
-
-    /*
-     * Put only the selected region
-     * back onto the main canvas.
-     */
-
-    context.save();
-
-    context.beginPath();
-
-    context.rect(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h
-    );
-
-    context.clip();
-
-    context.drawImage(
-        temporary,
-        rect.x - sx,
-        rect.y - sy,
-        rect.w,
-        rect.h,
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h
-    );
-
-    context.restore();
-
-}
-
-/* =========================================================
-   CREATE FINAL GEOTAGGED CANVAS
-========================================================= */
+/* =====================================================
+CREATE FINAL IMAGE
+===================================================== */
 
 function createFinalCanvas(
-    sourceCanvas,
+    source,
     rect
 ) {
 
@@ -2833,22 +2717,22 @@ function createFinalCanvas(
         );
 
     output.width =
-        sourceCanvas.width;
+        source.width;
 
     output.height =
-        sourceCanvas.height;
+        source.height;
 
-    const context =
+    const ctx =
         output.getContext(
             "2d"
         );
 
     /*
-     * ORIGINAL PHOTO
+     * ORIGINAL
      */
 
-    context.drawImage(
-        sourceCanvas,
+    ctx.drawImage(
+        source,
         0,
         0
     );
@@ -2860,7 +2744,7 @@ function createFinalCanvas(
     const blur =
         clamp(
             Number(
-                $("editorBlur").value
+                $("editor-blur").value
             ) || 5,
             0,
             30
@@ -2869,7 +2753,7 @@ function createFinalCanvas(
     const grey =
         clamp(
             Number(
-                $("editorGrey").value
+                $("editor-grey").value
             ) || 24,
             0,
             100
@@ -2878,49 +2762,159 @@ function createFinalCanvas(
     const opacity =
         clamp(
             Number(
-                $("editorOpacity").value
+                $("editor-opacity").value
             ) || 86,
             1,
             100
         ) / 100;
 
     /*
-     * BLUR
+     * =================================================
+     * BLUR ONLY SELECTED AREA
+     * =================================================
      */
 
-    applyBlurToRegion(
-        context,
-        sourceCanvas,
-        rect,
-        blur
-    );
+    if(blur > 0) {
+
+        const padding =
+            Math.ceil(
+                blur * 4
+            );
+
+        const sx =
+            Math.max(
+                0,
+                rect.x -
+                padding
+            );
+
+        const sy =
+            Math.max(
+                0,
+                rect.y -
+                padding
+            );
+
+        const ex =
+            Math.min(
+                source.width,
+                rect.x +
+                rect.w +
+                padding
+            );
+
+        const ey =
+            Math.min(
+                source.height,
+                rect.y +
+                rect.h +
+                padding
+            );
+
+        const sw =
+            ex - sx;
+
+        const sh =
+            ey - sy;
+
+        if(
+            sw > 0 &&
+            sh > 0
+        ) {
+
+            const blurCanvas =
+                document.createElement(
+                    "canvas"
+                );
+
+            blurCanvas.width =
+                sw;
+
+            blurCanvas.height =
+                sh;
+
+            const blurCtx =
+                blurCanvas.getContext(
+                    "2d"
+                );
+
+            blurCtx.filter =
+                `blur(${blur}px)`;
+
+            blurCtx.drawImage(
+                source,
+                sx,
+                sy,
+                sw,
+                sh,
+                0,
+                0,
+                sw,
+                sh
+            );
+
+            blurCtx.filter =
+                "none";
+
+            ctx.save();
+
+            ctx.beginPath();
+
+            ctx.rect(
+                rect.x,
+                rect.y,
+                rect.w,
+                rect.h
+            );
+
+            ctx.clip();
+
+            ctx.drawImage(
+                blurCanvas,
+                rect.x - sx,
+                rect.y - sy,
+                rect.w,
+                rect.h,
+                rect.x,
+                rect.y,
+                rect.w,
+                rect.h
+            );
+
+            ctx.restore();
+
+        }
+
+    }
 
     /*
-     * GREY TRANSPARENT BLEND
+     * =================================================
+     * GREY BLEND
+     * =================================================
      */
 
-    context.save();
+    ctx.save();
 
-    context.beginPath();
+    ctx.beginPath();
 
-    context.rect(
+    ctx.rect(
         rect.x,
         rect.y,
         rect.w,
         rect.h
     );
 
-    context.clip();
+    ctx.clip();
 
-    context.fillStyle =
+    ctx.fillStyle =
         `rgba(
-            75,
-            75,
-            75,
+            80,
+            80,
+            80,
             ${grey}
         )`;
 
-    context.fillRect(
+    ctx.fillRect(
         rect.x,
         rect.y,
         rect.w,
@@ -2928,47 +2922,50 @@ function createFinalCanvas(
     );
 
     /*
-     * Very subtle highlight.
+     * Slight gradient so it doesn't
+     * look like a flat rectangle.
      */
 
     const gradient =
-        context.createLinearGradient(
+        ctx.createLinearGradient(
             rect.x,
             rect.y,
             rect.x,
             rect.y +
-                rect.h
+            rect.h
         );
 
     gradient.addColorStop(
         0,
-        "rgba(255,255,255,0.035)"
+        "rgba(255,255,255,.035)"
     );
 
     gradient.addColorStop(
-        0.5,
+        .5,
         "rgba(255,255,255,0)"
     );
 
     gradient.addColorStop(
         1,
-        "rgba(0,0,0,0.10)"
+        "rgba(0,0,0,.10)"
     );
 
-    context.fillStyle =
+    ctx.fillStyle =
         gradient;
 
-    context.fillRect(
+    ctx.fillRect(
         rect.x,
         rect.y,
         rect.w,
         rect.h
     );
 
-    context.restore();
+    ctx.restore();
 
     /*
+     * =================================================
      * GEOTAG
+     * =================================================
      */
 
     if(
@@ -2979,27 +2976,27 @@ function createFinalCanvas(
             state.geotagBitmap;
 
         /*
-         * Keep a little padding.
+         * Fit geotag inside selection.
          */
 
         const padding =
             Math.min(
-                rect.w * 0.025,
-                rect.h * 0.04
+                rect.w * .025,
+                rect.h * .04
             );
 
         const availableWidth =
             Math.max(
                 1,
                 rect.w -
-                    padding * 2
+                padding * 2
             );
 
         const availableHeight =
             Math.max(
                 1,
                 rect.h -
-                    padding * 2
+                padding * 2
             );
 
         const scale =
@@ -3033,12 +3030,12 @@ function createFinalCanvas(
                 tagHeight
             ) / 2;
 
-        context.save();
+        ctx.save();
 
-        context.globalAlpha =
+        ctx.globalAlpha =
             opacity;
 
-        context.drawImage(
+        ctx.drawImage(
             tag,
             tagX,
             tagY,
@@ -3046,7 +3043,7 @@ function createFinalCanvas(
             tagHeight
         );
 
-        context.restore();
+        ctx.restore();
 
     }
 
@@ -3054,25 +3051,25 @@ function createFinalCanvas(
 
 }
 
-/* =========================================================
-   APPLY BLUR + GEOTAG
-========================================================= */
+/* =====================================================
+APPLY
+===================================================== */
 
 async function applyBlend() {
 
     /*
-     * Check photo.
+     * PHOTO CHECK
      */
 
     if(
-        state.activeIndex === -1 ||
+        state.activeIndex < 0 ||
         !state.photos[
             state.activeIndex
         ]
     ) {
 
-        showToast(
-            "Please upload and open a photo first."
+        toast(
+            "Please open a photo first."
         );
 
         return;
@@ -3080,15 +3077,15 @@ async function applyBlend() {
     }
 
     /*
-     * Check geotag.
+     * GEOTAG CHECK
      */
 
     if(
         !state.geotagBitmap
     ) {
 
-        showToast(
-            "Please upload the geotag image first."
+        toast(
+            "Please upload the geotag PNG/JPG first."
         );
 
         return;
@@ -3096,14 +3093,14 @@ async function applyBlend() {
     }
 
     /*
-     * Check box.
+     * SELECTION CHECK
      */
 
     if(
         !editor.selection
     ) {
 
-        showToast(
+        toast(
             "Please select the geotag area first."
         );
 
@@ -3117,42 +3114,39 @@ async function applyBlend() {
         ];
 
     const rect =
-        getNativeSelection();
+        nativeRect();
 
     /*
-     * Create final image.
+     * CREATE FINAL
      */
 
-    const output =
+    const result =
         createFinalCanvas(
             editor.sourceCanvas,
             rect
         );
 
     /*
-     * Save to photo.
+     * SAVE
      */
 
     photo.workingCanvas =
-        output;
-
-    photo.blendRect =
-        rect;
+        result;
 
     photo.tagged =
         true;
 
-    createThumbnail(
+    makeThumbnail(
         photo
     );
 
     /*
-     * Update editor.
+     * Update editor
      */
 
     editor.sourceCanvas =
         cloneCanvas(
-            output
+            result
         );
 
     editor.selection =
@@ -3167,23 +3161,23 @@ async function applyBlend() {
 
     updateUI();
 
-    showToast(
-        "✓ Geotag blended successfully"
+    toast(
+        "✓ Blur + geotag applied"
     );
 
 }
 
-/* =========================================================
-   BATCH APPLY
-========================================================= */
+/* =====================================================
+BATCH
+===================================================== */
 
-async function applyToAll() {
+async function applyBatch() {
 
     if(
         !state.geotagBitmap
     ) {
 
-        showToast(
+        toast(
             "Please upload the geotag first."
         );
 
@@ -3195,7 +3189,7 @@ async function applyToAll() {
         !state.photos.length
     ) {
 
-        showToast(
+        toast(
             "Please upload photos first."
         );
 
@@ -3213,34 +3207,26 @@ async function applyToAll() {
         const height =
             photo.workingCanvas.height;
 
-        /*
-         * Bottom-right default area.
-         */
-
         const rect = {
-
-            w:
-                Math.round(
-                    width * 0.42
-                ),
-
-            h:
-                Math.round(
-                    height * 0.22
-                ),
 
             x:
                 Math.round(
-                    width -
-                    width * 0.42 -
-                    width * 0.018
+                    width * .56
                 ),
 
             y:
                 Math.round(
-                    height -
-                    height * 0.22 -
-                    height * 0.018
+                    height * .76
+                ),
+
+            w:
+                Math.round(
+                    width * .42
+                ),
+
+            h:
+                Math.round(
+                    height * .22
                 )
 
         };
@@ -3251,37 +3237,33 @@ async function applyToAll() {
                 rect
             );
 
-        photo.blendRect =
-            rect;
-
         photo.tagged =
             true;
 
-        createThumbnail(
+        makeThumbnail(
             photo
         );
-
-        await sleep(10);
 
     }
 
     updateUI();
 
-    showToast(
-        "✓ Geotag applied to all photos"
+    toast(
+        "✓ Geotag applied to all images"
     );
 
 }
 
-/* =========================================================
-   RESET CURRENT IMAGE
-========================================================= */
+/* =====================================================
+RESET
+===================================================== */
 
-$("resetButton").onclick =
+$("reset")
+    .onclick =
     () => {
 
         if(
-            state.activeIndex === -1
+            state.activeIndex < 0
         ) {
             return;
         }
@@ -3299,10 +3281,7 @@ $("resetButton").onclick =
         photo.tagged =
             false;
 
-        photo.blendRect =
-            null;
-
-        createThumbnail(
+        makeThumbnail(
             photo
         );
 
@@ -3323,56 +3302,29 @@ $("resetButton").onclick =
 
         updateUI();
 
-        showToast(
-            "Image reset."
+        toast(
+            "Image reset"
         );
 
     };
 
-/* =========================================================
-   SAVE CURRENT IMAGE
-========================================================= */
+/* =====================================================
+DOWNLOAD
+===================================================== */
 
-$("saveButton").onclick =
-    () => {
-
-        if(
-            state.activeIndex === -1
-        ) {
-            return;
-        }
-
-        const photo =
-            state.photos[
-                state.activeIndex
-            ];
-
-        downloadCanvas(
-            photo.workingCanvas,
-            makeOutputName(
-                photo.name
-            )
-        );
-
-    };
-
-/* =========================================================
-   DOWNLOAD
-========================================================= */
-
-function makeOutputName(
-    originalName
+function outputName(
+    name
 ) {
 
     const dot =
-        originalName.lastIndexOf(
+        name.lastIndexOf(
             "."
         );
 
-    if(dot !== -1) {
+    if(dot >= 0) {
 
         return (
-            originalName.substring(
+            name.substring(
                 0,
                 dot
             ) +
@@ -3382,7 +3334,7 @@ function makeOutputName(
     }
 
     return (
-        originalName +
+        name +
         "_geotag.jpg"
     );
 
@@ -3398,8 +3350,8 @@ function downloadCanvas(
 
             if(!blob) {
 
-                showToast(
-                    "Could not export image."
+                toast(
+                    "Could not create image."
                 );
 
                 return;
@@ -3443,16 +3395,45 @@ function downloadCanvas(
 
         },
         "image/jpeg",
-        0.94
+        .94
     );
 
 }
 
-/* =========================================================
-   DOWNLOAD SELECTED
-========================================================= */
+/* =====================================================
+SAVE
+===================================================== */
 
-$("downloadSelectedButton").onclick =
+$("save")
+    .onclick =
+    () => {
+
+        if(
+            state.activeIndex < 0
+        ) {
+            return;
+        }
+
+        const photo =
+            state.photos[
+                state.activeIndex
+            ];
+
+        downloadCanvas(
+            photo.workingCanvas,
+            outputName(
+                photo.name
+            )
+        );
+
+    };
+
+/* =====================================================
+DOWNLOAD SELECTED
+===================================================== */
+
+$("download-selected")
+    .onclick =
     async () => {
 
         const selected =
@@ -3461,10 +3442,12 @@ $("downloadSelectedButton").onclick =
                     photo.selected
             );
 
-        if(!selected.length) {
+        if(
+            !selected.length
+        ) {
 
-            showToast(
-                "No photos selected."
+            toast(
+                "No images selected."
             );
 
             return;
@@ -3477,22 +3460,30 @@ $("downloadSelectedButton").onclick =
 
             downloadCanvas(
                 photo.workingCanvas,
-                makeOutputName(
+                outputName(
                     photo.name
                 )
             );
 
-            await sleep(150);
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        150
+                    )
+            );
 
         }
 
     };
 
-/* =========================================================
-   ZIP
-========================================================= */
+/* =====================================================
+ZIP
+===================================================== */
 
-function canvasToBlob(canvas) {
+function canvasBlob(
+    canvas
+) {
 
     return new Promise(
         resolve => {
@@ -3500,7 +3491,7 @@ function canvasToBlob(canvas) {
             canvas.toBlob(
                 resolve,
                 "image/jpeg",
-                0.94
+                .94
             );
 
         }
@@ -3508,15 +3499,14 @@ function canvasToBlob(canvas) {
 
 }
 
-$("downloadZipButton").onclick =
+$("download-zip")
+    .onclick =
     async () => {
 
         if(
             !state.photos.length
         ) {
-
             return;
-
         }
 
         if(
@@ -3524,15 +3514,15 @@ $("downloadZipButton").onclick =
             "undefined"
         ) {
 
-            showToast(
-                "ZIP library not available."
+            toast(
+                "ZIP library unavailable."
             );
 
             return;
 
         }
 
-        showToast(
+        toast(
             "Creating ZIP..."
         );
 
@@ -3544,12 +3534,12 @@ $("downloadZipButton").onclick =
         ) {
 
             const blob =
-                await canvasToBlob(
+                await canvasBlob(
                     photo.workingCanvas
                 );
 
             zip.file(
-                makeOutputName(
+                outputName(
                     photo.name
                 ),
                 blob
@@ -3557,14 +3547,14 @@ $("downloadZipButton").onclick =
 
         }
 
-        const zipBlob =
+        const result =
             await zip.generateAsync({
                 type: "blob"
             });
 
         const url =
             URL.createObjectURL(
-                zipBlob
+                result
             );
 
         const link =
@@ -3587,82 +3577,169 @@ $("downloadZipButton").onclick =
         link.remove();
 
         setTimeout(
-            () => {
+            () =>
                 URL.revokeObjectURL(
                     url
-                );
-            },
+                ),
             2000
         );
 
-        showToast(
-            "✓ ZIP downloaded"
+        toast(
+            "✓ ZIP created"
         );
 
     };
 
-/* =========================================================
-   SELECT ALL
-========================================================= */
+/* =====================================================
+SELECT ALL
+===================================================== */
 
-$("selectAllButton").onclick =
+$("select-all")
+    .onclick =
     () => {
 
         state.photos.forEach(
-            photo => {
+            photo =>
                 photo.selected =
-                    true;
-            }
+                    true
         );
 
         updateUI();
 
     };
 
-/* =========================================================
-   CLEAR SELECTION
-========================================================= */
+/* =====================================================
+CLEAR ALL
+===================================================== */
 
-$("clearSelectionButton").onclick =
+$("clear-all")
+    .onclick =
     () => {
 
         state.photos.forEach(
-            photo => {
+            photo =>
                 photo.selected =
-                    false;
-            }
+                    false
         );
 
         updateUI();
 
     };
 
-/* =========================================================
-   BATCH
-========================================================= */
+/* =====================================================
+EVENTS
+===================================================== */
 
-$("batchButton").onclick =
-    applyToAll;
+$("upload-photo")
+    .onclick =
+    () =>
+        $("photo-input").click();
 
-/* =========================================================
-   EDITOR BUTTONS
-========================================================= */
+$("upload-folder")
+    .onclick =
+    () =>
+        $("folder-input").click();
 
-$("selectAreaButton").onclick =
+$("upload-geotag")
+    .onclick =
+    () =>
+        $("geotag-input").click();
+
+$("sidebar-geotag")
+    .onclick =
+    () =>
+        $("geotag-input").click();
+
+/* PHOTO */
+
+$("photo-input")
+    .addEventListener(
+        "change",
+        async event => {
+
+            await loadPhotos(
+                event.target.files
+            );
+
+            event.target.value =
+                "";
+
+        }
+    );
+
+/* FOLDER */
+
+$("folder-input")
+    .addEventListener(
+        "change",
+        async event => {
+
+            await loadPhotos(
+                event.target.files
+            );
+
+            event.target.value =
+                "";
+
+        }
+    );
+
+/* GEOTAG */
+
+$("geotag-input")
+    .addEventListener(
+        "change",
+        async event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+            if(file) {
+
+                await loadGeotag(
+                    file
+                );
+
+            }
+
+            /*
+             * Allows selecting same file again.
+             */
+
+            event.target.value =
+                "";
+
+        }
+    );
+
+/* SELECT AREA */
+
+$("select-area")
+    .onclick =
     startSelection;
 
-$("applyButton").onclick =
+/* APPLY */
+
+$("apply")
+    .onclick =
     applyBlend;
 
-$("closeEditor").onclick =
+/* BATCH */
+
+$("batch")
+    .onclick =
+    applyBatch;
+
+/* CLOSE */
+
+$("close")
+    .onclick =
     () => {
 
         $("overlay")
             .classList
             .remove("open");
-
-        editor.drag =
-            null;
 
         editor.selection =
             null;
@@ -3670,15 +3747,17 @@ $("closeEditor").onclick =
         editor.mode =
             "none";
 
+        editor.drag =
+            null;
+
         hideSelection();
 
     };
 
-/* =========================================================
-   PREVIOUS
-========================================================= */
+/* PREVIOUS */
 
-$("previousButton").onclick =
+$("previous")
+    .onclick =
     () => {
 
         if(
@@ -3703,11 +3782,10 @@ $("previousButton").onclick =
 
     };
 
-/* =========================================================
-   NEXT
-========================================================= */
+/* NEXT */
 
-$("nextButton").onclick =
+$("next")
+    .onclick =
     () => {
 
         if(
@@ -3734,77 +3812,79 @@ $("nextButton").onclick =
 
     };
 
-/* =========================================================
-   SYNC SIDEBAR SETTINGS
-========================================================= */
+/* =====================================================
+SETTINGS SYNC
+===================================================== */
 
-$("blurSetting").addEventListener(
-    "input",
-    () => {
+$("blur")
+    .addEventListener(
+        "input",
+        () => {
 
-        $("editorBlur").value =
-            $("blurSetting").value;
+            $("editor-blur").value =
+                $("blur").value;
 
-    }
-);
+        }
+    );
 
-$("greySetting").addEventListener(
-    "input",
-    () => {
+$("grey")
+    .addEventListener(
+        "input",
+        () => {
 
-        $("editorGrey").value =
-            $("greySetting").value;
+            $("editor-grey").value =
+                $("grey").value;
 
-    }
-);
+        }
+    );
 
-$("opacitySetting").addEventListener(
-    "input",
-    () => {
+$("opacity")
+    .addEventListener(
+        "input",
+        () => {
 
-        $("editorOpacity").value =
-            $("opacitySetting").value;
+            $("editor-opacity").value =
+                $("opacity").value;
 
-    }
-);
+        }
+    );
 
-/* =========================================================
-   SYNC EDITOR SETTINGS
-========================================================= */
+$("editor-blur")
+    .addEventListener(
+        "input",
+        () => {
 
-$("editorBlur").addEventListener(
-    "input",
-    () => {
+            $("blur").value =
+                $("editor-blur").value;
 
-        $("blurSetting").value =
-            $("editorBlur").value;
+        }
+    );
 
-    }
-);
+$("editor-grey")
+    .addEventListener(
+        "input",
+        () => {
 
-$("editorGrey").addEventListener(
-    "input",
-    () => {
+            $("grey").value =
+                $("editor-grey").value;
 
-        $("greySetting").value =
-            $("editorGrey").value;
+        }
+    );
 
-    }
-);
+$("editor-opacity")
+    .addEventListener(
+        "input",
+        () => {
 
-$("editorOpacity").addEventListener(
-    "input",
-    () => {
+            $("opacity").value =
+                $("editor-opacity").value;
 
-        $("opacitySetting").value =
-            $("editorOpacity").value;
+        }
+    );
 
-    }
-);
-
-/* =========================================================
-   RESIZE
-========================================================= */
+/* =====================================================
+RESIZE
+===================================================== */
 
 window.addEventListener(
     "resize",
@@ -3833,9 +3913,9 @@ window.addEventListener(
     }
 );
 
-/* =========================================================
-   ESC
-========================================================= */
+/* =====================================================
+ESCAPE
+===================================================== */
 
 window.addEventListener(
     "keydown",
@@ -3848,16 +3928,16 @@ window.addEventListener(
                 .contains("open")
         ) {
 
-            $("closeEditor").click();
+            $("close").click();
 
         }
 
     }
 );
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
+/* =====================================================
+INITIAL
+===================================================== */
 
 updateUI();
 
