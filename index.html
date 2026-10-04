@@ -4,3577 +4,5224 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Geotag Studio — Blur & Geotag</title>
+<title>Photo Tools — White Text Remover + GeoTag</title>
 
-<!-- HEIC / HEIF support -->
-<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<!-- ZIP CREATION -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-
-:root{
-  --bg:#14161a;
-  --panel:#1c1f26;
-  --panel2:#22262f;
-  --border:#303540;
-  --text:#eeeae3;
-  --muted:#9298a4;
-  --accent:#e8a33d;
-  --danger:#d9645a;
-}
-
 *{
-  box-sizing:border-box;
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
 }
 
-html,
+html,body{
+    min-height:100%;
+}
+
 body{
-  width:100%;
-  height:100%;
-  margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f3f4f6;
+    color:#171717;
 }
 
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-  overflow:hidden;
-}
-
-/* =========================================================
-   TOP BAR
-========================================================= */
-
-#topbar{
-  height:56px;
-  background:var(--panel);
-  border-bottom:1px solid var(--border);
-
-  display:flex;
-  align-items:center;
-
-  padding:0 18px;
-  gap:10px;
-}
-
-.logoDot{
-  width:10px;
-  height:10px;
-  border-radius:2px;
-  background:var(--accent);
-}
-
-.logo{
-  font-size:17px;
-  font-weight:700;
-}
-
-.subtitle{
-  color:#666c77;
-  font-size:11px;
-}
-
-#status{
-  margin-left:auto;
-  color:var(--muted);
-  font-size:12px;
-}
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-#main{
-  height:calc(100vh - 56px);
-
-  display:flex;
-
-  min-height:0;
-}
-
-/* =========================================================
-   PREVIEW
-========================================================= */
-
-#previewArea{
-  flex:1;
-
-  min-width:0;
-
-  position:relative;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  overflow:auto;
-
-  padding:25px;
-
-  background:
-    repeating-conic-gradient(
-      #191b20 0% 25%,
-      #14161a 0% 50%
-    ) 0 0 / 24px 24px;
-}
-
-/*
-IMPORTANT:
-
-The wrapper is the exact visual size of the
-displayed canvas.
-
-The selection rectangle is positioned relative
-to this wrapper.
-*/
-
-#canvasWrapper{
-  position:relative;
-
-  display:none;
-
-  flex-shrink:0;
-
-  line-height:0;
-}
-
-#previewCanvas{
-  display:block;
-
-  max-width:calc(100vw - 380px);
-  max-height:calc(100vh - 110px);
-
-  width:auto;
-  height:auto;
-
-  box-shadow:
-    0 8px 35px rgba(0,0,0,.55);
-
-  touch-action:none;
-}
-
-/* =========================================================
-   SELECTION OVERLAY
-========================================================= */
-
-#selectionOverlay{
-
-  position:absolute;
-
-  display:none;
-
-  border:2px solid var(--accent);
-
-  background:rgba(232,163,61,.10);
-
-  box-shadow:
-    0 0 0 99999px rgba(0,0,0,.28),
-    inset 0 0 20px rgba(232,163,61,.08);
-
-  cursor:move;
-
-  z-index:10;
-
-  touch-action:none;
-}
-
-.handle{
-
-  position:absolute;
-
-  width:15px;
-  height:15px;
-
-  background:var(--accent);
-
-  border:2px solid #17130c;
-
-  border-radius:3px;
-
-  z-index:20;
-}
-
-.handle.tl{
-  left:-8px;
-  top:-8px;
-  cursor:nwse-resize;
-}
-
-.handle.tr{
-  right:-8px;
-  top:-8px;
-  cursor:nesw-resize;
-}
-
-.handle.bl{
-  left:-8px;
-  bottom:-8px;
-  cursor:nesw-resize;
-}
-
-.handle.br{
-  right:-8px;
-  bottom:-8px;
-  cursor:nwse-resize;
-}
-
-.selectionLabel{
-
-  position:absolute;
-
-  top:-30px;
-  left:0;
-
-  background:var(--accent);
-
-  color:#181206;
-
-  font-size:11px;
-
-  font-weight:bold;
-
-  padding:5px 8px;
-
-  border-radius:4px;
-
-  white-space:nowrap;
-
-  line-height:normal;
-}
-
-/* =========================================================
-   EMPTY
-========================================================= */
-
-#empty{
-  text-align:center;
-
-  color:#606671;
-
-  max-width:380px;
-}
-
-#empty .icon{
-  font-size:40px;
-  margin-bottom:10px;
-}
-
-#empty h2{
-  color:#9a9fa8;
-  font-size:17px;
-  margin:0 0 8px;
-}
-
-#empty p{
-  font-size:13px;
-  line-height:1.5;
-  margin:0;
-}
-
-/* =========================================================
-   DIMENSIONS
-========================================================= */
-
-#dimensions{
-
-  position:absolute;
-
-  bottom:8px;
-  left:15px;
-
-  color:#606671;
-
-  font-size:11px;
-
-  font-family:monospace;
-}
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
-#sidebar{
-
-  width:330px;
-
-  flex-shrink:0;
-
-  background:var(--panel);
-
-  border-left:1px solid var(--border);
-
-  overflow-y:auto;
-}
-
-.section{
-
-  padding:17px;
-
-  border-bottom:1px solid var(--border);
-}
-
-.sectionTitle{
-
-  color:#646a75;
-
-  text-transform:uppercase;
-
-  letter-spacing:1px;
-
-  font-size:11px;
-
-  font-weight:bold;
-
-  margin-bottom:12px;
+button,
+input,
+textarea,
+select{
+    font:inherit;
 }
 
 button{
-
-  border:1px solid var(--border);
-
-  background:var(--panel2);
-
-  color:var(--text);
-
-  padding:10px 13px;
-
-  border-radius:5px;
-
-  font-size:13px;
-
-  cursor:pointer;
-
-  font-weight:500;
-}
-
-button:hover:not(:disabled){
-
-  border-color:var(--accent);
+    border:0;
+    cursor:pointer;
 }
 
 button:disabled{
-
-  opacity:.4;
-
-  cursor:not-allowed;
+    opacity:.45;
+    cursor:not-allowed;
 }
 
-button.primary{
+/* =====================================================
+   TOP STEP BAR
+===================================================== */
 
-  background:var(--accent);
-
-  color:#181206;
-
-  border-color:var(--accent);
-
-  font-weight:bold;
+#stepBar{
+    max-width:1200px;
+    margin:14px auto 0;
+    padding:0 16px;
 }
 
-.full{
-  width:100%;
+.step{
+    display:inline-block;
+    padding:9px 14px;
+    border-radius:9px;
+    font-size:12px;
+    font-weight:700;
 }
 
-.row{
-
-  display:flex;
-
-  gap:8px;
+#stepOne{
+    background:#1769e0;
+    color:white;
 }
 
-.row button{
-  flex:1;
+#stepTwo{
+    background:#e5e7eb;
+    color:#555;
+    margin-left:6px;
 }
 
-.stack{
+/* =====================================================
+   COMMON
+===================================================== */
 
-  display:flex;
-
-  flex-direction:column;
-
-  gap:8px;
+.page{
+    max-width:1200px;
+    margin:auto;
+    padding:24px 16px;
 }
 
-/* =========================================================
-   SLIDERS
-========================================================= */
+h1{
+    text-align:center;
+    margin-bottom:6px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#666;
+    margin-bottom:20px;
+}
+
+.card{
+    background:white;
+    border:1px solid #ddd;
+    border-radius:16px;
+    padding:16px;
+}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    justify-content:center;
+    margin-bottom:12px;
+}
+
+button,
+.fileButton{
+    padding:11px 15px;
+    border-radius:9px;
+    font-weight:700;
+}
+
+.fileButton{
+    background:#1769e0;
+    color:white;
+    cursor:pointer;
+}
+
+.fileButton input{
+    display:none;
+}
+
+.btn-dark{
+    background:#222;
+    color:white;
+}
+
+.btn-gray{
+    background:#555;
+    color:white;
+}
+
+.btn-blue{
+    background:#1769e0;
+    color:white;
+}
+
+.btn-green{
+    background:#14834b;
+    color:white;
+}
+
+.btn-orange{
+    background:#d97706;
+    color:white;
+}
+
+.status{
+    text-align:center;
+    min-height:22px;
+    color:#555;
+    margin:8px;
+}
+
+.counter{
+    text-align:center;
+    font-weight:700;
+    margin:8px 0;
+}
+
+/* =====================================================
+   IMAGE WORK AREA
+===================================================== */
+
+.imageStage{
+    position:relative;
+    background:#181818;
+    border-radius:14px;
+    min-height:420px;
+    overflow:auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:12px;
+}
+
+#editCanvas{
+    display:block;
+    max-width:100%;
+    height:auto;
+    cursor:crosshair;
+}
+
+.selectionBox{
+    position:absolute;
+    border:2px solid #ff3030;
+    background:rgba(255,255,255,.08);
+    display:none;
+    pointer-events:none;
+}
+
+.toolRow{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+}
+
+.controlPanel{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.control{
+    background:#f7f7f8;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:10px;
+}
+
+.control label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:7px;
+}
+
+.control b{
+    color:#1769e0;
+}
+
+.control input[type="range"]{
+    width:100%;
+}
+
+.help{
+    text-align:center;
+    color:#666;
+    font-size:12px;
+    margin-top:10px;
+}
+
+/* =====================================================
+   FOLDER THUMBNAILS
+===================================================== */
+
+.thumbnailStrip{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:10px 0 2px;
+}
+
+.thumb{
+    width:76px;
+    height:76px;
+    flex:0 0 76px;
+    border-radius:8px;
+    overflow:hidden;
+    border:2px solid transparent;
+    background:#ddd;
+    cursor:pointer;
+}
+
+.thumb.active{
+    border-color:#1769e0;
+}
+
+.thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* =====================================================
+   GEO PAGE
+===================================================== */
+
+#geoPage{
+    display:none;
+    background:#0b1015;
+    color:#eef2f7;
+    min-height:calc(100vh - 65px);
+}
+
+.geoLayout{
+    display:grid;
+    grid-template-columns:370px minmax(0,1fr);
+    min-height:calc(100vh - 65px);
+}
+
+.geoAside{
+    background:#111820;
+    border-right:1px solid #26313b;
+    padding:18px;
+    overflow:auto;
+}
+
+.geoAside h2{
+    margin-bottom:5px;
+}
+
+.geoDescription{
+    color:#8e9aa6;
+    font-size:12px;
+    line-height:1.45;
+    margin-bottom:14px;
+}
+
+.notice{
+    background:#241a12;
+    border:1px solid #5a3d1a;
+    color:#f0c27b;
+    border-radius:8px;
+    padding:10px;
+    font-size:11px;
+    line-height:1.4;
+    margin-bottom:14px;
+}
+
+.sectionTitle{
+    font-size:13px;
+    font-weight:700;
+    margin:14px 0 9px;
+}
+
+.field{
+    margin-bottom:10px;
+}
+
+.field label{
+    display:block;
+    color:#aeb8c2;
+    font-size:11px;
+    margin-bottom:5px;
+}
+
+.field input,
+.field textarea,
+.field select{
+    width:100%;
+    background:#151e27;
+    color:#eef2f7;
+    border:1px solid #334250;
+    border-radius:8px;
+    padding:10px;
+    outline:none;
+}
+
+.field textarea{
+    min-height:75px;
+    resize:vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+    border-color:#2387ff;
+}
+
+#gFind{
+    width:100%;
+    background:#1769e0;
+    margin-bottom:7px;
+}
+
+#gStatus{
+    font-size:11px;
+    color:#8e9aa6;
+    min-height:30px;
+}
+
+.coordsBox{
+    background:#151e27;
+    border:1px solid #263441;
+    border-radius:8px;
+    padding:9px;
+    margin:7px 0;
+}
+
+.coordsTitle{
+    color:#8e9aa6;
+    font-size:10px;
+    margin-bottom:4px;
+}
+
+#gCoords{
+    font-size:12px;
+}
+
+.dateGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
 
 .slider{
-
-  margin-bottom:17px;
+    background:#151e27;
+    border:1px solid #263441;
+    border-radius:9px;
+    padding:9px;
+    margin-bottom:7px;
 }
 
-.slider:last-child{
-  margin-bottom:0;
+.sliderTop{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    margin-bottom:6px;
 }
 
-.sliderHeader{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  margin-bottom:7px;
-
-  color:var(--muted);
-
-  font-size:12px;
+.sliderTop b{
+    color:#63a8ff;
 }
 
-.sliderValue{
-
-  color:var(--text);
-
-  font-family:monospace;
-}
-
-input[type=range]{
-
-  width:100%;
-
-  accent-color:var(--accent);
-
-  cursor:pointer;
-}
-
-/* =========================================================
-   GEOTAG PREVIEW
-========================================================= */
-
-#geoPreview{
-
-  height:70px;
-
-  margin-top:10px;
-
-  border:1px dashed var(--border);
-
-  border-radius:5px;
-
-  display:flex;
-
-  justify-content:center;
-
-  align-items:center;
-
-  overflow:hidden;
-
-  background:
-    linear-gradient(
-      45deg,
-      #252831 25%,
-      transparent 25%
-    ) -8px 0/16px 16px,
-
-    linear-gradient(
-      -45deg,
-      #252831 25%,
-      transparent 25%
-    ) -8px 0/16px 16px,
-
-    #191b20;
-}
-
-#geoPreview img{
-
-  max-width:95%;
-  max-height:90%;
-
-  object-fit:contain;
-}
-
-.placeholder{
-
-  color:#606671;
-
-  font-size:11px;
-
-  font-family:monospace;
-}
-
-/* =========================================================
-   SEGMENT
-========================================================= */
-
-.segment{
-
-  display:flex;
-
-  border:1px solid var(--border);
-
-  border-radius:5px;
-
-  overflow:hidden;
-}
-
-.segment button{
-
-  flex:1;
-
-  border:0;
-
-  border-radius:0;
-}
-
-.segment button.active{
-
-  background:var(--accent);
-
-  color:#181206;
-}
-
-/* =========================================================
-   INFO
-========================================================= */
-
-.info{
-
-  color:#777d87;
-
-  font-size:11px;
-
-  line-height:1.5;
-
-  margin-top:9px;
-}
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-#toast{
-
-  position:fixed;
-
-  left:50%;
-
-  bottom:25px;
-
-  transform:translate(-50%,15px);
-
-  background:#252a32;
-
-  border:1px solid var(--border);
-
-  color:var(--text);
-
-  padding:11px 17px;
-
-  border-radius:5px;
-
-  opacity:0;
-
-  pointer-events:none;
-
-  transition:.2s;
-
-  z-index:1000;
-
-  font-size:13px;
-}
-
-#toast.show{
-
-  opacity:1;
-
-  transform:translate(-50%,0);
-}
-
-#toast.error{
-
-  color:#ffaaa2;
-
-  border-color:var(--danger);
-}
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media(max-width:900px){
-
-  body{
-    overflow:auto;
-  }
-
-  #main{
-
-    height:auto;
-
-    min-height:calc(100vh - 56px);
-
-    flex-direction:column;
-  }
-
-  #previewArea{
-
-    height:55vh;
-
-    flex:none;
-
-    padding:15px;
-  }
-
-  #previewCanvas{
-
-    max-width:calc(100vw - 30px);
-
-    max-height:50vh;
-  }
-
-  #sidebar{
-
+.slider input{
     width:100%;
-
-    border-left:0;
-
-    border-top:1px solid var(--border);
-  }
-
-  #status{
-    display:none;
-  }
+    accent-color:#2387ff;
 }
 
+.geoButtons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:12px;
+}
+
+.geoButtons button{
+    width:100%;
+}
+
+#gSaveNext{
+    background:#14834b;
+}
+
+#gDownloadAll{
+    background:#1769e0;
+}
+
+.geoMain{
+    padding:18px;
+    min-width:0;
+}
+
+.previewHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+}
+
+.previewHeader span{
+    color:#84919d;
+    font-size:11px;
+}
+
+.previewBox{
+    background:#05080b;
+    border:1px solid #26313b;
+    border-radius:14px;
+    min-height:550px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:auto;
+    padding:10px;
+}
+
+#gCanvas{
+    display:block;
+    max-width:100%;
+    height:auto;
+    cursor:default;
+}
+
+.mapCredit{
+    color:#84919d;
+    font-size:10px;
+    text-align:center;
+    margin-top:7px;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:850px){
+
+    .geoLayout{
+        grid-template-columns:1fr;
+    }
+
+    .geoAside{
+        border-right:0;
+        border-bottom:1px solid #26313b;
+    }
+
+    .controlPanel{
+        grid-template-columns:1fr;
+    }
+
+    .previewBox{
+        min-height:350px;
+    }
+}
+
+@media(max-width:600px){
+
+    .toolbar{
+        flex-direction:column;
+    }
+
+    .toolbar>*{
+        width:100%;
+        text-align:center;
+    }
+
+    .dateGrid{
+        grid-template-columns:1fr;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<!-- =========================================================
-     TOP BAR
-========================================================= -->
+<!-- =====================================================
+     STEP BAR
+===================================================== -->
 
-<div id="topbar">
+<div id="stepBar">
 
-  <div class="logoDot"></div>
-
-  <div class="logo">
-    Geotag Studio
-  </div>
-
-  <div class="subtitle">
-    blur & stamp
-  </div>
-
-  <div id="status">
-    No image uploaded
-  </div>
-
-</div>
-
-
-<div id="main">
-
-<!-- =========================================================
-     PREVIEW
-========================================================= -->
-
-<div id="previewArea">
-
-  <div id="empty">
-
-    <div class="icon">
-      ▢
-    </div>
-
-    <h2>
-      No image uploaded
-    </h2>
-
-    <p>
-      Upload a photograph to begin.
-      Draw the exact area you want to blur,
-      generate the blur, then optionally
-      add a geotag.
-    </p>
-
-  </div>
-
-
-  <div id="canvasWrapper">
-
-    <canvas id="previewCanvas"></canvas>
-
-
-    <div id="selectionOverlay">
-
-      <div class="selectionLabel">
-        Blur Area
-      </div>
-
-      <div
-        class="handle tl"
-        data-handle="tl"
-      ></div>
-
-      <div
-        class="handle tr"
-        data-handle="tr"
-      ></div>
-
-      <div
-        class="handle bl"
-        data-handle="bl"
-      ></div>
-
-      <div
-        class="handle br"
-        data-handle="br"
-      ></div>
-
-    </div>
-
-  </div>
-
-
-  <div id="dimensions"></div>
-
-</div>
-
-
-<!-- =========================================================
-     SIDEBAR
-========================================================= -->
-
-<div id="sidebar">
-
-
-<!-- IMAGE -->
-
-<div class="section">
-
-  <div class="sectionTitle">
-    Image
-  </div>
-
-  <div class="stack">
-
-    <button
-      id="uploadImageBtn"
-      class="full"
-    >
-      Upload Image
-    </button>
-
-    <button
-      id="uploadGeoBtn"
-      class="full"
-    >
-      Upload Geotag
-    </button>
-
-  </div>
-
-
-  <div id="geoPreview">
-
-    <span class="placeholder">
-      no geotag uploaded
+    <span id="stepOne" class="step">
+        1. White Text Remover
     </span>
 
-  </div>
+    <span id="stepTwo" class="step">
+        2. Location / GeoTag
+    </span>
 
 </div>
 
 
-<!-- BLUR SELECTION -->
+<!-- =====================================================
+     STEP 1
+===================================================== -->
 
-<div class="section">
+<section id="removePage" class="page">
 
-  <div class="sectionTitle">
-    Blur Area
-  </div>
+    <h1>Fast White Text Remover</h1>
 
+    <p class="subtitle">
+        Upload one image or an entire folder. Process each image and use Save & Next.
+    </p>
 
-  <button
-    id="selectAreaBtn"
-    class="full"
-  >
-    Select Blur Area
-  </button>
+    <div class="card">
 
+        <div class="toolbar">
 
-  <button
-    id="clearSelectionBtn"
-    class="full"
-    style="margin-top:8px;"
-  >
-    Clear Selection
-  </button>
+            <label class="fileButton">
+                📁 Upload Folder
+                <input
+                    id="folderInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                    webkitdirectory
+                    directory
+                >
+            </label>
 
+            <label class="fileButton">
+                🖼️ Upload Image
+                <input
+                    id="singleInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                >
+            </label>
 
-  <div class="info">
+            <button id="removeBtn" class="btn-dark" disabled>
+                ⬜ Remove White Text
+            </button>
 
-    Click Select Blur Area and then
-    drag over the exact part of the
-    photograph you want to blur.
+            <button id="undoBtn" class="btn-gray" disabled>
+                ↶ Undo
+            </button>
 
-    You can move or resize the selected
-    rectangle using the handles.
+            <button id="cropBtn" class="btn-orange" disabled>
+                ✂️ Crop
+            </button>
 
-  </div>
+            <button id="applyCropBtn" class="btn-orange" disabled>
+                Apply Crop
+            </button>
 
-</div>
+            <button id="saveNextBtn" class="btn-green" disabled>
+                💾 Save & Next
+            </button>
 
+            <button id="goGeoBtn" class="btn-blue" disabled>
+                📍 Go To GeoTag
+            </button>
 
-<!-- BLUR SETTINGS -->
+        </div>
 
-<div class="section">
+        <div id="editStatus" class="status">
+            Upload an image or folder to begin.
+        </div>
 
-  <div class="sectionTitle">
-    Blur Settings
-  </div>
+        <div id="editCounter" class="counter">
+            No images loaded
+        </div>
 
+        <div class="imageStage" id="editStage">
 
-  <div class="slider">
+            <canvas id="editCanvas"></canvas>
 
-    <div class="sliderHeader">
+            <div
+                id="selectionBox"
+                class="selectionBox"
+            ></div>
 
-      <span>
-        Blur Strength
-      </span>
+        </div>
 
-      <span
-        class="sliderValue"
-        id="blurStrengthValue"
-      >
-        50%
-      </span>
+        <div class="toolRow">
 
-    </div>
+            <button id="prevEditBtn" class="btn-gray" disabled>
+                ← Previous
+            </button>
 
+            <button id="nextEditBtn" class="btn-gray" disabled>
+                Next →
+            </button>
 
-    <input
-      id="blurStrength"
-      type="range"
-      min="0"
-      max="100"
-      value="50"
-    >
+        </div>
 
-  </div>
+        <div class="controlPanel">
 
+            <div class="control">
 
-  <div class="slider">
+                <label>
+                    White removal opacity
+                    <b id="whiteOpacityValue">100%</b>
+                </label>
 
-    <div class="sliderHeader">
+                <input
+                    id="whiteOpacity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="100"
+                >
 
-      <span>
-        Grey Effect
-      </span>
+            </div>
 
-      <span
-        class="sliderValue"
-        id="greyOpacityValue"
-      >
-        45%
-      </span>
+            <div class="control">
 
-    </div>
+                <label>
+                    White detection
+                    <b id="whiteThresholdValue">150</b>
+                </label>
 
+                <input
+                    id="whiteThreshold"
+                    type="range"
+                    min="100"
+                    max="230"
+                    value="150"
+                >
 
-    <input
-      id="greyOpacity"
-      type="range"
-      min="0"
-      max="100"
-      value="45"
-    >
+            </div>
 
-  </div>
+            <div class="control">
 
+                <label>
+                    Working image size
+                    <b>2200px max</b>
+                </label>
 
-  <button
-    id="generateBlurBtn"
-    class="primary full"
-  >
-    Generate Blur Image
-  </button>
+                <div style="font-size:11px;color:#666;line-height:1.4">
+                    Large phone images are automatically scaled for reliable browser processing.
+                </div>
 
-</div>
+            </div>
 
+        </div>
 
-<!-- GEOTAG -->
+        <div
+            id="thumbnailStrip"
+            class="thumbnailStrip"
+        ></div>
 
-<div class="section">
-
-  <div class="sectionTitle">
-    Geotag
-  </div>
-
-
-  <!-- HEIGHT -->
-
-  <div class="slider">
-
-    <div class="sliderHeader">
-
-      <span>
-        Geotag Height
-      </span>
-
-      <span
-        class="sliderValue"
-        id="geoHeightValue"
-      >
-        20%
-      </span>
-
-    </div>
-
-
-    <input
-      id="geoHeight"
-      type="range"
-      min="5"
-      max="100"
-      value="20"
-    >
-
-  </div>
-
-
-  <!-- WIDTH -->
-
-  <div class="slider">
-
-    <div class="sliderHeader">
-
-      <span>
-        Geotag Width
-      </span>
-
-      <span
-        class="sliderValue"
-        id="geoWidthValue"
-      >
-        100%
-      </span>
+        <div class="help">
+            Drag around the white text, then click Remove White Text.
+            Crop by clicking Crop and dragging around the part you want to keep.
+        </div>
 
     </div>
 
-
-    <input
-      id="geoWidth"
-      type="range"
-      min="5"
-      max="100"
-      value="100"
-    >
-
-  </div>
+</section>
 
 
-  <!-- OPACITY -->
+<!-- =====================================================
+     STEP 2
+===================================================== -->
 
-  <div class="slider">
+<section id="geoPage">
 
-    <div class="sliderHeader">
+    <div class="geoLayout">
 
-      <span>
-        Geotag Opacity
-      </span>
+        <aside class="geoAside">
 
-      <span
-        class="sliderValue"
-        id="geoOpacityValue"
-      >
-        100%
-      </span>
+            <h2>📍 GeoTag / Location</h2>
+
+            <p class="geoDescription">
+                Your saved cleaned images appear here one at a time.
+                Change the location and time for each image, then use
+                Save & Next.
+            </p>
+
+            <div class="notice">
+                The visible GeoTag is a generated overlay. It is not
+                camera-generated GPS metadata.
+            </div>
+
+
+            <div class="sectionTitle">
+                Current Image
+            </div>
+
+            <div
+                id="geoCounter"
+                style="font-size:12px;margin-bottom:8px"
+            >
+                No image
+            </div>
+
+
+            <div class="sectionTitle">
+                1. Location
+            </div>
+
+
+            <div class="field">
+
+                <label>State</label>
+
+                <select id="gState"></select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    District / Town / Subdivision
+                </label>
+
+                <input
+                    id="gPlace"
+                    type="text"
+                    placeholder="Example: Beerwah"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Address / Location — printed on image
+                </label>
+
+                <textarea
+                    id="gAddress"
+                    placeholder="Example: Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India"
+                ></textarea>
+
+            </div>
+
+
+            <button id="gFind">
+                📍 Find Location
+            </button>
+
+
+            <div id="gStatus">
+                Enter a location and click Find Location.
+            </div>
+
+
+            <div class="coordsBox">
+
+                <div class="coordsTitle">
+                    Latitude / Longitude
+                </div>
+
+                <div id="gCoords">
+                    —
+                </div>
+
+            </div>
+
+
+            <div class="sectionTitle">
+                Date & Time
+            </div>
+
+
+            <div class="dateGrid">
+
+                <div class="field">
+
+                    <label>Date</label>
+
+                    <input
+                        id="gDate"
+                        type="date"
+                    >
+
+                </div>
+
+                <div class="field">
+
+                    <label>Time</label>
+
+                    <input
+                        id="gTime"
+                        type="time"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="sectionTitle">
+                2. GeoTag Appearance
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>GeoTag opacity</span>
+                    <b id="gOpacityVal">85%</b>
+                </div>
+
+                <input
+                    id="gOpacity"
+                    type="range"
+                    min="10"
+                    max="100"
+                    value="85"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Map opacity</span>
+                    <b id="gMapOpacityVal">100%</b>
+                </div>
+
+                <input
+                    id="gMapOpacity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Stamp height</span>
+                    <b id="gHeightVal">25%</b>
+                </div>
+
+                <input
+                    id="gHeight"
+                    type="range"
+                    min="5"
+                    max="80"
+                    value="25"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Map width</span>
+                    <b id="gMapWidthVal">29%</b>
+                </div>
+
+                <input
+                    id="gMapWidth"
+                    type="range"
+                    min="10"
+                    max="60"
+                    value="29"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Title size</span>
+                    <b id="gTitleVal">100%</b>
+                </div>
+
+                <input
+                    id="gTitle"
+                    type="range"
+                    min="50"
+                    max="200"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Details size</span>
+                    <b id="gDetailsVal">100%</b>
+                </div>
+
+                <input
+                    id="gDetails"
+                    type="range"
+                    min="50"
+                    max="200"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="sectionTitle">
+                3. Blue Camera Logo Position
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Logo X position</span>
+                    <b id="gLogoXVal">88%</b>
+                </div>
+
+                <input
+                    id="gLogoX"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="88"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Logo Y position</span>
+                    <b id="gLogoYVal">78%</b>
+                </div>
+
+                <input
+                    id="gLogoY"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="78"
+                >
+
+            </div>
+
+
+            <div class="slider">
+
+                <div class="sliderTop">
+                    <span>Logo size</span>
+                    <b id="gLogoSizeVal">70%</b>
+                </div>
+
+                <input
+                    id="gLogoSize"
+                    type="range"
+                    min="30"
+                    max="130"
+                    value="70"
+                >
+
+            </div>
+
+
+            <div class="geoButtons">
+
+                <button id="gBack">
+                    ← Back
+                </button>
+
+                <button id="gPrev">
+                    ← Previous
+                </button>
+
+                <button id="gSaveNext">
+                    💾 Save & Next
+                </button>
+
+                <button id="gDownloadAll">
+                    ⬇ Download All ZIP
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <main class="geoMain">
+
+            <div class="previewHeader">
+
+                <h3>GeoTag Preview</h3>
+
+                <span>
+                    Current image only
+                </span>
+
+            </div>
+
+
+            <div class="previewBox">
+
+                <canvas id="gCanvas"></canvas>
+
+            </div>
+
+
+            <div class="mapCredit">
+                Map is generated from the selected state and district.
+            </div>
+
+        </main>
 
     </div>
 
-
-    <input
-      id="geoOpacity"
-      type="range"
-      min="0"
-      max="100"
-      value="100"
-    >
-
-  </div>
-
-
-  <!-- POSITION -->
-
-  <div class="slider">
-
-    <div class="sliderHeader">
-
-      <span>
-        Geotag Position
-      </span>
-
-    </div>
-
-
-    <div class="segment">
-
-      <button id="geoTop">
-        Top
-      </button>
-
-      <button
-        id="geoBottom"
-        class="active"
-      >
-        Bottom
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <div class="info">
-
-    <b>Height</b> controls the actual
-    height of the geotag area.
-
-    <br><br>
-
-    <b>Width 100%</b> means the geotag
-    covers the complete width of the
-    original photograph.
-
-    <br><br>
-
-    <b>Position</b> only determines whether
-    the area is attached to the top or
-    bottom edge.
-
-  </div>
-
-
-  <button
-    id="addGeoBtn"
-    class="primary full"
-    style="margin-top:12px;"
-  >
-    Add Geotag
-  </button>
-
-</div>
-
-
-<!-- EXPORT -->
-
-<div class="section">
-
-  <div class="sectionTitle">
-    Export
-  </div>
-
-
-  <div class="row">
-
-    <button id="resetBtn">
-      Reset
-    </button>
-
-    <button
-      id="downloadBtn"
-      class="primary"
-    >
-      Download
-    </button>
-
-  </div>
-
-</div>
-
-
-</div>
-
-</div>
-
-
-<!-- =========================================================
-     FILE INPUTS
-========================================================= -->
-
-<input
-  id="imageInput"
-  type="file"
-  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,.heic,.heif"
-  style="display:none;"
->
-
-<input
-  id="geoInput"
-  type="file"
-  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,.heic,.heif"
-  style="display:none;"
->
-
-
-<div id="toast"></div>
+</section>
 
 
 <script>
+/* =========================================================
+   GLOBAL HELPERS
+========================================================= */
 
-"use strict";
+const $ = id => document.getElementById(id);
 
 
 /* =========================================================
-   ELEMENTS
+   STEP 1 VARIABLES
 ========================================================= */
 
-const imageInput =
-  document.getElementById("imageInput");
+const folderInput = $("folderInput");
+const singleInput = $("singleInput");
 
-const geoInput =
-  document.getElementById("geoInput");
+const editCanvas = $("editCanvas");
+const editCtx = editCanvas.getContext("2d", {
+    willReadFrequently:true
+});
 
-const uploadImageBtn =
-  document.getElementById("uploadImageBtn");
+const editStage = $("editStage");
+const selectionBox = $("selectionBox");
 
-const uploadGeoBtn =
-  document.getElementById("uploadGeoBtn");
+let imageFiles = [];
+let currentEditIndex = 0;
 
-const previewArea =
-  document.getElementById("previewArea");
+let originalCanvasData = null;
 
-const previewCanvas =
-  document.getElementById("previewCanvas");
+let selection = null;
+let selecting = false;
+let selectionMode = "remove";
 
-const canvasWrapper =
-  document.getElementById("canvasWrapper");
+let startX = 0;
+let startY = 0;
 
-const selectionOverlay =
-  document.getElementById("selectionOverlay");
+let cropSelection = null;
 
-const empty =
-  document.getElementById("empty");
-
-const dimensions =
-  document.getElementById("dimensions");
-
-const status =
-  document.getElementById("status");
-
-const selectAreaBtn =
-  document.getElementById("selectAreaBtn");
-
-const clearSelectionBtn =
-  document.getElementById("clearSelectionBtn");
-
-const generateBlurBtn =
-  document.getElementById("generateBlurBtn");
-
-const addGeoBtn =
-  document.getElementById("addGeoBtn");
-
-const resetBtn =
-  document.getElementById("resetBtn");
-
-const downloadBtn =
-  document.getElementById("downloadBtn");
-
-const geoPreview =
-  document.getElementById("geoPreview");
-
-const blurStrength =
-  document.getElementById("blurStrength");
-
-const greyOpacity =
-  document.getElementById("greyOpacity");
-
-const geoHeight =
-  document.getElementById("geoHeight");
-
-const geoWidth =
-  document.getElementById("geoWidth");
-
-const geoOpacity =
-  document.getElementById("geoOpacity");
-
-const geoTop =
-  document.getElementById("geoTop");
-
-const geoBottom =
-  document.getElementById("geoBottom");
+let cleanedImages = [];
 
 
 /* =========================================================
-   STATE
+   LOAD IMAGE FILE
 ========================================================= */
 
-const state = {
+function loadFileImage(file){
 
-  image:null,
+    return new Promise((resolve,reject)=>{
 
-  geotag:null,
+        if(!file){
+            reject(new Error("No image."));
+            return;
+        }
 
-  originalCanvas:null,
+        const url = URL.createObjectURL(file);
 
-  blurredCanvas:null,
+        const image = new Image();
 
-  finalCanvas:null,
+        image.onload = ()=>{
 
-  selection:null,
+            URL.revokeObjectURL(url);
 
-  selecting:false,
+            resolve(image);
 
-  blurStrength:50,
+        };
 
-  greyOpacity:45,
+        image.onerror = ()=>{
 
-  geoHeight:20,
+            URL.revokeObjectURL(url);
 
-  geoWidth:100,
+            reject(new Error(
+                "Could not decode image."
+            ));
 
-  geoOpacity:100,
+        };
 
-  geoPosition:"bottom"
+        image.src = url;
+
+    });
+
+}
+
+
+/* =========================================================
+   ADD FILES
+========================================================= */
+
+async function setImageFiles(files){
+
+    const arr = Array.from(files || [])
+        .filter(file =>
+            file &&
+            file.type &&
+            file.type.startsWith("image/")
+        );
+
+    if(!arr.length){
+
+        $("editStatus").textContent =
+            "No supported images were found.";
+
+        return;
+
+    }
+
+    imageFiles = arr;
+
+    currentEditIndex = 0;
+
+    cleanedImages = [];
+
+    await loadCurrentEditImage();
+
+    buildThumbnails();
+
+}
+
+
+/* =========================================================
+   FOLDER INPUT
+========================================================= */
+
+folderInput.addEventListener(
+    "change",
+    async function(){
+
+        await setImageFiles(this.files);
+
+    }
+);
+
+
+/* =========================================================
+   SINGLE IMAGE INPUT
+========================================================= */
+
+singleInput.addEventListener(
+    "change",
+    async function(){
+
+        await setImageFiles(this.files);
+
+    }
+);
+
+
+/* =========================================================
+   LOAD CURRENT EDIT IMAGE
+========================================================= */
+
+async function loadCurrentEditImage(){
+
+    if(!imageFiles.length)
+        return;
+
+    const file =
+        imageFiles[currentEditIndex];
+
+    $("editStatus").textContent =
+        "Opening " + file.name + "…";
+
+    try{
+
+        const image =
+            await loadFileImage(file);
+
+        const MAX_SIZE = 2200;
+
+        const scale =
+            Math.min(
+                1,
+                MAX_SIZE /
+                Math.max(
+                    image.naturalWidth,
+                    image.naturalHeight
+                )
+            );
+
+        editCanvas.width =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalWidth * scale
+                )
+            );
+
+        editCanvas.height =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalHeight * scale
+                )
+            );
+
+        editCtx.clearRect(
+            0,
+            0,
+            editCanvas.width,
+            editCanvas.height
+        );
+
+        editCtx.drawImage(
+            image,
+            0,
+            0,
+            editCanvas.width,
+            editCanvas.height
+        );
+
+        originalCanvasData =
+            editCtx.getImageData(
+                0,
+                0,
+                editCanvas.width,
+                editCanvas.height
+            );
+
+        selection = null;
+        cropSelection = null;
+
+        selectionBox.style.display =
+            "none";
+
+        $("removeBtn").disabled = false;
+        $("undoBtn").disabled = true;
+        $("cropBtn").disabled = false;
+        $("applyCropBtn").disabled = true;
+        $("saveNextBtn").disabled = false;
+        $("goGeoBtn").disabled =
+            cleanedImages.length === 0;
+
+        updateEditUI();
+
+        $("editStatus").textContent =
+            "Ready — " + file.name;
+
+    }catch(err){
+
+        console.error(err);
+
+        $("editStatus").textContent =
+            "Could not open this image. Try JPG, PNG or WebP.";
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE EDIT UI
+========================================================= */
+
+function updateEditUI(){
+
+    const total =
+        imageFiles.length;
+
+    $("editCounter").textContent =
+        total
+            ? `Image ${currentEditIndex+1} of ${total} — ${imageFiles[currentEditIndex].name}`
+            : "No images loaded";
+
+    $("prevEditBtn").disabled =
+        currentEditIndex <= 0;
+
+    $("nextEditBtn").disabled =
+        currentEditIndex >= total-1;
+
+    buildThumbnails();
+
+}
+
+
+/* =========================================================
+   THUMBNAILS
+========================================================= */
+
+function buildThumbnails(){
+
+    const strip =
+        $("thumbnailStrip");
+
+    strip.innerHTML = "";
+
+    imageFiles.forEach(
+        (file,index)=>{
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "thumb" +
+                (
+                    index === currentEditIndex
+                    ? " active"
+                    : ""
+                );
+
+            const img =
+                document.createElement("img");
+
+            const url =
+                URL.createObjectURL(file);
+
+            img.src = url;
+
+            img.onload = ()=>{
+                URL.revokeObjectURL(url);
+            };
+
+            div.appendChild(img);
+
+            div.addEventListener(
+                "click",
+                async ()=>{
+
+                    await saveCurrentWithoutAdvance();
+
+                    currentEditIndex =
+                        index;
+
+                    await loadCurrentEditImage();
+
+                }
+            );
+
+            strip.appendChild(div);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CANVAS POINT
+========================================================= */
+
+function getEditPoint(e){
+
+    const rect =
+        editCanvas.getBoundingClientRect();
+
+    return {
+
+        x:Math.max(
+            0,
+            Math.min(
+                editCanvas.width,
+                (e.clientX-rect.left) *
+                editCanvas.width /
+                rect.width
+            )
+        ),
+
+        y:Math.max(
+            0,
+            Math.min(
+                editCanvas.height,
+                (e.clientY-rect.top) *
+                editCanvas.height /
+                rect.height
+            )
+        )
+
+    };
+
+}
+
+
+/* =========================================================
+   SHOW SELECTION
+========================================================= */
+
+function showSelection(sel){
+
+    if(!sel){
+
+        selectionBox.style.display =
+            "none";
+
+        return;
+
+    }
+
+    const canvasRect =
+        editCanvas.getBoundingClientRect();
+
+    const stageRect =
+        editStage.getBoundingClientRect();
+
+    selectionBox.style.left =
+        (
+            editCanvas.offsetLeft +
+            sel.x *
+            canvasRect.width /
+            editCanvas.width
+        ) + "px";
+
+    selectionBox.style.top =
+        (
+            editCanvas.offsetTop +
+            sel.y *
+            canvasRect.height /
+            editCanvas.height
+        ) + "px";
+
+    selectionBox.style.width =
+        (
+            sel.w *
+            canvasRect.width /
+            editCanvas.width
+        ) + "px";
+
+    selectionBox.style.height =
+        (
+            sel.h *
+            canvasRect.height /
+            editCanvas.height
+        ) + "px";
+
+    selectionBox.style.display =
+        "block";
+
+    selectionBox.style.borderColor =
+        selectionMode === "crop"
+            ? "#ff9d00"
+            : "#ff3030";
+
+}
+
+
+/* =========================================================
+   POINTER DOWN
+========================================================= */
+
+editCanvas.addEventListener(
+    "pointerdown",
+    function(e){
+
+        if(!imageFiles.length)
+            return;
+
+        selecting = true;
+
+        editCanvas.setPointerCapture(
+            e.pointerId
+        );
+
+        const p =
+            getEditPoint(e);
+
+        startX = p.x;
+        startY = p.y;
+
+        selection = {
+            x:startX,
+            y:startY,
+            w:0,
+            h:0
+        };
+
+        showSelection(selection);
+
+    }
+);
+
+
+/* =========================================================
+   POINTER MOVE
+========================================================= */
+
+editCanvas.addEventListener(
+    "pointermove",
+    function(e){
+
+        if(!selecting)
+            return;
+
+        const p =
+            getEditPoint(e);
+
+        selection = {
+
+            x:Math.min(
+                startX,
+                p.x
+            ),
+
+            y:Math.min(
+                startY,
+                p.y
+            ),
+
+            w:Math.abs(
+                p.x-startX
+            ),
+
+            h:Math.abs(
+                p.y-startY
+            )
+
+        };
+
+        showSelection(selection);
+
+    }
+);
+
+
+/* =========================================================
+   POINTER UP
+========================================================= */
+
+editCanvas.addEventListener(
+    "pointerup",
+    function(){
+
+        selecting = false;
+
+        if(
+            !selection ||
+            selection.w < 4 ||
+            selection.h < 4
+        ){
+
+            selection = null;
+
+            showSelection(null);
+
+            return;
+
+        }
+
+        if(selectionMode === "crop"){
+
+            cropSelection =
+                {...selection};
+
+            $("applyCropBtn").disabled =
+                false;
+
+            $("editStatus").textContent =
+                "Crop area selected. Click Apply Crop.";
+
+        }else{
+
+            $("editStatus").textContent =
+                "White text area selected. Click Remove White Text.";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   WHITE DETECTION
+========================================================= */
+
+function isWhitePixel(data,i){
+
+    const r = data[i];
+    const g = data[i+1];
+    const b = data[i+2];
+
+    const max =
+        Math.max(r,g,b);
+
+    const min =
+        Math.min(r,g,b);
+
+    const threshold =
+        Number(
+            $("whiteThreshold").value
+        );
+
+    return (
+        max >= threshold &&
+        max-min <= 85 &&
+        r+g+b >= threshold*3
+    );
+
+}
+
+
+/* =========================================================
+   REMOVE WHITE TEXT
+========================================================= */
+
+$("removeBtn").addEventListener(
+    "click",
+    function(){
+
+        if(
+            !selection ||
+            selection.w < 4 ||
+            selection.h < 4
+        ){
+
+            $("editStatus").textContent =
+                "First drag around the white text.";
+
+            return;
+
+        }
+
+        if(selectionMode !== "remove"){
+
+            $("editStatus").textContent =
+                "Click Crop again to leave crop mode.";
+
+            return;
+
+        }
+
+        $("editStatus").textContent =
+            "Removing white text…";
+
+        const x =
+            Math.max(
+                0,
+                Math.floor(selection.x)
+            );
+
+        const y =
+            Math.max(
+                0,
+                Math.floor(selection.y)
+            );
+
+        const w =
+            Math.min(
+                editCanvas.width-x,
+                Math.ceil(selection.w)
+            );
+
+        const h =
+            Math.min(
+                editCanvas.height-y,
+                Math.ceil(selection.h)
+            );
+
+        const imageData =
+            editCtx.getImageData(
+                x,
+                y,
+                w,
+                h
+            );
+
+        const pixels =
+            imageData.data;
+
+        const mask =
+            new Uint8Array(w*h);
+
+
+        /* Detect */
+
+        for(
+            let yy=0;
+            yy<h;
+            yy++
+        ){
+
+            for(
+                let xx=0;
+                xx<w;
+                xx++
+            ){
+
+                const i =
+                    (yy*w+xx)*4;
+
+                if(
+                    isWhitePixel(
+                        pixels,
+                        i
+                    )
+                ){
+
+                    mask[
+                        yy*w+xx
+                    ] = 1;
+
+                }
+
+            }
+
+        }
+
+
+        /* Expand */
+
+        for(
+            let pass=0;
+            pass<2;
+            pass++
+        ){
+
+            const old =
+                mask.slice();
+
+            for(
+                let yy=0;
+                yy<h;
+                yy++
+            ){
+
+                for(
+                    let xx=0;
+                    xx<w;
+                    xx++
+                ){
+
+                    if(
+                        old[yy*w+xx]
+                    )
+                        continue;
+
+                    let hit=false;
+
+                    for(
+                        let dy=-1;
+                        dy<=1 && !hit;
+                        dy++
+                    ){
+
+                        for(
+                            let dx=-1;
+                            dx<=1;
+                            dx++
+                        ){
+
+                            const nx =
+                                xx+dx;
+
+                            const ny =
+                                yy+dy;
+
+                            if(
+                                nx>=0 &&
+                                nx<w &&
+                                ny>=0 &&
+                                ny<h &&
+                                old[
+                                    ny*w+nx
+                                ]
+                            ){
+
+                                hit=true;
+                                break;
+
+                            }
+
+                        }
+
+                    }
+
+                    if(hit)
+                        mask[
+                            yy*w+xx
+                        ]=1;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+          Inpaint using nearby non-white pixels.
+        */
+
+        const distances =
+            [
+                1,2,3,4,5,
+                7,9,12,16,
+                20,25
+            ];
+
+
+        for(
+            let pass=0;
+            pass<6;
+            pass++
+        ){
+
+            const old =
+                pixels.slice();
+
+            for(
+                let yy=0;
+                yy<h;
+                yy++
+            ){
+
+                for(
+                    let xx=0;
+                    xx<w;
+                    xx++
+                ){
+
+                    if(
+                        !mask[yy*w+xx]
+                    )
+                        continue;
+
+                    const samples=[];
+
+                    for(
+                        const d of distances
+                    ){
+
+                        const candidates=[
+
+                            [xx-d,yy],
+                            [xx+d,yy],
+                            [xx,yy-d],
+                            [xx,yy+d],
+                            [xx-d,yy-d],
+                            [xx+d,yy-d],
+                            [xx-d,yy+d],
+                            [xx+d,yy+d]
+
+                        ];
+
+                        for(
+                            const pair of candidates
+                        ){
+
+                            const nx =
+                                pair[0];
+
+                            const ny =
+                                pair[1];
+
+                            if(
+                                nx>=0 &&
+                                nx<w &&
+                                ny>=0 &&
+                                ny<h &&
+                                !mask[
+                                    ny*w+nx
+                                ]
+                            ){
+
+                                samples.push(
+                                    (ny*w+nx)*4
+                                );
+
+                            }
+
+                        }
+
+                        if(
+                            samples.length >= 10
+                        )
+                            break;
+
+                    }
+
+                    if(!samples.length)
+                        continue;
+
+                    let r=0;
+                    let g=0;
+                    let b=0;
+
+                    const count =
+                        Math.min(
+                            samples.length,
+                            12
+                        );
+
+                    for(
+                        let s=0;
+                        s<count;
+                        s++
+                    ){
+
+                        const i =
+                            samples[s];
+
+                        r += old[i];
+                        g += old[i+1];
+                        b += old[i+2];
+
+                    }
+
+                    const i =
+                        (yy*w+xx)*4;
+
+                    const opacity =
+                        Number(
+                            $("whiteOpacity").value
+                        ) / 100;
+
+                    const nr =
+                        Math.round(r/count);
+
+                    const ng =
+                        Math.round(g/count);
+
+                    const nb =
+                        Math.round(b/count);
+
+                    pixels[i] =
+                        Math.round(
+                            pixels[i] *
+                            (1-opacity) +
+                            nr *
+                            opacity
+                        );
+
+                    pixels[i+1] =
+                        Math.round(
+                            pixels[i+1] *
+                            (1-opacity) +
+                            ng *
+                            opacity
+                        );
+
+                    pixels[i+2] =
+                        Math.round(
+                            pixels[i+2] *
+                            (1-opacity) +
+                            nb *
+                            opacity
+                        );
+
+                }
+
+            }
+
+        }
+
+
+        editCtx.putImageData(
+            imageData,
+            x,
+            y
+        );
+
+        selection = null;
+
+        showSelection(null);
+
+        $("undoBtn").disabled =
+            false;
+
+        $("editStatus").textContent =
+            "White text removed. You can continue editing or Save & Next.";
+
+    }
+);
+
+
+/* =========================================================
+   UNDO
+========================================================= */
+
+$("undoBtn").addEventListener(
+    "click",
+    function(){
+
+        if(!originalCanvasData)
+            return;
+
+        editCtx.putImageData(
+            originalCanvasData,
+            0,
+            0
+        );
+
+        selection = null;
+        cropSelection = null;
+
+        showSelection(null);
+
+        $("undoBtn").disabled =
+            true;
+
+        $("applyCropBtn").disabled =
+            true;
+
+        $("editStatus").textContent =
+            "Original image restored.";
+
+    }
+);
+
+
+/* =========================================================
+   CROP MODE
+========================================================= */
+
+$("cropBtn").addEventListener(
+    "click",
+    function(){
+
+        selectionMode = "crop";
+
+        selection = null;
+
+        cropSelection = null;
+
+        showSelection(null);
+
+        $("applyCropBtn").disabled =
+            true;
+
+        $("editStatus").textContent =
+            "Crop mode: drag around the area you want to keep.";
+
+    }
+);
+
+
+/* =========================================================
+   APPLY CROP
+========================================================= */
+
+$("applyCropBtn").addEventListener(
+    "click",
+    function(){
+
+        if(
+            !cropSelection ||
+            cropSelection.w < 4 ||
+            cropSelection.h < 4
+        )
+            return;
+
+        const s =
+            cropSelection;
+
+        const sx =
+            Math.max(
+                0,
+                Math.floor(s.x)
+            );
+
+        const sy =
+            Math.max(
+                0,
+                Math.floor(s.y)
+            );
+
+        const sw =
+            Math.min(
+                editCanvas.width-sx,
+                Math.floor(s.w)
+            );
+
+        const sh =
+            Math.min(
+                editCanvas.height-sy,
+                Math.floor(s.h)
+            );
+
+        const temp =
+            document.createElement("canvas");
+
+        temp.width = sw;
+        temp.height = sh;
+
+        const tctx =
+            temp.getContext("2d");
+
+        tctx.drawImage(
+            editCanvas,
+            sx,
+            sy,
+            sw,
+            sh,
+            0,
+            0,
+            sw,
+            sh
+        );
+
+        editCanvas.width = sw;
+        editCanvas.height = sh;
+
+        editCtx.drawImage(
+            temp,
+            0,
+            0
+        );
+
+        originalCanvasData =
+            editCtx.getImageData(
+                0,
+                0,
+                sw,
+                sh
+            );
+
+        selection = null;
+        cropSelection = null;
+
+        selectionMode = "remove";
+
+        showSelection(null);
+
+        $("applyCropBtn").disabled =
+            true;
+
+        $("undoBtn").disabled =
+            false;
+
+        $("editStatus").textContent =
+            "Crop applied.";
+
+    }
+);
+
+
+/* =========================================================
+   SAVE CURRENT CLEAN IMAGE
+========================================================= */
+
+function canvasToBlob(canvas,type="image/png"){
+
+    return new Promise(
+        (resolve,reject)=>{
+
+            canvas.toBlob(
+                blob=>{
+
+                    if(blob)
+                        resolve(blob);
+                    else
+                        reject(
+                            new Error(
+                                "Could not create image."
+                            )
+                        );
+
+                },
+                type,
+                .95
+            );
+
+        }
+    );
+
+}
+
+
+async function saveCurrentWithoutAdvance(){
+
+    if(!imageFiles.length)
+        return null;
+
+    const file =
+        imageFiles[currentEditIndex];
+
+    const blob =
+        await canvasToBlob(
+            editCanvas,
+            "image/png"
+        );
+
+    /*
+      Preserve the original filename.
+      Only the extension changes to PNG if needed.
+      The base name remains exactly the same.
+    */
+
+    const originalName =
+        file.name;
+
+    const dot =
+        originalName.lastIndexOf(".");
+
+    const baseName =
+        dot > 0
+            ? originalName.slice(0,dot)
+            : originalName;
+
+    const outputName =
+        baseName + ".png";
+
+    const item = {
+
+        index:currentEditIndex,
+
+        originalName:originalName,
+
+        outputName:outputName,
+
+        blob:blob
+
+    };
+
+    const existing =
+        cleanedImages.findIndex(
+            x =>
+                x.index === currentEditIndex
+        );
+
+    if(existing >= 0)
+        cleanedImages[existing] = item;
+    else
+        cleanedImages.push(item);
+
+    cleanedImages.sort(
+        (a,b)=>a.index-b.index
+    );
+
+    $("goGeoBtn").disabled =
+        false;
+
+    return item;
+
+}
+
+
+/* =========================================================
+   SAVE & NEXT
+========================================================= */
+
+$("saveNextBtn").addEventListener(
+    "click",
+    async function(){
+
+        if(!imageFiles.length)
+            return;
+
+        const btn =
+            $("saveNextBtn");
+
+        btn.disabled = true;
+
+        btn.textContent =
+            "Saving…";
+
+        try{
+
+            await saveCurrentWithoutAdvance();
+
+            if(
+                currentEditIndex <
+                imageFiles.length-1
+            ){
+
+                currentEditIndex++;
+
+                await loadCurrentEditImage();
+
+                $("editStatus").textContent =
+                    "Saved. Now processing " +
+                    imageFiles[currentEditIndex].name;
+
+            }else{
+
+                $("editStatus").textContent =
+                    `All ${cleanedImages.length} images saved.`;
+
+                $("goGeoBtn").disabled =
+                    false;
+
+            }
+
+        }catch(err){
+
+            console.error(err);
+
+            $("editStatus").textContent =
+                "Could not save this image.";
+
+        }finally{
+
+            btn.disabled = false;
+
+            btn.textContent =
+                "💾 Save & Next";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   PREVIOUS / NEXT EDIT
+========================================================= */
+
+$("prevEditBtn").addEventListener(
+    "click",
+    async function(){
+
+        if(currentEditIndex <= 0)
+            return;
+
+        await saveCurrentWithoutAdvance();
+
+        currentEditIndex--;
+
+        await loadCurrentEditImage();
+
+    }
+);
+
+
+$("nextEditBtn").addEventListener(
+    "click",
+    async function(){
+
+        if(
+            currentEditIndex >=
+            imageFiles.length-1
+        )
+            return;
+
+        await saveCurrentWithoutAdvance();
+
+        currentEditIndex++;
+
+        await loadCurrentEditImage();
+
+    }
+);
+
+
+/* =========================================================
+   WHITE REMOVAL SLIDERS
+========================================================= */
+
+$("whiteOpacity").addEventListener(
+    "input",
+    function(){
+
+        $("whiteOpacityValue").textContent =
+            this.value + "%";
+
+    }
+);
+
+
+$("whiteThreshold").addEventListener(
+    "input",
+    function(){
+
+        $("whiteThresholdValue").textContent =
+            this.value;
+
+    }
+);
+
+
+/* =========================================================
+   GEO VARIABLES
+========================================================= */
+
+const gCanvas =
+    $("gCanvas");
+
+const gCtx =
+    gCanvas.getContext("2d");
+
+let geoIndex = 0;
+
+let geoImages = [];
+
+let gLat = null;
+let gLon = null;
+
+
+/* =========================================================
+   STATE LIST
+========================================================= */
+
+const stateNames = [
+
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Puducherry",
+    "Chandigarh",
+    "Andaman and Nicobar Islands",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Lakshadweep"
+
+];
+
+
+stateNames.forEach(
+    state=>{
+
+        const option =
+            document.createElement("option");
+
+        option.value = state;
+        option.textContent = state;
+
+        $("gState").appendChild(
+            option
+        );
+
+    }
+);
+
+
+$("gState").value =
+    "Jammu and Kashmir";
+
+
+/* =========================================================
+   DEFAULT LOCATION
+========================================================= */
+
+$("gPlace").value =
+    "Beerwah";
+
+$("gAddress").value =
+    "Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India";
+
+
+/* =========================================================
+   GEO SETTINGS
+========================================================= */
+
+const GEO = {
+
+    opacity:85,
+
+    mapOpacity:100,
+
+    height:25,
+
+    mapWidth:29,
+
+    titleSize:100,
+
+    detailsSize:100,
+
+    logoX:88,
+
+    logoY:78,
+
+    logoSize:70
 
 };
 
 
 /* =========================================================
-   TOAST
+   CURRENT DATE/TIME
 ========================================================= */
 
-function showToast(message,error=false){
+function setCurrentDateTime(){
 
-  const toast =
-    document.getElementById("toast");
+    const now =
+        new Date();
 
-  toast.textContent =
-    message;
+    $("gDate").value =
+        now.getFullYear() +
+        "-" +
+        String(
+            now.getMonth()+1
+        ).padStart(2,"0") +
+        "-" +
+        String(
+            now.getDate()
+        ).padStart(2,"0");
 
-  toast.classList.toggle(
-    "error",
-    error
-  );
-
-  toast.classList.add("show");
-
-  clearTimeout(
-    showToast.timer
-  );
-
-  showToast.timer =
-    setTimeout(
-      ()=>{
-        toast.classList.remove("show");
-      },
-      3000
-    );
+    $("gTime").value =
+        String(
+            now.getHours()
+        ).padStart(2,"0") +
+        ":" +
+        String(
+            now.getMinutes()
+        ).padStart(2,"0");
 
 }
 
-
-/* =========================================================
-   CLAMP
-========================================================= */
-
-function clamp(value,min,max){
-
-  return Math.max(
-    min,
-    Math.min(max,value)
-  );
-
-}
+setCurrentDateTime();
 
 
 /* =========================================================
-   IMAGE VALIDATION
+   CONVERT BLOB TO IMAGE
 ========================================================= */
 
-function validImage(file){
+function blobToImage(blob){
 
-  if(!file){
-    return false;
-  }
+    return new Promise(
+        (resolve,reject)=>{
 
-  const type =
-    (file.type || "").toLowerCase();
+            const url =
+                URL.createObjectURL(blob);
 
-  const name =
-    (file.name || "").toLowerCase();
+            const image =
+                new Image();
 
-  const extension =
-    /\.(jpg|jpeg|png|webp|gif|bmp|heic|heif)$/i
-      .test(name);
+            image.onload =
+                function(){
 
-  return (
-    type.startsWith("image/") ||
-    extension
-  );
+                    URL.revokeObjectURL(
+                        url
+                    );
 
-}
+                    resolve(image);
 
+                };
 
-/* =========================================================
-   LOAD NORMAL IMAGE
-========================================================= */
+            image.onerror =
+                function(){
 
-function loadNormalImage(file){
+                    URL.revokeObjectURL(
+                        url
+                    );
 
-  return new Promise(
-    (resolve,reject)=>{
+                    reject(
+                        new Error(
+                            "Could not load saved image."
+                        )
+                    );
 
-      const reader =
-        new FileReader();
+                };
 
-      reader.onload = function(){
-
-        const img =
-          new Image();
-
-        img.onload = function(){
-
-          resolve(img);
-
-        };
-
-        img.onerror = function(){
-
-          reject(
-            new Error(
-              "Browser could not decode image"
-            )
-          );
-
-        };
-
-        img.src =
-          reader.result;
-
-      };
-
-      reader.onerror = function(){
-
-        reject(
-          new Error(
-            "Could not read file"
-          )
-        );
-
-      };
-
-      reader.readAsDataURL(file);
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   LOAD IMAGE INCLUDING HEIC
-========================================================= */
-
-async function loadImageFile(file){
-
-  const isHEIC =
-    /\.(heic|heif)$/i.test(
-      file.name || ""
-    ) ||
-    /image\/hei[cf]/i.test(
-      file.type || ""
-    );
-
-
-  if(!isHEIC){
-
-    return await loadNormalImage(file);
-
-  }
-
-
-  /*
-    HEIC / HEIF conversion.
-  */
-
-  if(
-    typeof window.heic2any !==
-    "function"
-  ){
-
-    throw new Error(
-      "HEIC converter did not load"
-    );
-
-  }
-
-
-  const converted =
-    await window.heic2any({
-
-      blob:file,
-
-      toType:"image/jpeg",
-
-      quality:0.95
-
-    });
-
-
-  const blob =
-    Array.isArray(converted)
-      ? converted[0]
-      : converted;
-
-
-  return await loadNormalImage(
-    new File(
-      [blob],
-      "converted.jpg",
-      {
-        type:"image/jpeg"
-      }
-    )
-  );
-
-}
-
-
-/* =========================================================
-   COPY CANVAS
-========================================================= */
-
-function copyCanvas(source){
-
-  const canvas =
-    document.createElement("canvas");
-
-  canvas.width =
-    source.width;
-
-  canvas.height =
-    source.height;
-
-  const ctx =
-    canvas.getContext("2d");
-
-  ctx.drawImage(
-    source,
-    0,
-    0
-  );
-
-  return canvas;
-
-}
-
-
-/* =========================================================
-   CREATE ORIGINAL CANVAS
-========================================================= */
-
-function imageToCanvas(img){
-
-  const canvas =
-    document.createElement("canvas");
-
-  canvas.width =
-    img.naturalWidth ||
-    img.width;
-
-  canvas.height =
-    img.naturalHeight ||
-    img.height;
-
-  const ctx =
-    canvas.getContext("2d",{
-      willReadFrequently:false
-    });
-
-  ctx.drawImage(
-    img,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  return canvas;
-
-}
-
-
-/* =========================================================
-   SHOW CANVAS
-========================================================= */
-
-function showCanvas(canvas){
-
-  if(!canvas){
-    return;
-  }
-
-
-  /*
-    Important:
-
-    previewCanvas keeps the REAL pixel dimensions.
-
-    CSS decides only how large it appears
-    on the screen.
-
-    This means download remains full resolution.
-  */
-
-  previewCanvas.width =
-    canvas.width;
-
-  previewCanvas.height =
-    canvas.height;
-
-
-  const ctx =
-    previewCanvas.getContext("2d");
-
-  ctx.clearRect(
-    0,
-    0,
-    previewCanvas.width,
-    previewCanvas.height
-  );
-
-  ctx.drawImage(
-    canvas,
-    0,
-    0
-  );
-
-
-  empty.style.display =
-    "none";
-
-  canvasWrapper.style.display =
-    "block";
-
-
-  dimensions.textContent =
-    canvas.width +
-    " × " +
-    canvas.height +
-    " px";
-
-
-  updateStatus();
-
-  requestAnimationFrame(
-    updateSelectionVisual
-  );
-
-}
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-function updateStatus(){
-
-  if(!state.originalCanvas){
-
-    status.textContent =
-      "No image uploaded";
-
-    return;
-
-  }
-
-
-  if(state.finalCanvas){
-
-    status.textContent =
-      "Final image · geotag added";
-
-    return;
-
-  }
-
-
-  if(state.blurredCanvas){
-
-    status.textContent =
-      "Blur generated";
-
-    return;
-
-  }
-
-
-  status.textContent =
-    state.originalCanvas.width +
-    " × " +
-    state.originalCanvas.height +
-    " · original";
-
-}
-
-
-/* =========================================================
-   UPLOAD MAIN IMAGE
-========================================================= */
-
-async function handleImage(file){
-
-  if(!file){
-    return;
-  }
-
-
-  if(!validImage(file)){
-
-    showToast(
-      "Please select a valid image file.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  try{
-
-    showToast(
-      "Loading image..."
-    );
-
-
-    const img =
-      await loadImageFile(file);
-
-
-    state.image =
-      img;
-
-
-    state.originalCanvas =
-      imageToCanvas(img);
-
-
-    state.blurredCanvas =
-      null;
-
-    state.finalCanvas =
-      null;
-
-    state.selection =
-      null;
-
-    state.selecting =
-      false;
-
-
-    selectionOverlay.style.display =
-      "none";
-
-
-    showCanvas(
-      state.originalCanvas
-    );
-
-
-    showToast(
-      "Image loaded successfully."
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      "IMAGE LOAD ERROR:",
-      error
-    );
-
-    showToast(
-      "Could not load this image. Try JPG, PNG or WEBP.",
-      true
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   UPLOAD GEOTAG
-========================================================= */
-
-async function handleGeotag(file){
-
-  if(!file){
-    return;
-  }
-
-
-  if(!validImage(file)){
-
-    showToast(
-      "Please select a valid geotag image.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  try{
-
-    showToast(
-      "Loading geotag..."
-    );
-
-
-    const img =
-      await loadImageFile(file);
-
-
-    state.geotag =
-      img;
-
-
-    geoPreview.innerHTML =
-      "";
-
-
-    const previewImg =
-      document.createElement("img");
-
-    previewImg.src =
-      img.src;
-
-    geoPreview.appendChild(
-      previewImg
-    );
-
-
-    showToast(
-      "Geotag image loaded."
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      "GEOTAG LOAD ERROR:",
-      error
-    );
-
-    showToast(
-      "Could not load the geotag image.",
-      true
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   FILE BUTTONS
-========================================================= */
-
-uploadImageBtn.addEventListener(
-  "click",
-  ()=>{
-    imageInput.click();
-  }
-);
-
-
-uploadGeoBtn.addEventListener(
-  "click",
-  ()=>{
-    geoInput.click();
-  }
-);
-
-
-imageInput.addEventListener(
-  "change",
-  async function(){
-
-    const file =
-      this.files &&
-      this.files[0];
-
-    await handleImage(file);
-
-    this.value = "";
-
-  }
-);
-
-
-geoInput.addEventListener(
-  "change",
-  async function(){
-
-    const file =
-      this.files &&
-      this.files[0];
-
-    await handleGeotag(file);
-
-    this.value = "";
-
-  }
-);
-
-
-/* =========================================================
-   GET DISPLAYED CANVAS COORDINATE
-========================================================= */
-
-function getCanvasPoint(event){
-
-  const rect =
-    previewCanvas.getBoundingClientRect();
-
-
-  if(
-    rect.width <= 0 ||
-    rect.height <= 0
-  ){
-
-    return {
-      x:0,
-      y:0
-    };
-
-  }
-
-
-  return {
-
-    x:clamp(
-      (
-        event.clientX -
-        rect.left
-      ) / rect.width,
-      0,
-      1
-    ),
-
-    y:clamp(
-      (
-        event.clientY -
-        rect.top
-      ) / rect.height,
-      0,
-      1
-    )
-
-  };
-
-}
-
-
-/* =========================================================
-   SELECT AREA MODE
-========================================================= */
-
-function startSelection(){
-
-  if(!state.originalCanvas){
-
-    showToast(
-      "Please upload the image first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  /*
-    Clicking the button puts the app
-    into drawing mode.
-
-    It does NOT automatically choose
-    the final blur area.
-  */
-
-  state.selecting =
-    true;
-
-
-  selectionOverlay.style.display =
-    "none";
-
-
-  showToast(
-    "Now drag over the exact area you want to blur."
-  );
-
-}
-
-
-selectAreaBtn.addEventListener(
-  "click",
-  startSelection
-);
-
-
-/* =========================================================
-   CLEAR SELECTION
-========================================================= */
-
-clearSelectionBtn.addEventListener(
-  "click",
-  ()=>{
-
-    state.selection =
-      null;
-
-    state.selecting =
-      false;
-
-    selectionOverlay.style.display =
-      "none";
-
-
-    showToast(
-      "Blur selection cleared."
-    );
-
-  }
-);
-
-
-/* =========================================================
-   DRAW NEW SELECTION
-========================================================= */
-
-let drawStart =
-  null;
-
-
-previewCanvas.addEventListener(
-  "pointerdown",
-  function(event){
-
-    /*
-      Only draw when Select Blur Area
-      mode is active.
-    */
-
-    if(!state.selecting){
-      return;
-    }
-
-
-    event.preventDefault();
-
-
-    const point =
-      getCanvasPoint(event);
-
-
-    drawStart =
-      point;
-
-
-    state.selection = {
-
-      x:point.x,
-
-      y:point.y,
-
-      width:0,
-
-      height:0
-
-    };
-
-
-    previewCanvas.setPointerCapture(
-      event.pointerId
-    );
-
-
-    updateSelectionVisual();
-
-  }
-);
-
-
-previewCanvas.addEventListener(
-  "pointermove",
-  function(event){
-
-    if(
-      !state.selecting ||
-      !drawStart
-    ){
-
-      return;
-
-    }
-
-
-    event.preventDefault();
-
-
-    const point =
-      getCanvasPoint(event);
-
-
-    let x =
-      Math.min(
-        drawStart.x,
-        point.x
-      );
-
-
-    let y =
-      Math.min(
-        drawStart.y,
-        point.y
-      );
-
-
-    let width =
-      Math.abs(
-        point.x -
-        drawStart.x
-      );
-
-
-    let height =
-      Math.abs(
-        point.y -
-        drawStart.y
-      );
-
-
-    x =
-      clamp(x,0,1);
-
-    y =
-      clamp(y,0,1);
-
-
-    width =
-      Math.min(
-        width,
-        1-x
-      );
-
-
-    height =
-      Math.min(
-        height,
-        1-y
-      );
-
-
-    state.selection = {
-
-      x,
-      y,
-      width,
-      height
-
-    };
-
-
-    updateSelectionVisual();
-
-  }
-);
-
-
-previewCanvas.addEventListener(
-  "pointerup",
-  finishDrawing
-);
-
-
-previewCanvas.addEventListener(
-  "pointercancel",
-  finishDrawing
-);
-
-
-function finishDrawing(event){
-
-  if(!state.selecting){
-    return;
-  }
-
-
-  drawStart =
-    null;
-
-
-  state.selecting =
-    false;
-
-
-  try{
-
-    previewCanvas.releasePointerCapture(
-      event.pointerId
-    );
-
-  }
-  catch(e){}
-
-
-  if(
-    !state.selection ||
-    state.selection.width < 0.01 ||
-    state.selection.height < 0.01
-  ){
-
-    state.selection =
-      null;
-
-    selectionOverlay.style.display =
-      "none";
-
-    showToast(
-      "Please draw a larger blur area.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  updateSelectionVisual();
-
-
-  showToast(
-    "Blur area selected."
-  );
-
-}
-
-
-/* =========================================================
-   SHOW SELECTION RECTANGLE
-========================================================= */
-
-function updateSelectionVisual(){
-
-  if(
-    !state.selection ||
-    !state.originalCanvas ||
-    canvasWrapper.style.display === "none"
-  ){
-
-    selectionOverlay.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  /*
-    Use the actual displayed canvas dimensions.
-
-    This fixes the alignment problem when
-    the original image is resized visually.
-  */
-
-  const canvasRect =
-    previewCanvas.getBoundingClientRect();
-
-  const wrapperRect =
-    canvasWrapper.getBoundingClientRect();
-
-
-  const offsetLeft =
-    canvasRect.left -
-    wrapperRect.left;
-
-  const offsetTop =
-    canvasRect.top -
-    wrapperRect.top;
-
-
-  const s =
-    state.selection;
-
-
-  selectionOverlay.style.display =
-    "block";
-
-
-  selectionOverlay.style.left =
-    (
-      offsetLeft +
-      s.x *
-      canvasRect.width
-    ) + "px";
-
-
-  selectionOverlay.style.top =
-    (
-      offsetTop +
-      s.y *
-      canvasRect.height
-    ) + "px";
-
-
-  selectionOverlay.style.width =
-    (
-      s.width *
-      canvasRect.width
-    ) + "px";
-
-
-  selectionOverlay.style.height =
-    (
-      s.height *
-      canvasRect.height
-    ) + "px";
-
-}
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-window.addEventListener(
-  "resize",
-  ()=>{
-    requestAnimationFrame(
-      updateSelectionVisual
-    );
-  }
-);
-
-
-/* =========================================================
-   MOVE / RESIZE EXISTING SELECTION
-========================================================= */
-
-let interaction =
-  null;
-
-
-selectionOverlay.addEventListener(
-  "pointerdown",
-  function(event){
-
-    if(!state.selection){
-      return;
-    }
-
-
-    event.preventDefault();
-
-    event.stopPropagation();
-
-
-    const handle =
-      event.target.dataset.handle ||
-      null;
-
-
-    const point =
-      getCanvasPoint(event);
-
-
-    interaction = {
-
-      mode:
-        handle
-          ? "resize"
-          : "move",
-
-      handle,
-
-      start:point,
-
-      original:{
-        ...state.selection
-      }
-
-    };
-
-
-    selectionOverlay.setPointerCapture(
-      event.pointerId
-    );
-
-  }
-);
-
-
-selectionOverlay.addEventListener(
-  "pointermove",
-  function(event){
-
-    if(!interaction){
-      return;
-    }
-
-
-    event.preventDefault();
-
-
-    const point =
-      getCanvasPoint(event);
-
-
-    const dx =
-      point.x -
-      interaction.start.x;
-
-
-    const dy =
-      point.y -
-      interaction.start.y;
-
-
-    const original =
-      interaction.original;
-
-
-    /* ================= MOVE ================= */
-
-    if(
-      interaction.mode ===
-      "move"
-    ){
-
-      state.selection.x =
-        clamp(
-          original.x + dx,
-          0,
-          1-original.width
-        );
-
-
-      state.selection.y =
-        clamp(
-          original.y + dy,
-          0,
-          1-original.height
-        );
-
-    }
-
-
-    /* ================= RESIZE ================= */
-
-    else{
-
-      let x =
-        original.x;
-
-      let y =
-        original.y;
-
-      let right =
-        original.x +
-        original.width;
-
-      let bottom =
-        original.y +
-        original.height;
-
-
-      const handle =
-        interaction.handle;
-
-
-      if(handle.includes("l")){
-
-        x =
-          clamp(
-            original.x + dx,
-            0,
-            right-0.02
-          );
-
-      }
-
-
-      if(handle.includes("r")){
-
-        right =
-          clamp(
-            original.x +
-            original.width +
-            dx,
-            x+0.02,
-            1
-          );
-
-      }
-
-
-      if(handle.includes("t")){
-
-        y =
-          clamp(
-            original.y + dy,
-            0,
-            bottom-0.02
-          );
-
-      }
-
-
-      if(handle.includes("b")){
-
-        bottom =
-          clamp(
-            original.y +
-            original.height +
-            dy,
-            y+0.02,
-            1
-          );
-
-      }
-
-
-      state.selection = {
-
-        x,
-
-        y,
-
-        width:
-          right-x,
-
-        height:
-          bottom-y
-
-      };
-
-    }
-
-
-    updateSelectionVisual();
-
-  }
-);
-
-
-selectionOverlay.addEventListener(
-  "pointerup",
-  endInteraction
-);
-
-
-selectionOverlay.addEventListener(
-  "pointercancel",
-  endInteraction
-);
-
-
-function endInteraction(event){
-
-  interaction =
-    null;
-
-  try{
-
-    selectionOverlay.releasePointerCapture(
-      event.pointerId
-    );
-
-  }
-  catch(e){}
-
-}
-
-
-/* =========================================================
-   BLUR
-========================================================= */
-
-function generateBlur(){
-
-  if(!state.originalCanvas){
-
-    showToast(
-      "Please upload the image first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  if(
-    !state.selection ||
-    state.selection.width < 0.01 ||
-    state.selection.height < 0.01
-  ){
-
-    showToast(
-      "Please select the area to blur first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  const source =
-    state.originalCanvas;
-
-
-  const w =
-    source.width;
-
-  const h =
-    source.height;
-
-
-  /*
-    Convert normalized selection
-    to REAL image pixels.
-  */
-
-  const x =
-    Math.round(
-      state.selection.x *
-      w
-    );
-
-  const y =
-    Math.round(
-      state.selection.y *
-      h
-    );
-
-  const width =
-    Math.max(
-      1,
-      Math.round(
-        state.selection.width *
-        w
-      )
-    );
-
-  const height =
-    Math.max(
-      1,
-      Math.round(
-        state.selection.height *
-        h
-      )
-    );
-
-
-  /*
-    Start with completely untouched
-    original image.
-  */
-
-  const output =
-    copyCanvas(source);
-
-
-  const ctx =
-    output.getContext("2d");
-
-
-  /*
-    Blur strength.
-
-    0% = no blur
-    100% = strong blur
-  */
-
-  const blurPixels =
-    (
-      state.blurStrength /
-      100
-    ) * 45;
-
-
-  /* =======================================================
-     BLUR SELECTED REGION
-  ======================================================= */
-
-  if(blurPixels > 0){
-
-    /*
-      Padding around selection makes
-      the blur look natural at edges.
-    */
-
-    const padding =
-      Math.ceil(
-        blurPixels * 3
-      ) + 10;
-
-
-    const sampleX =
-      Math.max(
-        0,
-        x-padding
-      );
-
-
-    const sampleY =
-      Math.max(
-        0,
-        y-padding
-      );
-
-
-    const sampleRight =
-      Math.min(
-        w,
-        x+width+padding
-      );
-
-
-    const sampleBottom =
-      Math.min(
-        h,
-        y+height+padding
-      );
-
-
-    const sampleWidth =
-      Math.max(
-        1,
-        sampleRight-sampleX
-      );
-
-
-    const sampleHeight =
-      Math.max(
-        1,
-        sampleBottom-sampleY
-      );
-
-
-    const blurredCanvas =
-      document.createElement(
-        "canvas"
-      );
-
-
-    blurredCanvas.width =
-      sampleWidth;
-
-    blurredCanvas.height =
-      sampleHeight;
-
-
-    const bctx =
-      blurredCanvas.getContext(
-        "2d"
-      );
-
-
-    /*
-      Draw source into padded canvas
-      with real canvas blur.
-    */
-
-    bctx.filter =
-      `blur(${blurPixels}px)`;
-
-
-    bctx.drawImage(
-      source,
-
-      sampleX,
-      sampleY,
-      sampleWidth,
-      sampleHeight,
-
-      0,
-      0,
-      sampleWidth,
-      sampleHeight
-    );
-
-
-    bctx.filter =
-      "none";
-
-
-    /*
-      Position of selected region
-      inside blurred canvas.
-    */
-
-    const cropX =
-      x-sampleX;
-
-    const cropY =
-      y-sampleY;
-
-
-    /*
-      IMPORTANT:
-
-      Only the selected rectangle
-      is copied back.
-
-      Everything outside remains
-      completely untouched.
-    */
-
-    ctx.drawImage(
-
-      blurredCanvas,
-
-      cropX,
-      cropY,
-      width,
-      height,
-
-      x,
-      y,
-      width,
-      height
-
-    );
-
-  }
-
-
-  /* =======================================================
-     GREY EFFECT
-  ======================================================= */
-
-  const greyAlpha =
-    (
-      state.greyOpacity /
-      100
-    ) * 0.65;
-
-
-  if(greyAlpha > 0){
-
-    ctx.save();
-
-
-    ctx.fillStyle =
-      `rgba(128,128,128,${greyAlpha})`;
-
-
-    /*
-      Grey ONLY inside selected area.
-    */
-
-    ctx.fillRect(
-      x,
-      y,
-      width,
-      height
-    );
-
-
-    ctx.restore();
-
-  }
-
-
-  /*
-    Save processed image.
-  */
-
-  state.blurredCanvas =
-    output;
-
-  state.finalCanvas =
-    null;
-
-
-  showCanvas(
-    output
-  );
-
-
-  /*
-    Keep selection visible.
-  */
-
-  state.selecting =
-    false;
-
-
-  updateSelectionVisual();
-
-
-  showToast(
-    "Blur generated successfully."
-  );
-
-}
-
-
-/* =========================================================
-   BLUR BUTTON
-========================================================= */
-
-generateBlurBtn.addEventListener(
-  "click",
-  generateBlur
-);
-
-
-/* =========================================================
-   GEOTAG POSITION
-========================================================= */
-
-geoBottom.addEventListener(
-  "click",
-  ()=>{
-
-    state.geoPosition =
-      "bottom";
-
-    geoBottom.classList.add(
-      "active"
-    );
-
-    geoTop.classList.remove(
-      "active"
-    );
-
-  }
-);
-
-
-geoTop.addEventListener(
-  "click",
-  ()=>{
-
-    state.geoPosition =
-      "top";
-
-    geoTop.classList.add(
-      "active"
-    );
-
-    geoBottom.classList.remove(
-      "active"
-    );
-
-  }
-);
-
-
-/* =========================================================
-   ADD GEOTAG
-========================================================= */
-
-function addGeotag(){
-
-  if(!state.originalCanvas){
-
-    showToast(
-      "Please upload the image first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  if(!state.geotag){
-
-    showToast(
-      "Please upload the geotag image first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  /*
-    Use blurred image if available.
-  */
-
-  const source =
-    state.blurredCanvas ||
-    state.originalCanvas;
-
-
-  const output =
-    copyCanvas(source);
-
-
-  const ctx =
-    output.getContext("2d");
-
-
-  const w =
-    output.width;
-
-  const h =
-    output.height;
-
-
-  /* =======================================================
-     GEOTAG WIDTH
-  ======================================================= */
-
-  /*
-    This is the critical fix.
-
-    100% means:
-
-      tagWidth = image width
-
-    Therefore:
-
-      tagX = 0
-
-    and the geotag physically reaches
-    the left and right edges.
-  */
-
-  const tagWidth =
-    Math.max(
-      1,
-      Math.round(
-        w *
-        (
-          state.geoWidth /
-          100
-        )
-      )
-    );
-
-
-  const tagX =
-    Math.round(
-      (w-tagWidth)/2
-    );
-
-
-  /* =======================================================
-     GEOTAG HEIGHT
-  ======================================================= */
-
-  /*
-    Height is calculated independently.
-
-    It does NOT change width.
-
-    It does NOT change the Top/Bottom setting.
-
-    Example:
-
-    Photo height = 4000px
-
-    20% = 800px
-    30% = 1200px
-    50% = 2000px
-  */
-
-  const tagHeight =
-    Math.max(
-      1,
-      Math.round(
-        h *
-        (
-          state.geoHeight /
-          100
-        )
-      )
-    );
-
-
-  /* =======================================================
-     POSITION
-  ======================================================= */
-
-  let tagY;
-
-
-  if(
-    state.geoPosition ===
-    "top"
-  ){
-
-    /*
-      Always attached to TOP.
-    */
-
-    tagY = 0;
-
-  }
-  else{
-
-    /*
-      Always attached to BOTTOM.
-
-      Increasing height therefore makes
-      the geotag grow UPWARD while its
-      bottom edge stays at the bottom.
-    */
-
-    tagY =
-      h-tagHeight;
-
-  }
-
-
-  /* =======================================================
-     DRAW GEOTAG
-  ======================================================= */
-
-  ctx.save();
-
-
-  ctx.globalAlpha =
-    clamp(
-      state.geoOpacity/100,
-      0,
-      1
-    );
-
-
-  /*
-    VERY IMPORTANT:
-
-    We intentionally stretch the geotag
-    to EXACTLY the selected rectangle.
-
-    So:
-
-      Width 100%
-      =
-      full image width.
-
-    And:
-
-      Height 20%
-      =
-      actual 20% image height.
-
-    No aspect-ratio calculation is used
-    here because that was preventing the
-    geotag from reaching 100% width.
-  */
-
-  ctx.drawImage(
-
-    state.geotag,
-
-    tagX,
-    tagY,
-    tagWidth,
-    tagHeight
-
-  );
-
-
-  ctx.restore();
-
-
-  /*
-    Save final result.
-  */
-
-  state.finalCanvas =
-    output;
-
-
-  showCanvas(
-    output
-  );
-
-
-  updateStatus();
-
-
-  showToast(
-    "Geotag added successfully."
-  );
-
-}
-
-
-/* =========================================================
-   ADD GEOTAG BUTTON
-========================================================= */
-
-addGeoBtn.addEventListener(
-  "click",
-  addGeotag
-);
-
-
-/* =========================================================
-   SLIDERS
-========================================================= */
-
-blurStrength.addEventListener(
-  "input",
-  function(){
-
-    state.blurStrength =
-      Number(this.value);
-
-    document.getElementById(
-      "blurStrengthValue"
-    ).textContent =
-      this.value+"%";
-
-  }
-);
-
-
-greyOpacity.addEventListener(
-  "input",
-  function(){
-
-    state.greyOpacity =
-      Number(this.value);
-
-    document.getElementById(
-      "greyOpacityValue"
-    ).textContent =
-      this.value+"%";
-
-  }
-);
-
-
-geoHeight.addEventListener(
-  "input",
-  function(){
-
-    state.geoHeight =
-      Number(this.value);
-
-    document.getElementById(
-      "geoHeightValue"
-    ).textContent =
-      this.value+"%";
-
-  }
-);
-
-
-geoWidth.addEventListener(
-  "input",
-  function(){
-
-    state.geoWidth =
-      Number(this.value);
-
-    document.getElementById(
-      "geoWidthValue"
-    ).textContent =
-      this.value+"%";
-
-  }
-);
-
-
-geoOpacity.addEventListener(
-  "input",
-  function(){
-
-    state.geoOpacity =
-      Number(this.value);
-
-    document.getElementById(
-      "geoOpacityValue"
-    ).textContent =
-      this.value+"%";
-
-  }
-);
-
-
-/* =========================================================
-   RESET
-========================================================= */
-
-resetBtn.addEventListener(
-  "click",
-  function(){
-
-    state.blurredCanvas =
-      null;
-
-    state.finalCanvas =
-      null;
-
-    state.selection =
-      null;
-
-    state.selecting =
-      false;
-
-
-    state.blurStrength =
-      50;
-
-    state.greyOpacity =
-      45;
-
-    state.geoHeight =
-      20;
-
-    state.geoWidth =
-      100;
-
-    state.geoOpacity =
-      100;
-
-    state.geoPosition =
-      "bottom";
-
-
-    blurStrength.value =
-      50;
-
-    greyOpacity.value =
-      45;
-
-    geoHeight.value =
-      20;
-
-    geoWidth.value =
-      100;
-
-    geoOpacity.value =
-      100;
-
-
-    document.getElementById(
-      "blurStrengthValue"
-    ).textContent =
-      "50%";
-
-
-    document.getElementById(
-      "greyOpacityValue"
-    ).textContent =
-      "45%";
-
-
-    document.getElementById(
-      "geoHeightValue"
-    ).textContent =
-      "20%";
-
-
-    document.getElementById(
-      "geoWidthValue"
-    ).textContent =
-      "100%";
-
-
-    document.getElementById(
-      "geoOpacityValue"
-    ).textContent =
-      "100%";
-
-
-    geoBottom.classList.add(
-      "active"
-    );
-
-    geoTop.classList.remove(
-      "active"
-    );
-
-
-    selectionOverlay.style.display =
-      "none";
-
-
-    if(state.originalCanvas){
-
-      showCanvas(
-        state.originalCanvas
-      );
-
-    }
-
-
-    updateStatus();
-
-
-    showToast(
-      "Processing settings reset."
-    );
-
-  }
-);
-
-
-/* =========================================================
-   DOWNLOAD
-========================================================= */
-
-/*
-  Robust download implementation.
-
-  It tries:
-
-  1. canvas.toBlob()
-  2. dataURL fallback
-  3. normal anchor download
-
-  This avoids the common situation where
-  clicking Download appears to do nothing.
-*/
-
-async function downloadCanvas(canvas){
-
-  if(!canvas){
-
-    showToast(
-      "Please upload an image first.",
-      true
-    );
-
-    return;
-
-  }
-
-
-  try{
-
-    showToast(
-      "Preparing download..."
-    );
-
-
-    /*
-      First attempt: Blob.
-    */
-
-    const blob =
-      await new Promise(
-        (resolve)=>{
-          
-          canvas.toBlob(
-            resolve,
-            "image/png"
-          );
+            image.src = url;
 
         }
-      );
+    );
+
+}
 
 
-    if(blob){
+/* =========================================================
+   OPEN GEOTAG PAGE
+========================================================= */
 
-      const url =
-        URL.createObjectURL(
-          blob
-        );
+$("goGeoBtn").addEventListener(
+    "click",
+    async function(){
 
+        /*
+          Save current image first.
+        */
 
-      const link =
-        document.createElement("a");
+        try{
 
+            await saveCurrentWithoutAdvance();
 
-      link.href =
-        url;
+        }catch(err){
 
-      link.download =
-        "geotag-studio-result.png";
+            console.error(err);
 
-      link.style.display =
-        "none";
+        }
 
+        geoImages =
+            cleanedImages
+            .slice()
+            .sort(
+                (a,b)=>a.index-b.index
+            );
 
-      document.body.appendChild(
-        link
-      );
+        if(!geoImages.length){
 
+            alert(
+                "Please save at least one cleaned image first."
+            );
 
-      /*
-        Force browser download.
-      */
+            return;
 
-      link.click();
+        }
 
+        geoIndex = 0;
 
-      document.body.removeChild(
-        link
-      );
+        $("removePage").style.display =
+            "none";
 
+        $("geoPage").style.display =
+            "block";
 
-      /*
-        Do NOT revoke immediately.
-        Some browsers need time to start
-        the download.
-      */
+        $("stepOne").style.background =
+            "#e5e7eb";
 
-      setTimeout(
-        ()=>{
-          URL.revokeObjectURL(
-            url
-          );
-        },
-        5000
-      );
+        $("stepOne").style.color =
+            "#555";
 
+        $("stepTwo").style.background =
+            "#1769e0";
 
-      showToast(
-        "Image downloaded successfully."
-      );
+        $("stepTwo").style.color =
+            "#fff";
 
-
-      return;
+        await loadGeoImage();
 
     }
+);
 
 
-    /*
-      If toBlob returned null,
-      use data URL fallback.
-    */
+/* =========================================================
+   LOAD GEO IMAGE
+========================================================= */
 
-    throw new Error(
-      "toBlob returned null"
-    );
+async function loadGeoImage(){
 
-  }
-  catch(error){
+    if(!geoImages.length)
+        return;
 
-    console.warn(
-      "Blob download failed:",
-      error
-    );
+    const item =
+        geoImages[geoIndex];
 
-
-    /*
-      FALLBACK
-
-      Convert canvas to PNG data URL.
-    */
+    $("geoCounter").textContent =
+        `Image ${geoIndex+1} of ${geoImages.length} — ${item.originalName}`;
 
     try{
 
-      const dataUrl =
-        canvas.toDataURL(
-          "image/png"
+        const image =
+            await blobToImage(
+                item.blob
+            );
+
+        const maxWidth =
+            1800;
+
+        const scale =
+            Math.min(
+                1,
+                maxWidth /
+                image.naturalWidth
+            );
+
+        const W =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalWidth*scale
+                )
+            );
+
+        const H =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalHeight*scale
+                )
+            );
+
+        gCanvas.width = W;
+        gCanvas.height = H;
+
+        gCtx.setTransform(
+            1,0,0,1,0,0
         );
 
+        gCtx.clearRect(
+            0,
+            0,
+            W,
+            H
+        );
 
-      const link =
-        document.createElement("a");
+        gCtx.drawImage(
+            image,
+            0,
+            0,
+            W,
+            H
+        );
 
+        $("gPrev").disabled =
+            geoIndex <= 0;
 
-      link.href =
-        dataUrl;
+        await drawGeo();
 
-      link.download =
-        "geotag-studio-result.png";
+    }catch(err){
 
+        console.error(err);
 
-      document.body.appendChild(
-        link
-      );
-
-
-      link.click();
-
-
-      document.body.removeChild(
-        link
-      );
-
-
-      showToast(
-        "Image downloaded."
-      );
+        $("gStatus").textContent =
+            "Could not display this saved image.";
 
     }
-    catch(fallbackError){
-
-      console.error(
-        "Download failed:",
-        fallbackError
-      );
-
-
-      showToast(
-        "Download failed. Please try again.",
-        true
-      );
-
-    }
-
-  }
 
 }
 
 
 /* =========================================================
-   DOWNLOAD BUTTON
+   TEXT WRAPPING
 ========================================================= */
 
-downloadBtn.addEventListener(
-  "click",
-  function(){
+function wrapGeoText(
+    text,
+    maxWidth,
+    font,
+    maxLines
+){
 
-    const canvas =
-      state.finalCanvas ||
-      state.blurredCanvas ||
-      state.originalCanvas;
+    gCtx.font = font;
 
+    const words =
+        String(text || "")
+        .trim()
+        .split(/\s+/);
 
-    downloadCanvas(
-      canvas
-    );
+    const lines = [];
 
-  }
-);
+    let line = "";
 
+    for(
+        const word of words
+    ){
 
-/* =========================================================
-   KEYBOARD ESC
-========================================================= */
+        const test =
+            line
+                ? line + " " + word
+                : word;
 
-document.addEventListener(
-  "keydown",
-  function(event){
+        if(
+            gCtx.measureText(test).width >
+            maxWidth &&
+            line
+        ){
 
-    if(event.key === "Escape"){
+            lines.push(line);
 
-      state.selecting =
-        false;
+            line = word;
 
-      drawStart =
-        null;
+            if(
+                lines.length >=
+                maxLines
+            )
+                break;
 
-      showToast(
-        "Selection mode cancelled."
-      );
+        }else{
+
+            line = test;
+
+        }
 
     }
 
-  }
+    if(
+        line &&
+        lines.length < maxLines
+    ){
+
+        lines.push(line);
+
+    }
+
+    return lines;
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+function formatDate(value){
+
+    if(!value)
+        return "Date";
+
+    const p =
+        value.split("-");
+
+    if(p.length !== 3)
+        return value;
+
+    return (
+        p[2] +
+        "/" +
+        p[1] +
+        "/" +
+        p[0]
+    );
+
+}
+
+
+/* =========================================================
+   TIME FORMAT
+========================================================= */
+
+function formatTime(value){
+
+    if(!value)
+        return "Time";
+
+    const p =
+        value.split(":");
+
+    let h =
+        Number(p[0]);
+
+    const m =
+        p[1] || "00";
+
+    const suffix =
+        h >= 12
+            ? "PM"
+            : "AM";
+
+    h =
+        h % 12 || 12;
+
+    return (
+        String(h).padStart(2,"0") +
+        ":" +
+        m +
+        " " +
+        suffix
+    );
+
+}
+
+
+/* =========================================================
+   DRAW FALLBACK MAP
+========================================================= */
+
+function drawFallbackMap(
+    x,
+    y,
+    w,
+    h
+){
+
+    gCtx.save();
+
+    gCtx.beginPath();
+
+    gCtx.rect(
+        x,
+        y,
+        w,
+        h
+    );
+
+    gCtx.clip();
+
+    gCtx.fillStyle =
+        "#d7dcde";
+
+    gCtx.fillRect(
+        x,
+        y,
+        w,
+        h
+    );
+
+
+    /*
+      Map-like roads.
+    */
+
+    gCtx.strokeStyle =
+        "rgba(100,110,115,.30)";
+
+    gCtx.lineWidth =
+        Math.max(
+            2,
+            w*.006
+        );
+
+    for(
+        let i=-h;
+        i<w+h;
+        i+=Math.max(
+            30,
+            w*.14
+        )
+    ){
+
+        gCtx.beginPath();
+
+        gCtx.moveTo(
+            x+i,
+            y
+        );
+
+        gCtx.lineTo(
+            x+i+h,
+            y+h
+        );
+
+        gCtx.stroke();
+
+    }
+
+
+    for(
+        let i=0;
+        i<h;
+        i+=Math.max(
+            30,
+            h*.17
+        )
+    ){
+
+        gCtx.beginPath();
+
+        gCtx.moveTo(
+            x,
+            y+i
+        );
+
+        gCtx.lineTo(
+            x+w,
+            y+i+h*.12
+        );
+
+        gCtx.stroke();
+
+    }
+
+
+    /*
+      Location marker.
+    */
+
+    const px =
+        x+w/2;
+
+    const py =
+        y+h/2;
+
+    const r =
+        Math.max(
+            7,
+            h*.065
+        );
+
+    gCtx.fillStyle =
+        "#e53935";
+
+    gCtx.beginPath();
+
+    gCtx.arc(
+        px,
+        py,
+        r,
+        0,
+        Math.PI*2
+    );
+
+    gCtx.fill();
+
+    gCtx.beginPath();
+
+    gCtx.moveTo(
+        px-r*.7,
+        py+r*.3
+    );
+
+    gCtx.lineTo(
+        px,
+        py+r*1.8
+    );
+
+    gCtx.lineTo(
+        px+r*.7,
+        py+r*.3
+    );
+
+    gCtx.closePath();
+
+    gCtx.fill();
+
+    gCtx.fillStyle =
+        "#fff";
+
+    gCtx.beginPath();
+
+    gCtx.arc(
+        px,
+        py,
+        r*.38,
+        0,
+        Math.PI*2
+    );
+
+    gCtx.fill();
+
+    gCtx.restore();
+
+}
+
+
+/* =========================================================
+   MAP TILE
+========================================================= */
+
+async function drawMap(
+    x,
+    y,
+    w,
+    h
+){
+
+    /*
+      OFFLINE MAP — no network, no tiles, nothing to block.
+      The map is generated on the canvas from the State and
+      District only. Same State + District = same map, always.
+    */
+
+    const state =
+        $("gState").value.trim();
+
+    const district =
+        $("gPlace").value.trim();
+
+    /* ---------- seeded random ---------- */
+
+    const seedText =
+        (state + "|" + district).toLowerCase();
+
+    let hsh = 2166136261;
+
+    for(let i=0;i<seedText.length;i++){
+        hsh ^= seedText.charCodeAt(i);
+        hsh = Math.imul(hsh,16777619);
+    }
+
+    let seed = hsh >>> 0;
+
+    const rnd = ()=>{
+        seed |= 0;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed>>>15, 1|seed);
+        t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
+        return ((t ^ t>>>14)>>>0)/4294967296;
+    };
+
+    /* ---------- geometry ---------- */
+
+    const cx = x + w/2;
+    const cy = y + h/2;
+    const R  = Math.hypot(w,h);
+    const u  = h;
+
+    const roadMinor = Math.max(2,   u*.020);
+    const roadMid   = Math.max(3.5, u*.036);
+    const roadMain  = Math.max(5,   u*.060);
+
+    const gridAngle = (rnd()*50 - 25) * Math.PI/180;
+
+    /* ---------- grid lines ---------- */
+
+    const makeLines = (spacing)=>{
+        const lines = [];
+        let p = -R/2 - spacing*rnd();
+        while(p < R/2 + spacing){
+            lines.push({
+                p,
+                mid: rnd() < .28
+            });
+            p += spacing*(.65 + rnd()*.8);
+        }
+        return lines;
+    };
+
+    const spacing = Math.max(u*.20, 22);
+
+    const vLines = makeLines(spacing*(.9 + rnd()*.4));
+    const hLines = makeLines(spacing*(.8 + rnd()*.4));
+
+    /* ---------- clip to map box ---------- */
+
+    gCtx.save();
+
+    gCtx.beginPath();
+    gCtx.roundRect(x,y,w,h,Math.min(18,h*.07));
+    gCtx.clip();
+
+    gCtx.globalAlpha = GEO.mapOpacity/100;
+
+    /* ---------- land ---------- */
+
+    gCtx.fillStyle = "#f1eee7";
+    gCtx.fillRect(x,y,w,h);
+
+    /* ---------- city blocks (rotated grid) ---------- */
+
+    const blockColors = [
+        "#e8e3d9",
+        "#ebe7de",
+        "#e4dfd4",
+        "#eae5da"
+    ];
+
+    gCtx.save();
+    gCtx.translate(cx,cy);
+    gCtx.rotate(gridAngle);
+
+    for(let i=0;i<vLines.length-1;i++){
+
+        for(let j=0;j<hLines.length-1;j++){
+
+            const a = vLines[i];
+            const b = vLines[i+1];
+            const c = hLines[j];
+            const d = hLines[j+1];
+
+            const ia = (a.mid?roadMid:roadMinor)/2 + 1.2;
+            const ib = (b.mid?roadMid:roadMinor)/2 + 1.2;
+            const ic = (c.mid?roadMid:roadMinor)/2 + 1.2;
+            const id = (d.mid?roadMid:roadMinor)/2 + 1.2;
+
+            const bx = a.p + ia;
+            const by = c.p + ic;
+            const bw = (b.p - ib) - bx;
+            const bh = (d.p - id) - by;
+
+            if(bw < 3 || bh < 3){
+                rnd();
+                continue;
+            }
+
+            const roll = rnd();
+
+            if(roll < .10){
+
+                gCtx.fillStyle = "#d3e8c8";
+
+            }else{
+
+                gCtx.fillStyle =
+                    blockColors[
+                        Math.floor(roll*blockColors.length*10)%blockColors.length
+                    ];
+
+            }
+
+            gCtx.beginPath();
+            gCtx.roundRect(bx,by,bw,bh,Math.min(3,u*.012));
+            gCtx.fill();
+
+            /* little building footprints */
+
+            if(roll >= .10 && bw > u*.09 && bh > u*.09){
+
+                gCtx.fillStyle = "rgba(160,150,130,.16)";
+
+                const bwid = bw*(.28 + rnd()*.25);
+                const bhei = bh*(.28 + rnd()*.25);
+
+                gCtx.fillRect(
+                    bx + bw*.12,
+                    by + bh*.14,
+                    bwid,
+                    bhei
+                );
+
+                gCtx.fillRect(
+                    bx + bw*.55,
+                    by + bh*.5,
+                    bw*.3,
+                    bh*.32
+                );
+
+            }
+
+        }
+
+    }
+
+    gCtx.restore();
+
+    /* ---------- parks ---------- */
+
+    const parkCount = 2;
+
+    for(let i=0;i<parkCount;i++){
+
+        const ang  = rnd()*Math.PI*2;
+        const dist = u*(.45 + rnd()*.5);
+        const px   = cx + Math.cos(ang)*dist*1.4;
+        const py   = cy + Math.sin(ang)*dist;
+        const rx   = u*(.22 + rnd()*.22);
+        const ry   = u*(.16 + rnd()*.18);
+
+        gCtx.fillStyle = "#c9e5bd";
+
+        gCtx.beginPath();
+        gCtx.ellipse(
+            px,py,rx,ry,
+            rnd()*Math.PI,
+            0,Math.PI*2
+        );
+        gCtx.fill();
+
+        gCtx.fillStyle = "#bcdcae";
+
+        gCtx.beginPath();
+        gCtx.ellipse(
+            px,py,rx*.55,ry*.55,
+            rnd()*Math.PI,
+            0,Math.PI*2
+        );
+        gCtx.fill();
+
+    }
+
+    /* ---------- river ---------- */
+
+    const riverAng = rnd()*Math.PI;
+    const rdx = Math.cos(riverAng);
+    const rdy = Math.sin(riverAng);
+    const rnx = -rdy;
+    const rny = rdx;
+
+    const side = rnd() < .5 ? -1 : 1;
+    const off  = side*u*(.34 + rnd()*.3);
+    const wig  = u*(.10 + rnd()*.10);
+
+    const rp = (t,n)=>({
+        x: cx + rdx*R*t + rnx*(off+n),
+        y: cy + rdy*R*t + rny*(off+n)
+    });
+
+    const r0 = rp(-.8, 0);
+    const r1 = rp(-.25, wig);
+    const r2 = rp(.25, -wig);
+    const r3 = rp(.8, 0);
+
+    const drawRiver = (lw,color)=>{
+        gCtx.strokeStyle = color;
+        gCtx.lineWidth = lw;
+        gCtx.lineCap = "round";
+        gCtx.beginPath();
+        gCtx.moveTo(r0.x,r0.y);
+        gCtx.bezierCurveTo(r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
+        gCtx.stroke();
+    };
+
+    drawRiver(Math.max(7,u*.13),"#a5d3f2");
+    drawRiver(Math.max(5,u*.10),"#b9e0f7");
+
+    /* ---------- minor + mid roads (rotated grid) ---------- */
+
+    gCtx.save();
+    gCtx.translate(cx,cy);
+    gCtx.rotate(gridAngle);
+
+    const strokeLines = (lw,color,mid)=>{
+
+        gCtx.strokeStyle = color;
+        gCtx.lineWidth = lw;
+        gCtx.lineCap = "butt";
+
+        vLines.forEach(l=>{
+            if(l.mid !== mid) return;
+            gCtx.beginPath();
+            gCtx.moveTo(l.p,-R);
+            gCtx.lineTo(l.p,R);
+            gCtx.stroke();
+        });
+
+        hLines.forEach(l=>{
+            if(l.mid !== mid) return;
+            gCtx.beginPath();
+            gCtx.moveTo(-R,l.p);
+            gCtx.lineTo(R,l.p);
+            gCtx.stroke();
+        });
+
+    };
+
+    /* casings first, then fills, so junctions merge cleanly */
+
+    strokeLines(roadMinor+2,"#d6d1c5",false);
+    strokeLines(roadMid+2.5,"#cfc9bb",true);
+    strokeLines(roadMinor,"#ffffff",false);
+    strokeLines(roadMid,"#ffffff",true);
+
+    gCtx.restore();
+
+    /* ---------- main highway through the centre ---------- */
+
+    const hwAng = gridAngle + (rnd()<.5 ? .55 : -.55);
+    const hx = Math.cos(hwAng);
+    const hy = Math.sin(hwAng);
+    const bend = u*(rnd()*.25 - .125);
+
+    const drawHighway = (lw,color)=>{
+
+        gCtx.strokeStyle = color;
+        gCtx.lineWidth = lw;
+        gCtx.lineCap = "round";
+        gCtx.lineJoin = "round";
+
+        gCtx.beginPath();
+
+        gCtx.moveTo(
+            cx - hx*R,
+            cy - hy*R
+        );
+
+        gCtx.quadraticCurveTo(
+            cx - hy*bend,
+            cy + hx*bend,
+            cx + hx*R,
+            cy + hy*R
+        );
+
+        gCtx.stroke();
+
+    };
+
+    drawHighway(roadMain+3,"#e1a93a");
+    drawHighway(roadMain,"#fbd46d");
+
+    /* ---------- soft vignette so it looks finished ---------- */
+
+    const vg = gCtx.createRadialGradient(
+        cx,cy,Math.min(w,h)*.35,
+        cx,cy,Math.hypot(w,h)*.62
+    );
+
+    vg.addColorStop(0,"rgba(0,0,0,0)");
+    vg.addColorStop(1,"rgba(0,0,0,.10)");
+
+    gCtx.fillStyle = vg;
+    gCtx.fillRect(x,y,w,h);
+
+    /* ---------- labels ---------- */
+
+    gCtx.textAlign = "center";
+    gCtx.textBaseline = "middle";
+    gCtx.lineJoin = "round";
+
+    const fitText = (text,weight,startSize,maxWidth)=>{
+
+        let size = startSize;
+
+        gCtx.font = `${weight} ${size}px Arial`;
+
+        while(
+            size > 6 &&
+            gCtx.measureText(text).width > maxWidth
+        ){
+            size -= .5;
+            gCtx.font = `${weight} ${size}px Arial`;
+        }
+
+        return size;
+
+    };
+
+    const haloText = (text,tx,ty,size,fill)=>{
+
+        gCtx.lineWidth = Math.max(3,size*.38);
+        gCtx.strokeStyle = "rgba(255,255,255,.92)";
+        gCtx.strokeText(text,tx,ty);
+
+        gCtx.fillStyle = fill;
+        gCtx.fillText(text,tx,ty);
+
+    };
+
+    if(state){
+
+        const sText = state.toUpperCase();
+        const sSize = fitText(
+            sText,
+            "700",
+            Math.max(8,u*.075),
+            w*.86
+        );
+
+        haloText(
+            sText,
+            cx,
+            y + Math.max(sSize*1.3,u*.11),
+            sSize,
+            "#7b828a"
+        );
+
+    }
+
+    /* ---------- pin ---------- */
+
+    const pr = Math.max(7,u*.062);
+    const pinTop = cy - pr*1.9;
+
+    /* shadow */
+
+    gCtx.fillStyle = "rgba(0,0,0,.22)";
+    gCtx.beginPath();
+    gCtx.ellipse(
+        cx,
+        cy + pr*.25,
+        pr*.95,
+        pr*.34,
+        0,0,Math.PI*2
+    );
+    gCtx.fill();
+
+    /* body */
+
+    gCtx.fillStyle = "#e53935";
+    gCtx.strokeStyle = "#b71c1c";
+    gCtx.lineWidth = Math.max(1,pr*.12);
+
+    gCtx.beginPath();
+
+    gCtx.moveTo(cx,cy + pr*.1);
+
+    gCtx.bezierCurveTo(
+        cx - pr*1.8, pinTop + pr*1.4,
+        cx - pr*1.15, pinTop - pr*.9,
+        cx, pinTop - pr*.9
+    );
+
+    gCtx.bezierCurveTo(
+        cx + pr*1.15, pinTop - pr*.9,
+        cx + pr*1.8, pinTop + pr*1.4,
+        cx, cy + pr*.1
+    );
+
+    gCtx.closePath();
+    gCtx.fill();
+    gCtx.stroke();
+
+    /* inner dot */
+
+    gCtx.fillStyle = "#ffffff";
+    gCtx.beginPath();
+    gCtx.arc(
+        cx,
+        pinTop + pr*.28,
+        pr*.40,
+        0,Math.PI*2
+    );
+    gCtx.fill();
+
+    /* district label under the pin */
+
+    if(district){
+
+        const dSize = fitText(
+            district,
+            "700",
+            Math.max(9,u*.095),
+            w*.9
+        );
+
+        haloText(
+            district,
+            cx,
+            cy + pr*.25 + Math.max(dSize*1.15,u*.12),
+            dSize,
+            "#3c4043"
+        );
+
+    }
+
+    gCtx.globalAlpha = 1;
+
+    gCtx.restore();
+
+}
+
+
+/* =========================================================
+   CAMERA LOGO
+========================================================= */
+
+function drawCameraLogo(
+    W,
+    H,
+    stampY,
+    stampHeight
+){
+
+    const size =
+        Math.max(
+            30,
+            Math.min(
+                stampHeight*.60,
+                130
+            ) *
+            GEO.logoSize /
+            70
+        );
+
+
+    /*
+      Position is percentage of image.
+    */
+
+    let x =
+        W *
+        GEO.logoX /
+        100;
+
+    let y =
+        stampY +
+        stampHeight *
+        GEO.logoY /
+        100;
+
+
+    /*
+      Keep logo inside stamp.
+    */
+
+    x =
+        Math.max(
+            0,
+            Math.min(
+                W-size-8,
+                x
+            )
+        );
+
+    y =
+        Math.max(
+            stampY+5,
+            Math.min(
+                stampY+stampHeight-size-5,
+                y
+            )
+        );
+
+
+    const radius =
+        size*.17;
+
+
+    gCtx.save();
+
+    /*
+      Blue rounded square.
+    */
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        x,
+        y,
+        size,
+        size,
+        radius
+    );
+
+    gCtx.fillStyle =
+        "#1595d0";
+
+    gCtx.fill();
+
+
+    /*
+      Camera body.
+    */
+
+    const bx =
+        x+size*.18;
+
+    const by =
+        y+size*.31;
+
+    const bw =
+        size*.64;
+
+    const bh =
+        size*.40;
+
+    gCtx.fillStyle =
+        "#fff";
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        bx,
+        by,
+        bw,
+        bh,
+        size*.06
+    );
+
+    gCtx.fill();
+
+
+    /*
+      Camera top.
+    */
+
+    gCtx.beginPath();
+
+    gCtx.moveTo(
+        bx+size*.10,
+        by
+    );
+
+    gCtx.lineTo(
+        bx+size*.19,
+        by-size*.08
+    );
+
+    gCtx.lineTo(
+        bx+size*.34,
+        by-size*.08
+    );
+
+    gCtx.lineTo(
+        bx+size*.40,
+        by
+    );
+
+    gCtx.closePath();
+
+    gCtx.fill();
+
+
+    /*
+      Lens.
+    */
+
+    gCtx.fillStyle =
+        "#1595d0";
+
+    gCtx.beginPath();
+
+    gCtx.arc(
+        x+size*.50,
+        y+size*.51,
+        size*.14,
+        0,
+        Math.PI*2
+    );
+
+    gCtx.fill();
+
+    gCtx.fillStyle =
+        "#fff";
+
+    gCtx.beginPath();
+
+    gCtx.arc(
+        x+size*.50,
+        y+size*.51,
+        size*.07,
+        0,
+        Math.PI*2
+    );
+
+    gCtx.fill();
+
+    gCtx.restore();
+
+}
+
+
+/* =========================================================
+   MAIN GEOTAG RENDER
+========================================================= */
+
+async function drawGeo(){
+
+    if(
+        !gCanvas.width ||
+        !gCanvas.height
+    )
+        return;
+
+    const W =
+        gCanvas.width;
+
+    const H =
+        gCanvas.height;
+
+
+    /*
+      Start with the already saved clean image.
+    */
+
+    /*
+      The current image is already underneath
+      everything because loadGeoImage() drew it.
+    */
+
+
+    /*
+      No coordinates = don't draw stamp.
+    */
+
+    if(
+        gLat === null ||
+        gLon === null
+    )
+        return;
+
+
+    const stampHeight =
+        Math.max(
+            1,
+            Math.min(
+                H,
+                Math.round(
+                    H*GEO.height/100
+                )
+            )
+        );
+
+
+    const stampY =
+        H-stampHeight;
+
+
+    const mapWidth =
+        Math.max(
+            1,
+            Math.min(
+                W,
+                Math.round(
+                    W*GEO.mapWidth/100
+                )
+            )
+        );
+
+
+    const infoWidth =
+        W-mapWidth;
+
+
+    /*
+      Rounded outer GeoTag shape.
+    */
+
+    gCtx.save();
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        0,
+        stampY,
+        W,
+        stampHeight,
+        Math.min(
+            22,
+            stampHeight*.14
+        )
+    );
+
+    gCtx.clip();
+
+
+    /*
+      Map.
+    */
+
+    await drawMap(
+        0,
+        stampY,
+        mapWidth,
+        stampHeight
+    );
+
+
+    /*
+      Information background.
+    */
+
+    gCtx.fillStyle =
+        `rgba(0,0,0,${GEO.opacity/100})`;
+
+    gCtx.fillRect(
+        mapWidth,
+        stampY,
+        infoWidth,
+        stampHeight
+    );
+
+
+    const left =
+        mapWidth +
+        Math.max(
+            12,
+            infoWidth*.04
+        );
+
+
+    const right =
+        Math.max(
+            12,
+            infoWidth*.04
+        );
+
+
+    /*
+      Reserve space for logo.
+    */
+
+    const reservedLogo =
+        Math.min(
+            infoWidth*.27,
+            120
+        );
+
+
+    const maxTextWidth =
+        Math.max(
+            60,
+            infoWidth-left+mapWidth-right-reservedLogo
+        );
+
+
+    const titleSize =
+        Math.max(
+            14,
+            Math.round(
+                stampHeight*.135*
+                GEO.titleSize/100
+            )
+        );
+
+
+    const detailSize =
+        Math.max(
+            9,
+            Math.round(
+                titleSize*.58*
+                GEO.detailsSize/100
+            )
+        );
+
+
+    gCtx.textAlign =
+        "left";
+
+    gCtx.textBaseline =
+        "top";
+
+
+    /*
+      TITLE
+    */
+
+    const place =
+        $("gPlace").value.trim();
+
+    const state =
+        $("gState").value.trim();
+
+    const title =
+        place
+            ? `${place}, ${state}`
+            : state;
+
+
+    gCtx.font =
+        `700 ${titleSize}px Arial`;
+
+    gCtx.fillStyle =
+        "#ffffff";
+
+
+    let currentY =
+        stampY +
+        stampHeight*.09;
+
+
+    const titleLines =
+        wrapGeoText(
+            title,
+            maxTextWidth,
+            `700 ${titleSize}px Arial`,
+            2
+        );
+
+
+    for(
+        const line of titleLines
+    ){
+
+        gCtx.fillText(
+            line,
+            left,
+            currentY
+        );
+
+        currentY +=
+            titleSize*1.04;
+
+    }
+
+
+    /*
+      ADDRESS
+    */
+
+    const address =
+        $("gAddress").value.trim();
+
+
+    gCtx.font =
+        `400 ${detailSize}px Arial`;
+
+    gCtx.fillStyle =
+        "rgba(255,255,255,.98)";
+
+
+    const addressLines =
+        wrapGeoText(
+            address ||
+            "Location",
+            maxTextWidth,
+            `400 ${detailSize}px Arial`,
+            3
+        );
+
+
+    currentY +=
+        detailSize*.08;
+
+
+    for(
+        const line of addressLines
+    ){
+
+        gCtx.fillText(
+            line,
+            left,
+            currentY
+        );
+
+        currentY +=
+            detailSize*1.18;
+
+    }
+
+
+    /*
+      COORDINATES
+    */
+
+    currentY +=
+        detailSize*.18;
+
+
+    gCtx.font =
+        `600 ${detailSize}px Arial`;
+
+    gCtx.fillStyle =
+        "#ffffff";
+
+
+    gCtx.fillText(
+        `Lat ${gLat.toFixed(6)}° Long ${gLon.toFixed(6)}°`,
+        left,
+        currentY
+    );
+
+
+    /*
+      DATE / TIME
+    */
+
+    currentY +=
+        detailSize*1.3;
+
+
+    gCtx.font =
+        `400 ${detailSize}px Arial`;
+
+
+    gCtx.fillText(
+        `${formatDate($("gDate").value)} ${formatTime($("gTime").value)}`,
+        left,
+        currentY
+    );
+
+
+    /*
+      BLUE CAMERA LOGO
+    */
+
+    drawCameraLogo(
+        W,
+        H,
+        stampY,
+        stampHeight
+    );
+
+
+    gCtx.restore();
+
+}
+
+
+/* =========================================================
+   GEO SLIDERS
+========================================================= */
+
+function connectSlider(
+    id,
+    property,
+    valueId
+){
+
+    $(id).addEventListener(
+        "input",
+        function(){
+
+            GEO[property] =
+                Number(this.value);
+
+            $(valueId).textContent =
+                this.value+"%";
+
+            drawGeo();
+
+        }
+    );
+
+}
+
+
+connectSlider(
+    "gOpacity",
+    "opacity",
+    "gOpacityVal"
+);
+
+connectSlider(
+    "gMapOpacity",
+    "mapOpacity",
+    "gMapOpacityVal"
+);
+
+connectSlider(
+    "gHeight",
+    "height",
+    "gHeightVal"
+);
+
+connectSlider(
+    "gMapWidth",
+    "mapWidth",
+    "gMapWidthVal"
+);
+
+connectSlider(
+    "gTitle",
+    "titleSize",
+    "gTitleVal"
+);
+
+connectSlider(
+    "gDetails",
+    "detailsSize",
+    "gDetailsVal"
+);
+
+connectSlider(
+    "gLogoX",
+    "logoX",
+    "gLogoXVal"
+);
+
+connectSlider(
+    "gLogoY",
+    "logoY",
+    "gLogoYVal"
+);
+
+connectSlider(
+    "gLogoSize",
+    "logoSize",
+    "gLogoSizeVal"
 );
 
 
 /* =========================================================
-   INITIAL STATE
+   LIVE GEO TEXT
 ========================================================= */
 
-selectionOverlay.style.display =
-  "none";
+[
+    "gPlace",
+    "gAddress",
+    "gDate",
+    "gTime"
+].forEach(
+    id=>{
+
+        $(id).addEventListener(
+            "input",
+            function(){
+
+                if(
+                    gLat !== null &&
+                    gLon !== null
+                ){
+
+                    drawGeo();
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   FIND LOCATION
+========================================================= */
+
+$("gFind").addEventListener(
+    "click",
+    findLocation
+);
+
+
+async function findLocation(){
+
+    const state =
+        $("gState").value.trim();
+
+    const place =
+        $("gPlace").value.trim();
+
+    const address =
+        $("gAddress").value.trim();
+
+
+    if(!state){
+
+        $("gStatus").textContent =
+            "Select a state.";
+
+        return;
+
+    }
+
+    if(!place){
+
+        $("gStatus").textContent =
+            "Enter a district, town or subdivision.";
+
+        return;
+
+    }
+
+
+    const btn =
+        $("gFind");
+
+    btn.disabled = true;
+
+    btn.textContent =
+        "📍 Finding…";
+
+    $("gStatus").textContent =
+        "Searching OpenStreetMap…";
+
+
+    const queries = [
+
+        [
+            place,
+            state,
+            "India"
+        ].join(", "),
+
+        [
+            address,
+            place,
+            state,
+            "India"
+        ]
+        .filter(Boolean)
+        .join(", ")
+
+    ];
+
+
+    try{
+
+        let found = null;
+
+
+        for(
+            const query of queries
+        ){
+
+            const url =
+                "https://nominatim.openstreetmap.org/search?" +
+                new URLSearchParams({
+
+                    q:query,
+
+                    format:"jsonv2",
+
+                    addressdetails:"1",
+
+                    limit:"5",
+
+                    countrycodes:"in",
+
+                    "accept-language":"en"
+
+                });
+
+
+            try{
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            headers:{
+                                "Accept":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                if(!response.ok)
+                    continue;
+
+
+                const results =
+                    await response.json();
+
+
+                if(
+                    !results ||
+                    !results.length
+                )
+                    continue;
+
+
+                found =
+                    results[0];
+
+
+                if(found)
+                    break;
+
+            }catch(err){
+
+                console.warn(
+                    err
+                );
+
+            }
+
+        }
+
+
+        if(!found)
+            throw new Error(
+                "Location not found."
+            );
+
+
+        const lat =
+            Number(found.lat);
+
+        const lon =
+            Number(found.lon);
+
+
+        if(
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lon)
+        )
+            throw new Error(
+                "Invalid coordinates."
+            );
+
+
+        gLat = lat;
+        gLon = lon;
+
+
+        $("gCoords").textContent =
+            `Lat ${lat.toFixed(6)}° Long ${lon.toFixed(6)}°`;
+
+
+        $("gStatus").textContent =
+            "Location found successfully.";
+
+
+        await drawGeo();
+
+    }catch(err){
+
+        console.error(err);
+
+        gLat = null;
+        gLon = null;
+
+        $("gCoords").textContent =
+            "—";
+
+        $("gStatus").textContent =
+            "Location not found. Try a town/district with the state and PIN code.";
+
+    }finally{
+
+        btn.disabled = false;
+
+        btn.textContent =
+            "📍 Find Location";
+
+    }
+
+}
+
+
+/* =========================================================
+   SAVE CURRENT GEOTAG
+========================================================= */
+
+async function saveCurrentGeo(){
+
+    if(!geoImages.length)
+        return;
+
+    const item =
+        geoImages[geoIndex];
+
+    /*
+      PNG preserves the rendered result.
+      Original base filename is retained.
+    */
+
+    const blob =
+        await canvasToBlob(
+            gCanvas,
+            "image/png"
+        );
+
+
+    item.geoBlob =
+        blob;
+
+    /*
+      Preserve original filename.
+    */
+
+    const original =
+        item.originalName;
+
+    const dot =
+        original.lastIndexOf(".");
+
+    const base =
+        dot > 0
+            ? original.slice(0,dot)
+            : original;
+
+    item.geoName =
+        base + ".png";
+
+}
+
+
+/* =========================================================
+   GEO SAVE & NEXT
+========================================================= */
+
+$("gSaveNext").addEventListener(
+    "click",
+    async function(){
+
+        if(!geoImages.length)
+            return;
+
+
+        const btn =
+            $("gSaveNext");
+
+        btn.disabled = true;
+
+        btn.textContent =
+            "Saving…";
+
+
+        try{
+
+            await saveCurrentGeo();
+
+
+            if(
+                geoIndex <
+                geoImages.length-1
+            ){
+
+                geoIndex++;
+
+                /*
+                  Keep same location and visual
+                  settings, but give the next image
+                  its own date/time if desired.
+                */
+
+                await loadGeoImage();
+
+                $("gStatus").textContent =
+                    "Saved. Now edit the next image.";
+
+            }else{
+
+                $("gStatus").textContent =
+                    "All GeoTag images are complete.";
+
+            }
+
+        }catch(err){
+
+            console.error(err);
+
+            $("gStatus").textContent =
+                "Could not save this GeoTag image.";
+
+        }finally{
+
+            btn.disabled = false;
+
+            btn.textContent =
+                "💾 Save & Next";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   GEO PREVIOUS
+========================================================= */
+
+$("gPrev").addEventListener(
+    "click",
+    async function(){
+
+        if(geoIndex <= 0)
+            return;
+
+        /*
+          Save current first.
+        */
+
+        await saveCurrentGeo();
+
+        geoIndex--;
+
+        await loadGeoImage();
+
+    }
+);
+
+
+/* =========================================================
+   BACK TO WHITE REMOVER
+========================================================= */
+
+$("gBack").addEventListener(
+    "click",
+    function(){
+
+        $("geoPage").style.display =
+            "none";
+
+        $("removePage").style.display =
+            "block";
+
+        $("stepOne").style.background =
+            "#1769e0";
+
+        $("stepOne").style.color =
+            "#fff";
+
+        $("stepTwo").style.background =
+            "#e5e7eb";
+
+        $("stepTwo").style.color =
+            "#555";
+
+    }
+);
+
+
+/* =========================================================
+   DOWNLOAD ALL ZIP
+========================================================= */
+
+$("gDownloadAll").addEventListener(
+    "click",
+    async function(){
+
+        /*
+          Save current image before making ZIP.
+        */
+
+        if(geoImages.length){
+
+            await saveCurrentGeo();
+
+        }
+
+
+        const completed =
+            geoImages.filter(
+                item =>
+                    item.geoBlob
+            );
+
+
+        if(!completed.length){
+
+            alert(
+                "No completed GeoTag images yet."
+            );
+
+            return;
+
+        }
+
+
+        if(
+            typeof JSZip ===
+            "undefined"
+        ){
+
+            alert(
+                "ZIP library could not load. Check your internet connection and reload the page."
+            );
+
+            return;
+
+        }
+
+
+        const btn =
+            $("gDownloadAll");
+
+        btn.disabled = true;
+
+        btn.textContent =
+            "Preparing ZIP…";
+
+
+        try{
+
+            const zip =
+                new JSZip();
+
+
+            /*
+              Preserve original names.
+              If two uploaded files have exactly
+              the same filename, JSZip gets a unique
+              name without overwriting.
+            */
+
+            const usedNames =
+                new Set();
+
+
+            for(
+                const item of completed
+            ){
+
+                let name =
+                    item.geoName ||
+                    item.outputName ||
+                    item.originalName;
+
+
+                let finalName =
+                    name;
+
+                let counter=2;
+
+
+                while(
+                    usedNames.has(
+                        finalName
+                    )
+                ){
+
+                    const dot =
+                        name.lastIndexOf(".");
+
+
+                    if(dot > 0){
+
+                        finalName =
+                            name.slice(0,dot) +
+                            ` (${counter})` +
+                            name.slice(dot);
+
+                    }else{
+
+                        finalName =
+                            name +
+                            ` (${counter})`;
+
+                    }
+
+                    counter++;
+
+                }
+
+
+                usedNames.add(
+                    finalName
+                );
+
+
+                zip.file(
+                    finalName,
+                    item.geoBlob
+                );
+
+            }
+
+
+            const zipBlob =
+                await zip.generateAsync(
+                    {
+                        type:"blob",
+                        compression:"DEFLATE",
+                        compressionOptions:{
+                            level:6
+                        }
+                    },
+                    metadata=>{
+
+                        const percent =
+                            Math.round(
+                                metadata.percent
+                            );
+
+                        btn.textContent =
+                            `ZIP ${percent}%`;
+
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    zipBlob
+                );
+
+
+            const a =
+                document.createElement("a");
+
+            a.href = url;
+
+            a.download =
+                "GeoTagged_Images.zip";
+
+            document.body.appendChild(a);
+
+            a.click();
+
+            a.remove();
+
+
+            setTimeout(
+                ()=>{
+                    URL.revokeObjectURL(
+                        url
+                    );
+                },
+                3000
+            );
+
+
+            $("gStatus").textContent =
+                `${completed.length} image(s) downloaded in ZIP.`;
+
+        }catch(err){
+
+            console.error(err);
+
+            alert(
+                "Could not create the ZIP. Try again."
+            );
+
+        }finally{
+
+            btn.disabled = false;
+
+            btn.textContent =
+                "⬇ Download All ZIP";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   GEO CANVAS LOGO DRAGGING
+========================================================= */
+
+/*
+  You can also drag the blue camera logo directly
+  on the GeoTag preview.
+*/
+
+let draggingLogo = false;
+
+
+function geoPoint(e){
+
+    const rect =
+        gCanvas.getBoundingClientRect();
+
+    return {
+
+        x:
+            (e.clientX-rect.left) *
+            gCanvas.width /
+            rect.width,
+
+        y:
+            (e.clientY-rect.top) *
+            gCanvas.height /
+            rect.height
+
+    };
+
+}
+
+
+gCanvas.addEventListener(
+    "pointerdown",
+    function(e){
+
+        if(
+            gLat === null ||
+            gLon === null
+        )
+            return;
+
+
+        const p =
+            geoPoint(e);
+
+
+        const stampHeight =
+            gCanvas.height*
+            GEO.height/100;
+
+        const stampY =
+            gCanvas.height-
+            stampHeight;
+
+
+        const size =
+            Math.max(
+                30,
+                Math.min(
+                    stampHeight*.60,
+                    130
+                ) *
+                GEO.logoSize/70
+            );
+
+
+        let lx =
+            gCanvas.width*
+            GEO.logoX/100;
+
+        let ly =
+            stampY+
+            stampHeight*
+            GEO.logoY/100;
+
+
+        lx =
+            Math.max(
+                0,
+                Math.min(
+                    gCanvas.width-size-8,
+                    lx
+                )
+            );
+
+
+        ly =
+            Math.max(
+                stampY+5,
+                Math.min(
+                    stampY+stampHeight-size-5,
+                    ly
+                )
+            );
+
+
+        if(
+            p.x>=lx &&
+            p.x<=lx+size &&
+            p.y>=ly &&
+            p.y<=ly+size
+        ){
+
+            draggingLogo = true;
+
+            gCanvas.setPointerCapture(
+                e.pointerId
+            );
+
+        }
+
+    }
+);
+
+
+gCanvas.addEventListener(
+    "pointermove",
+    function(e){
+
+        if(!draggingLogo)
+            return;
+
+
+        const p =
+            geoPoint(e);
+
+
+        const stampHeight =
+            gCanvas.height*
+            GEO.height/100;
+
+        const stampY =
+            gCanvas.height-
+            stampHeight;
+
+
+        const size =
+            Math.max(
+                30,
+                Math.min(
+                    stampHeight*.60,
+                    130
+                ) *
+                GEO.logoSize/70
+            );
+
+
+        GEO.logoX =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    (p.x-size/2) /
+                    gCanvas.width *
+                    100
+                )
+            );
+
+
+        GEO.logoY =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    (p.y-size/2-stampY) /
+                    stampHeight *
+                    100
+                )
+            );
+
+
+        $("gLogoX").value =
+            Math.round(
+                GEO.logoX
+            );
+
+        $("gLogoY").value =
+            Math.round(
+                GEO.logoY
+            );
+
+        $("gLogoXVal").textContent =
+            Math.round(
+                GEO.logoX
+            )+"%";
+
+        $("gLogoYVal").textContent =
+            Math.round(
+                GEO.logoY
+            )+"%";
+
+
+        /*
+          Reload image then redraw because drawGeo
+          adds the overlay to the original.
+        */
+
+        redrawGeoFromSaved();
+
+    }
+);
+
+
+gCanvas.addEventListener(
+    "pointerup",
+    function(){
+
+        draggingLogo = false;
+
+    }
+);
+
+
+gCanvas.addEventListener(
+    "pointercancel",
+    function(){
+
+        draggingLogo = false;
+
+    }
+);
+
+
+/* =========================================================
+   REDRAW GEO FROM SAVED IMAGE
+========================================================= */
+
+async function redrawGeoFromSaved(){
+
+    if(!geoImages.length)
+        return;
+
+    const item =
+        geoImages[geoIndex];
+
+    try{
+
+        const image =
+            await blobToImage(
+                item.blob
+            );
+
+        const maxWidth =
+            1800;
+
+        const scale =
+            Math.min(
+                1,
+                maxWidth/image.naturalWidth
+            );
+
+        const W =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalWidth*scale
+                )
+            );
+
+        const H =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalHeight*scale
+                )
+            );
+
+        gCanvas.width = W;
+        gCanvas.height = H;
+
+        gCtx.setTransform(
+            1,0,0,1,0,0
+        );
+
+        gCtx.drawImage(
+            image,
+            0,
+            0,
+            W,
+            H
+        );
+
+        await drawGeo();
+
+    }catch(err){
+
+        console.error(err);
+
+    }
+
+}
+
+
+/* =========================================================
+   REDRAW WHEN GEO SLIDER CHANGES
+========================================================= */
+
+/*
+  The slider currently calls drawGeo() directly.
+  For a canvas, that would stack overlays.
+  Replace the behaviour with a clean redraw.
+*/
+
+[
+    "gOpacity",
+    "gMapOpacity",
+    "gHeight",
+    "gMapWidth",
+    "gTitle",
+    "gDetails",
+    "gLogoX",
+    "gLogoY",
+    "gLogoSize"
+].forEach(
+    id=>{
+
+        $(id).addEventListener(
+            "input",
+            function(){
+
+                setTimeout(
+                    redrawGeoFromSaved,
+                    0
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   TEXT INPUT ALSO NEEDS CLEAN REDRAW
+========================================================= */
+
+[
+    "gPlace",
+    "gAddress",
+    "gDate",
+    "gTime"
+].forEach(
+    id=>{
+
+        $(id).addEventListener(
+            "input",
+            function(){
+
+                if(
+                    gLat !== null &&
+                    gLon !== null
+                ){
+
+                    redrawGeoFromSaved();
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INITIAL EDIT CANVAS
+========================================================= */
+
+editCanvas.width = 900;
+editCanvas.height = 550;
+
+editCtx.fillStyle =
+    "#222";
+
+editCtx.fillRect(
+    0,
+    0,
+    900,
+    550
+);
+
+editCtx.fillStyle =
+    "#888";
+
+editCtx.font =
+    "22px Arial";
+
+editCtx.textAlign =
+    "center";
+
+editCtx.fillText(
+    "Upload an image or folder",
+    450,
+    275
+);
+
+
+/* =========================================================
+   INITIAL GEO CANVAS
+========================================================= */
+
+gCanvas.width = 900;
+gCanvas.height = 550;
+
+gCtx.fillStyle =
+    "#17202a";
+
+gCtx.fillRect(
+    0,
+    0,
+    900,
+    550
+);
+
+gCtx.fillStyle =
+    "#81909d";
+
+gCtx.font =
+    "22px Arial";
+
+gCtx.textAlign =
+    "center";
+
+gCtx.fillText(
+    "Complete White Text Remover first",
+    450,
+    275
+);
 
 </script>
 
