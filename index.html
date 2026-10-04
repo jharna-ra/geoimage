@@ -1050,7 +1050,7 @@ button,
 
 
             <div class="mapCredit">
-                Map is generated from the selected state and district.
+                Map information supplied through OpenStreetMap services.
             </div>
 
         </main>
@@ -3087,467 +3087,212 @@ async function drawMap(
     h
 ){
 
+    if(
+        gLat === null ||
+        gLon === null
+    ){
+
+        drawFallbackMap(
+            x,y,w,h
+        );
+
+        return;
+
+    }
+
     /*
-      OFFLINE MAP — no network, no tiles, nothing to block.
-      The map is generated on the canvas from the State and
-      District only. Same State + District = same map, always.
+      OpenStreetMap tile.
+      If the browser cannot export it because of
+      CORS restrictions, fallback map is used.
     */
 
-    const state =
-        $("gState").value.trim();
+    const zoom = 15;
 
-    const district =
-        $("gPlace").value.trim();
+    const n =
+        Math.pow(
+            2,
+            zoom
+        );
 
-    /* ---------- seeded random ---------- */
+    const xtile =
+        Math.floor(
+            (gLon+180)/360*n
+        );
 
-    const seedText =
-        (state + "|" + district).toLowerCase();
+    const latRad =
+        gLat*Math.PI/180;
 
-    let hsh = 2166136261;
+    const ytile =
+        Math.floor(
+            (
+                1 -
+                Math.log(
+                    Math.tan(latRad) +
+                    1/Math.cos(latRad)
+                )/Math.PI
+            )/2*n
+        );
 
-    for(let i=0;i<seedText.length;i++){
-        hsh ^= seedText.charCodeAt(i);
-        hsh = Math.imul(hsh,16777619);
-    }
+    const tile =
+        new Image();
 
-    let seed = hsh >>> 0;
+    tile.crossOrigin =
+        "anonymous";
 
-    const rnd = ()=>{
-        seed |= 0;
-        seed = seed + 0x6D2B79F5 | 0;
-        let t = Math.imul(seed ^ seed>>>15, 1|seed);
-        t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
-        return ((t ^ t>>>14)>>>0)/4294967296;
-    };
+    const url =
+        `https://tile.openstreetmap.org/${zoom}/${xtile}/${ytile}.png`;
 
-    /* ---------- geometry ---------- */
+    await new Promise(
+        resolve=>{
 
-    const cx = x + w/2;
-    const cy = y + h/2;
-    const R  = Math.hypot(w,h);
-    const u  = h;
+            let done=false;
 
-    const roadMinor = Math.max(2,   u*.020);
-    const roadMid   = Math.max(3.5, u*.036);
-    const roadMain  = Math.max(5,   u*.060);
+            const finish=()=>{
+                if(done)return;
+                done=true;
+                resolve();
+            };
 
-    const gridAngle = (rnd()*50 - 25) * Math.PI/180;
+            tile.onload =
+                finish;
 
-    /* ---------- grid lines ---------- */
+            tile.onerror =
+                finish;
 
-    const makeLines = (spacing)=>{
-        const lines = [];
-        let p = -R/2 - spacing*rnd();
-        while(p < R/2 + spacing){
-            lines.push({
-                p,
-                mid: rnd() < .28
-            });
-            p += spacing*(.65 + rnd()*.8);
+            tile.src = url;
+
+            setTimeout(
+                finish,
+                2500
+            );
+
         }
-        return lines;
-    };
+    );
 
-    const spacing = Math.max(u*.20, 22);
 
-    const vLines = makeLines(spacing*(.9 + rnd()*.4));
-    const hLines = makeLines(spacing*(.8 + rnd()*.4));
+    try{
 
-    /* ---------- clip to map box ---------- */
+        if(
+            tile.complete &&
+            tile.naturalWidth
+        ){
 
-    gCtx.save();
-
-    gCtx.beginPath();
-    gCtx.roundRect(x,y,w,h,Math.min(18,h*.07));
-    gCtx.clip();
-
-    gCtx.globalAlpha = GEO.mapOpacity/100;
-
-    /* ---------- land ---------- */
-
-    gCtx.fillStyle = "#f1eee7";
-    gCtx.fillRect(x,y,w,h);
-
-    /* ---------- city blocks (rotated grid) ---------- */
-
-    const blockColors = [
-        "#e8e3d9",
-        "#ebe7de",
-        "#e4dfd4",
-        "#eae5da"
-    ];
-
-    gCtx.save();
-    gCtx.translate(cx,cy);
-    gCtx.rotate(gridAngle);
-
-    for(let i=0;i<vLines.length-1;i++){
-
-        for(let j=0;j<hLines.length-1;j++){
-
-            const a = vLines[i];
-            const b = vLines[i+1];
-            const c = hLines[j];
-            const d = hLines[j+1];
-
-            const ia = (a.mid?roadMid:roadMinor)/2 + 1.2;
-            const ib = (b.mid?roadMid:roadMinor)/2 + 1.2;
-            const ic = (c.mid?roadMid:roadMinor)/2 + 1.2;
-            const id = (d.mid?roadMid:roadMinor)/2 + 1.2;
-
-            const bx = a.p + ia;
-            const by = c.p + ic;
-            const bw = (b.p - ib) - bx;
-            const bh = (d.p - id) - by;
-
-            if(bw < 3 || bh < 3){
-                rnd();
-                continue;
-            }
-
-            const roll = rnd();
-
-            if(roll < .10){
-
-                gCtx.fillStyle = "#d3e8c8";
-
-            }else{
-
-                gCtx.fillStyle =
-                    blockColors[
-                        Math.floor(roll*blockColors.length*10)%blockColors.length
-                    ];
-
-            }
+            gCtx.save();
 
             gCtx.beginPath();
-            gCtx.roundRect(bx,by,bw,bh,Math.min(3,u*.012));
+
+            gCtx.roundRect(
+                x,
+                y,
+                w,
+                h,
+                Math.min(
+                    18,
+                    h*.07
+                )
+            );
+
+            gCtx.clip();
+
+            gCtx.globalAlpha =
+                GEO.mapOpacity/100;
+
+            gCtx.drawImage(
+                tile,
+                x,
+                y,
+                w,
+                h
+            );
+
+            gCtx.globalAlpha =
+                1;
+
+            /*
+              Pin.
+            */
+
+            const px =
+                x+w/2;
+
+            const py =
+                y+h/2;
+
+            const r =
+                Math.max(
+                    7,
+                    h*.06
+                );
+
+            gCtx.fillStyle =
+                "#e53935";
+
+            gCtx.beginPath();
+
+            gCtx.arc(
+                px,
+                py,
+                r,
+                0,
+                Math.PI*2
+            );
+
             gCtx.fill();
 
-            /* little building footprints */
+            gCtx.beginPath();
 
-            if(roll >= .10 && bw > u*.09 && bh > u*.09){
+            gCtx.moveTo(
+                px-r*.7,
+                py+r*.3
+            );
 
-                gCtx.fillStyle = "rgba(160,150,130,.16)";
+            gCtx.lineTo(
+                px,
+                py+r*1.8
+            );
 
-                const bwid = bw*(.28 + rnd()*.25);
-                const bhei = bh*(.28 + rnd()*.25);
+            gCtx.lineTo(
+                px+r*.7,
+                py+r*.3
+            );
 
-                gCtx.fillRect(
-                    bx + bw*.12,
-                    by + bh*.14,
-                    bwid,
-                    bhei
-                );
+            gCtx.closePath();
 
-                gCtx.fillRect(
-                    bx + bw*.55,
-                    by + bh*.5,
-                    bw*.3,
-                    bh*.32
-                );
+            gCtx.fill();
 
-            }
+            gCtx.fillStyle =
+                "#fff";
+
+            gCtx.beginPath();
+
+            gCtx.arc(
+                px,
+                py,
+                r*.38,
+                0,
+                Math.PI*2
+            );
+
+            gCtx.fill();
+
+            gCtx.restore();
+
+            return;
 
         }
 
-    }
+    }catch(err){
 
-    gCtx.restore();
-
-    /* ---------- parks ---------- */
-
-    const parkCount = 2;
-
-    for(let i=0;i<parkCount;i++){
-
-        const ang  = rnd()*Math.PI*2;
-        const dist = u*(.45 + rnd()*.5);
-        const px   = cx + Math.cos(ang)*dist*1.4;
-        const py   = cy + Math.sin(ang)*dist;
-        const rx   = u*(.22 + rnd()*.22);
-        const ry   = u*(.16 + rnd()*.18);
-
-        gCtx.fillStyle = "#c9e5bd";
-
-        gCtx.beginPath();
-        gCtx.ellipse(
-            px,py,rx,ry,
-            rnd()*Math.PI,
-            0,Math.PI*2
-        );
-        gCtx.fill();
-
-        gCtx.fillStyle = "#bcdcae";
-
-        gCtx.beginPath();
-        gCtx.ellipse(
-            px,py,rx*.55,ry*.55,
-            rnd()*Math.PI,
-            0,Math.PI*2
-        );
-        gCtx.fill();
-
-    }
-
-    /* ---------- river ---------- */
-
-    const riverAng = rnd()*Math.PI;
-    const rdx = Math.cos(riverAng);
-    const rdy = Math.sin(riverAng);
-    const rnx = -rdy;
-    const rny = rdx;
-
-    const side = rnd() < .5 ? -1 : 1;
-    const off  = side*u*(.34 + rnd()*.3);
-    const wig  = u*(.10 + rnd()*.10);
-
-    const rp = (t,n)=>({
-        x: cx + rdx*R*t + rnx*(off+n),
-        y: cy + rdy*R*t + rny*(off+n)
-    });
-
-    const r0 = rp(-.8, 0);
-    const r1 = rp(-.25, wig);
-    const r2 = rp(.25, -wig);
-    const r3 = rp(.8, 0);
-
-    const drawRiver = (lw,color)=>{
-        gCtx.strokeStyle = color;
-        gCtx.lineWidth = lw;
-        gCtx.lineCap = "round";
-        gCtx.beginPath();
-        gCtx.moveTo(r0.x,r0.y);
-        gCtx.bezierCurveTo(r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
-        gCtx.stroke();
-    };
-
-    drawRiver(Math.max(7,u*.13),"#a5d3f2");
-    drawRiver(Math.max(5,u*.10),"#b9e0f7");
-
-    /* ---------- minor + mid roads (rotated grid) ---------- */
-
-    gCtx.save();
-    gCtx.translate(cx,cy);
-    gCtx.rotate(gridAngle);
-
-    const strokeLines = (lw,color,mid)=>{
-
-        gCtx.strokeStyle = color;
-        gCtx.lineWidth = lw;
-        gCtx.lineCap = "butt";
-
-        vLines.forEach(l=>{
-            if(l.mid !== mid) return;
-            gCtx.beginPath();
-            gCtx.moveTo(l.p,-R);
-            gCtx.lineTo(l.p,R);
-            gCtx.stroke();
-        });
-
-        hLines.forEach(l=>{
-            if(l.mid !== mid) return;
-            gCtx.beginPath();
-            gCtx.moveTo(-R,l.p);
-            gCtx.lineTo(R,l.p);
-            gCtx.stroke();
-        });
-
-    };
-
-    /* casings first, then fills, so junctions merge cleanly */
-
-    strokeLines(roadMinor+2,"#d6d1c5",false);
-    strokeLines(roadMid+2.5,"#cfc9bb",true);
-    strokeLines(roadMinor,"#ffffff",false);
-    strokeLines(roadMid,"#ffffff",true);
-
-    gCtx.restore();
-
-    /* ---------- main highway through the centre ---------- */
-
-    const hwAng = gridAngle + (rnd()<.5 ? .55 : -.55);
-    const hx = Math.cos(hwAng);
-    const hy = Math.sin(hwAng);
-    const bend = u*(rnd()*.25 - .125);
-
-    const drawHighway = (lw,color)=>{
-
-        gCtx.strokeStyle = color;
-        gCtx.lineWidth = lw;
-        gCtx.lineCap = "round";
-        gCtx.lineJoin = "round";
-
-        gCtx.beginPath();
-
-        gCtx.moveTo(
-            cx - hx*R,
-            cy - hy*R
-        );
-
-        gCtx.quadraticCurveTo(
-            cx - hy*bend,
-            cy + hx*bend,
-            cx + hx*R,
-            cy + hy*R
-        );
-
-        gCtx.stroke();
-
-    };
-
-    drawHighway(roadMain+3,"#e1a93a");
-    drawHighway(roadMain,"#fbd46d");
-
-    /* ---------- soft vignette so it looks finished ---------- */
-
-    const vg = gCtx.createRadialGradient(
-        cx,cy,Math.min(w,h)*.35,
-        cx,cy,Math.hypot(w,h)*.62
-    );
-
-    vg.addColorStop(0,"rgba(0,0,0,0)");
-    vg.addColorStop(1,"rgba(0,0,0,.10)");
-
-    gCtx.fillStyle = vg;
-    gCtx.fillRect(x,y,w,h);
-
-    /* ---------- labels ---------- */
-
-    gCtx.textAlign = "center";
-    gCtx.textBaseline = "middle";
-    gCtx.lineJoin = "round";
-
-    const fitText = (text,weight,startSize,maxWidth)=>{
-
-        let size = startSize;
-
-        gCtx.font = `${weight} ${size}px Arial`;
-
-        while(
-            size > 6 &&
-            gCtx.measureText(text).width > maxWidth
-        ){
-            size -= .5;
-            gCtx.font = `${weight} ${size}px Arial`;
-        }
-
-        return size;
-
-    };
-
-    const haloText = (text,tx,ty,size,fill)=>{
-
-        gCtx.lineWidth = Math.max(3,size*.38);
-        gCtx.strokeStyle = "rgba(255,255,255,.92)";
-        gCtx.strokeText(text,tx,ty);
-
-        gCtx.fillStyle = fill;
-        gCtx.fillText(text,tx,ty);
-
-    };
-
-    if(state){
-
-        const sText = state.toUpperCase();
-        const sSize = fitText(
-            sText,
-            "700",
-            Math.max(8,u*.075),
-            w*.86
-        );
-
-        haloText(
-            sText,
-            cx,
-            y + Math.max(sSize*1.3,u*.11),
-            sSize,
-            "#7b828a"
+        console.warn(
+            "OSM map could not be exported.",
+            err
         );
 
     }
 
-    /* ---------- pin ---------- */
-
-    const pr = Math.max(7,u*.062);
-    const pinTop = cy - pr*1.9;
-
-    /* shadow */
-
-    gCtx.fillStyle = "rgba(0,0,0,.22)";
-    gCtx.beginPath();
-    gCtx.ellipse(
-        cx,
-        cy + pr*.25,
-        pr*.95,
-        pr*.34,
-        0,0,Math.PI*2
+    drawFallbackMap(
+        x,y,w,h
     );
-    gCtx.fill();
-
-    /* body */
-
-    gCtx.fillStyle = "#e53935";
-    gCtx.strokeStyle = "#b71c1c";
-    gCtx.lineWidth = Math.max(1,pr*.12);
-
-    gCtx.beginPath();
-
-    gCtx.moveTo(cx,cy + pr*.1);
-
-    gCtx.bezierCurveTo(
-        cx - pr*1.8, pinTop + pr*1.4,
-        cx - pr*1.15, pinTop - pr*.9,
-        cx, pinTop - pr*.9
-    );
-
-    gCtx.bezierCurveTo(
-        cx + pr*1.15, pinTop - pr*.9,
-        cx + pr*1.8, pinTop + pr*1.4,
-        cx, cy + pr*.1
-    );
-
-    gCtx.closePath();
-    gCtx.fill();
-    gCtx.stroke();
-
-    /* inner dot */
-
-    gCtx.fillStyle = "#ffffff";
-    gCtx.beginPath();
-    gCtx.arc(
-        cx,
-        pinTop + pr*.28,
-        pr*.40,
-        0,Math.PI*2
-    );
-    gCtx.fill();
-
-    /* district label under the pin */
-
-    if(district){
-
-        const dSize = fitText(
-            district,
-            "700",
-            Math.max(9,u*.095),
-            w*.9
-        );
-
-        haloText(
-            district,
-            cx,
-            cy + pr*.25 + Math.max(dSize*1.15,u*.12),
-            dSize,
-            "#3c4043"
-        );
-
-    }
-
-    gCtx.globalAlpha = 1;
-
-    gCtx.restore();
 
 }
 
