@@ -194,6 +194,14 @@ button,
     pointer-events:none;
 }
 
+#selectionBox2{
+    position:absolute;
+    border:2px dashed #00e5ff;
+    background:transparent;
+    display:none;
+    pointer-events:none;
+}
+
 .toolRow{
     display:flex;
     justify-content:center;
@@ -632,7 +640,7 @@ button,
             </label>
 
             <button id="removeBtn" class="btn-dark" disabled>
-                ⬜ Remove White Text
+                ⬜ Re-run White Text Removal
             </button>
 
             <button id="undoBtn" class="btn-gray" disabled>
@@ -671,6 +679,11 @@ button,
 
             <div
                 id="selectionBox"
+                class="selectionBox"
+            ></div>
+
+            <div
+                id="selectionBox2"
                 class="selectionBox"
             ></div>
 
@@ -773,6 +786,48 @@ button,
                     value="9"
                 >
 
+            </div>
+
+            <div class="control">
+                <label>
+                    Second box strength
+                    <b id="secondStrengthValue">160%</b>
+                </label>
+                <input
+                    id="secondStrength"
+                    type="range"
+                    min="100"
+                    max="220"
+                    value="160"
+                >
+            </div>
+
+            <div class="control">
+                <label>
+                    Second box inpaint passes
+                    <b id="secondPassValue">12</b>
+                </label>
+                <input
+                    id="secondPasses"
+                    type="range"
+                    min="4"
+                    max="18"
+                    value="12"
+                >
+            </div>
+
+            <div class="control">
+                <label>
+                    Second box text thickness
+                    <b id="secondThickValue">12</b>px
+                </label>
+                <input
+                    id="secondThick"
+                    type="range"
+                    min="3"
+                    max="30"
+                    value="12"
+                >
             </div>
 
             <div class="control">
@@ -1000,6 +1055,7 @@ const editCtx = editCanvas.getContext("2d", {
 
 const editStage = $("editStage");
 const selectionBox = $("selectionBox");
+const selectionBox2 = $("selectionBox2");
 
 let imageFiles = [];
 let currentEditIndex = 0;
@@ -1007,7 +1063,9 @@ let currentEditIndex = 0;
 let originalCanvasData = null;
 
 let selection = null;
+let selection2 = null;
 let selecting = false;
+let firstRemovalDone = false;
 let selectionMode = "remove";
 
 let startX = 0;
@@ -1195,9 +1253,13 @@ async function loadCurrentEditImage(){
             );
 
         selection = null;
+        selection2 = null;
         cropSelection = null;
+        firstRemovalDone = false;
 
         selectionBox.style.display =
+            "none";
+        selectionBox2.style.display =
             "none";
 
         $("removeBtn").disabled = false;
@@ -1352,262 +1414,137 @@ function getEditPoint(e){
 ========================================================= */
 
 function showSelection(sel){
-
+    const box=firstRemovalDone ? selectionBox2 : selectionBox;
     if(!sel){
-
-        selectionBox.style.display =
-            "none";
-
+        selectionBox.style.display='none';
+        selectionBox2.style.display='none';
         return;
-
     }
-
-    const canvasRect =
-        editCanvas.getBoundingClientRect();
-
-    const stageRect =
-        editStage.getBoundingClientRect();
-
-    selectionBox.style.left =
-        (
-            editCanvas.offsetLeft +
-            sel.x *
-            canvasRect.width /
-            editCanvas.width
-        ) + "px";
-
-    selectionBox.style.top =
-        (
-            editCanvas.offsetTop +
-            sel.y *
-            canvasRect.height /
-            editCanvas.height
-        ) + "px";
-
-    selectionBox.style.width =
-        (
-            sel.w *
-            canvasRect.width /
-            editCanvas.width
-        ) + "px";
-
-    selectionBox.style.height =
-        (
-            sel.h *
-            canvasRect.height /
-            editCanvas.height
-        ) + "px";
-
-    selectionBox.style.display =
-        "block";
-
-    selectionBox.style.borderColor =
-        selectionMode === "crop"
-            ? "#ff9d00"
-            : "#ff3030";
-
+    const canvasRect=editCanvas.getBoundingClientRect();
+    box.style.left=(editCanvas.offsetLeft + sel.x*canvasRect.width/editCanvas.width)+'px';
+    box.style.top=(editCanvas.offsetTop + sel.y*canvasRect.height/editCanvas.height)+'px';
+    box.style.width=(sel.w*canvasRect.width/editCanvas.width)+'px';
+    box.style.height=(sel.h*canvasRect.height/editCanvas.height)+'px';
+    box.style.display='block';
+    if(box===selectionBox){
+        selectionBox2.style.display='none';
+        selectionBox.style.borderColor=selectionMode==='crop'?'#ff9d00':'#ff3030';
+    }else{
+        selectionBox.style.display='none';
+        selectionBox2.style.borderColor='#00e5ff';
+    }
 }
+
 
 
 /* =========================================================
    POINTER DOWN
 ========================================================= */
 
-editCanvas.addEventListener(
-    "pointerdown",
-    function(e){
+editCanvas.addEventListener("pointerdown",function(e){
+    if(!imageFiles.length) return;
+    selecting=true;
+    editCanvas.setPointerCapture(e.pointerId);
+    const p=getEditPoint(e);
+    startX=p.x; startY=p.y;
+    selection={x:startX,y:startY,w:0,h:0};
+    showSelection(selection);
+});
 
-        if(!imageFiles.length)
-            return;
+editCanvas.addEventListener("pointermove",function(e){
+    if(!selecting) return;
+    const p=getEditPoint(e);
+    selection={x:Math.min(startX,p.x),y:Math.min(startY,p.y),w:Math.abs(p.x-startX),h:Math.abs(p.y-startY)};
+    showSelection(selection);
+});
 
-        selecting = true;
-
-        editCanvas.setPointerCapture(
-            e.pointerId
-        );
-
-        const p =
-            getEditPoint(e);
-
-        startX = p.x;
-        startY = p.y;
-
-        selection = {
-            x:startX,
-            y:startY,
-            w:0,
-            h:0
-        };
-
-        showSelection(selection);
-
+editCanvas.addEventListener("pointerup",async function(){
+    selecting=false;
+    if(!selection || selection.w<4 || selection.h<4){ selection=null; showSelection(null); return; }
+    if(selectionMode==='crop'){
+        cropSelection={...selection};
+        $('applyCropBtn').disabled=false;
+        $('editStatus').textContent='Crop area selected. Click Apply Crop.';
+        return;
     }
-);
 
-
-/* =========================================================
-   POINTER MOVE
-========================================================= */
-
-editCanvas.addEventListener(
-    "pointermove",
-    function(e){
-
-        if(!selecting)
-            return;
-
-        const p =
-            getEditPoint(e);
-
-        selection = {
-
-            x:Math.min(
-                startX,
-                p.x
-            ),
-
-            y:Math.min(
-                startY,
-                p.y
-            ),
-
-            w:Math.abs(
-                p.x-startX
-            ),
-
-            h:Math.abs(
-                p.y-startY
-            )
-
-        };
-
-        showSelection(selection);
-
+    const current={...selection};
+    const isSecond=firstRemovalDone;
+    $('editStatus').textContent=isSecond?'Running detailed second-box removal…':'Running automatic white-text removal…';
+    const ok=await removeWhiteFromRect(current,{
+        strength:isSecond?(Number($('secondStrength').value)||160):(Number($('removeStrength').value)||100),
+        inpaintPasses:isSecond?(Number($('secondPasses').value)||12):(Number($('photoInpaintPasses').value)||8),
+        stroke:isSecond?(Number($('secondThick').value)||12):(Number($('photoTextThick').value)||9),
+        threshold:isSecond?Math.max(95,(Number($('whiteThreshold').value)||150)-18):(Number($('whiteThreshold').value)||150),
+        expandPasses:isSecond?2:1
+    });
+    if(ok){
+        firstRemovalDone=true;
+        selection=null;
+        showSelection(null);
+        $('undoBtn').disabled=false;
+        $('editStatus').textContent=isSecond?'Second box removed with detailed precision. Drag another box if needed.':'First box removed automatically. Drag a second box for stronger precision removal.';
+    }else{
+        $('editStatus').textContent='No suitable white text found in that area. Increase strength and drag the box again.';
+        selection=null;
+        showSelection(null);
     }
-);
+});
 
-
-/* =========================================================
-   POINTER UP
-========================================================= */
-
-editCanvas.addEventListener(
-    "pointerup",
-    function(){
-
-        selecting = false;
-
-        if(
-            !selection ||
-            selection.w < 4 ||
-            selection.h < 4
-        ){
-
-            selection = null;
-
-            showSelection(null);
-
-            return;
-
-        }
-
-        if(selectionMode === "crop"){
-
-            cropSelection =
-                {...selection};
-
-            $("applyCropBtn").disabled =
-                false;
-
-            $("editStatus").textContent =
-                "Crop area selected. Click Apply Crop.";
-
-        }else{
-
-            $("editStatus").textContent =
-                "White text area selected. Click Remove White Text.";
-
-        }
-
-    }
-);
 
 
 /* =========================================================
    WHITE DETECTION
 ========================================================= */
 
-function isWhitePixel(data,i){
+function isWhitePixel(data,i,opts={}){
 
-    const r = data[i];
-    const g = data[i+1];
-    const b = data[i+2];
+    const r=data[i], g=data[i+1], b=data[i+2];
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    const baseThreshold=Number(opts.threshold ?? $('whiteThreshold').value) || 150;
+    const strength=Number(opts.strength ?? $('removeStrength').value) || 100;
+    const threshold=Math.max(78, baseThreshold - 24*(strength/100-1) - 8);
 
-    const max = Math.max(r,g,b);
-    const min = Math.min(r,g,b);
-    const baseThreshold = Number($('whiteThreshold').value) || 150;
-    const strength = Number($('removeStrength').value) || 100;
-
-    // Strong mode lowers the effective detection threshold so faint,
-    // anti-aliased/compressed white text is also caught.
-    const threshold = Math.max(
-        88,
-        baseThreshold - 18 * (strength / 100)
-    );
-
-    // Keep the detector neutral-colour focused so bright scene details
-    // are less likely to be treated as text.
-    return (
-        max >= threshold &&
-        max-min <= 78 &&
-        r+g+b >= threshold*3
-    );
-
+    // White/grey text tends to be bright and relatively neutral. Keep a
+    // small colour-spread allowance for JPEG/compressed anti-aliased edges.
+    return max>=threshold && (max-min)<=92 && (r+g+b)>=threshold*2.78;
 }
+
 
 
 /* =========================================================
    REMOVE WHITE TEXT — STRONGER VIDEO-STYLE INPAINT
 ========================================================= */
 
-$('removeBtn').addEventListener(
-    'click',
-    function(){
+async function removeWhiteFromRect(rect,opts={}){
 
-        if(!selection || selection.w < 4 || selection.h < 4){
-            $('editStatus').textContent = 'First drag around the white text.';
-            return;
-        }
+    if(!rect || rect.w<4 || rect.h<4) return false;
 
-        if(selectionMode !== 'remove'){
-            $('editStatus').textContent = 'Click Crop again to leave crop mode.';
-            return;
-        }
+    const x=Math.max(0,Math.floor(rect.x));
+    const y=Math.max(0,Math.floor(rect.y));
+    const w=Math.min(editCanvas.width-x,Math.ceil(rect.w));
+    const h=Math.min(editCanvas.height-y,Math.ceil(rect.h));
+    if(w<4||h<4) return false;
 
-        $('editStatus').textContent = 'Removing white text with stronger detail…';
+    const imageData=editCtx.getImageData(x,y,w,h);
+    const pixels=imageData.data;
+    const mask=new Uint8Array(w*h);
+    const strength=Number(opts.strength ?? $('removeStrength').value)||100;
+    const inpaintPasses=Number(opts.inpaintPasses ?? $('photoInpaintPasses').value)||8;
+    const stroke=Math.max(2,Number(opts.stroke ?? $('photoTextThick').value)||9);
 
-        const x=Math.max(0,Math.floor(selection.x));
-        const y=Math.max(0,Math.floor(selection.y));
-        const w=Math.min(editCanvas.width-x,Math.ceil(selection.w));
-        const h=Math.min(editCanvas.height-y,Math.ceil(selection.h));
 
-        const imageData=editCtx.getImageData(x,y,w,h);
-        const pixels=imageData.data;
-        const mask=new Uint8Array(w*h);
-        const strength=Number($('removeStrength').value)||100;
-        const inpaintPasses=Number($('photoInpaintPasses').value)||8;
-        const stroke=Math.max(2,Number($('photoTextThick').value)||9);
 
         // Detect the white/light text at pixel level.
         for(let yy=0;yy<h;yy++){
             for(let xx=0;xx<w;xx++){
                 const i=(yy*w+xx)*4;
-                if(isWhitePixel(pixels,i)) mask[yy*w+xx]=1;
+                if(isWhitePixel(pixels,i,{threshold:opts.threshold,strength})) mask[yy*w+xx]=1;
             }
         }
 
         // Stronger anti-aliasing capture, but still confined to the selected box.
-        const expandPasses=Math.max(2,Math.min(5,Math.round(1+strength/35)));
+        const expandPasses=Math.max(1,Math.min(3,Math.round(opts.expandPasses ?? (strength>=150?2:1))));
         for(let pass=0;pass<expandPasses;pass++){
             const old=mask.slice();
             for(let yy=0;yy<h;yy++){
@@ -1630,8 +1567,7 @@ $('removeBtn').addEventListener(
         let count=0;
         for(let p=0;p<mask.length;p++) count+=mask[p];
         if(!count){
-            $('editStatus').textContent='No white text was detected. Try a higher Text removal strength.';
-            return;
+            return false;
         }
 
         // Match the video remover's push/pull style: build a multiscale
@@ -1679,8 +1615,7 @@ $('removeBtn').addEventListener(
         const top=levels[levels.length-1];
         const topCount=top.wt.reduce((a,b)=>a+b,0);
         if(!topCount){
-            $('editStatus').textContent='Not enough surrounding pixels inside the selection.';
-            return;
+            return false;
         }
 
         let col=new Float32Array([
@@ -1758,12 +1693,30 @@ $('removeBtn').addEventListener(
         }
 
         editCtx.putImageData(imageData,x,y);
+        return true;
+    }
+
+
+$('removeBtn').addEventListener('click',async function(){
+    if(!selection) return;
+    $('editStatus').textContent='Removing selected white text…';
+    const ok=await removeWhiteFromRect(selection,{
+        strength:Number($('removeStrength').value)||100,
+        inpaintPasses:Number($('photoInpaintPasses').value)||8,
+        stroke:Number($('photoTextThick').value)||9,
+        expandPasses:1
+    });
+    if(ok){
+        firstRemovalDone=true;
         selection=null;
         showSelection(null);
         $('undoBtn').disabled=false;
-        $('editStatus').textContent='White text removed with stronger, detailed pixel reconstruction.';
+        $('editStatus').textContent='First text area removed. Drag a second box for precision removal — it will run automatically.';
+    }else{
+        $('editStatus').textContent='No suitable white text found. Try increasing Text removal strength.';
     }
-);
+});
+
 
 
 /* =========================================================
@@ -1784,7 +1737,9 @@ $("undoBtn").addEventListener(
         );
 
         selection = null;
+        selection2 = null;
         cropSelection = null;
+        firstRemovalDone = false;
 
         showSelection(null);
 
@@ -1812,7 +1767,7 @@ $("cropBtn").addEventListener(
         selectionMode = "crop";
 
         selection = null;
-
+        firstRemovalDone = false;
         cropSelection = null;
 
         showSelection(null);
@@ -1908,6 +1863,8 @@ $("applyCropBtn").addEventListener(
             );
 
         selection = null;
+        selection2 = null;
+        firstRemovalDone = false;
         cropSelection = null;
 
         selectionMode = "remove";
@@ -2180,6 +2137,11 @@ $("photoTextThick").addEventListener(
         $("photoTextThickValue").textContent=this.value;
     }
 );
+
+
+$('secondStrength').addEventListener('input',function(){ $('secondStrengthValue').textContent=this.value+'%'; });
+$('secondPasses').addEventListener('input',function(){ $('secondPassValue').textContent=this.value; });
+$('secondThick').addEventListener('input',function(){ $('secondThickValue').textContent=this.value+'px'; });
 
 
 /* =========================================================
