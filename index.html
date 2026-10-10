@@ -2253,10 +2253,11 @@ const GEO = {
     mapOpacity:100,
     height:35,
 
-    mapX:0,
-    mapY:65,
+    /* Match the Video GeoTag stamp: map inset at the left of the black stamp. */
+    mapX:1.5,
+    mapY:67.5,
     mapWidth:30,
-    mapHeight:35,
+    mapHeight:30,
 
     titleSize:100,
     detailsSize:100,
@@ -2818,27 +2819,30 @@ async function makeMap(lat,lon){
 
 async function drawMap(x,y,w,h,alpha){
 
-    if(!mapImg)
+    if(!mapImg || !mapImg.width || !mapImg.height)
         return;
 
+    /* Video-style map: rounded tile crop, cover-fit, and a thin white edge. */
+    const radius = Math.max(5, Math.min(w,h)*.06);
     gCtx.save();
-
-    gCtx.globalAlpha =
-        alpha === undefined ? 1 : alpha;
-
-    gCtx.beginPath();
-    gCtx.rect(x,y,w,h);
+    gCtx.globalAlpha = alpha === undefined ? 1 : alpha;
+    geoRoundRectCorners(gCtx,x,y,w,h,radius,radius,radius,radius);
     gCtx.clip();
 
-    /*
-      This is the exact same map image produced by the
-      Video GeoTag map engine, scaled into the photo map box.
-    */
-    gCtx.drawImage(
-        mapImg,
-        x,y,w,h
-    );
+    const scale = Math.max(w/mapImg.width,h/mapImg.height);
+    const dw = mapImg.width*scale;
+    const dh = mapImg.height*scale;
+    gCtx.imageSmoothingEnabled = true;
+    gCtx.imageSmoothingQuality = "high";
+    gCtx.drawImage(mapImg,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+    gCtx.restore();
 
+    gCtx.save();
+    gCtx.globalAlpha = alpha === undefined ? 1 : alpha;
+    gCtx.strokeStyle = "rgba(255,255,255,.95)";
+    gCtx.lineWidth = Math.max(1.5,Math.min(w,h)*.018);
+    geoRoundRectCorners(gCtx,x,y,w,h,radius,radius,radius,radius);
+    gCtx.stroke();
     gCtx.restore();
 }
 
