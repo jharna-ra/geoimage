@@ -3,2411 +3,739 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
 <title>Photo Tools — White Text Remover + GeoTag</title>
-
-<!-- ZIP CREATION -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 <style>
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-html,body{
-    min-height:100%;
-}
-
-body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f3f4f6;
-    color:#171717;
-}
-
-button,
-input,
-textarea,
-select{
-    font:inherit;
-}
-
-button{
-    border:0;
-    cursor:pointer;
-}
-
-button:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-}
-
-/* =====================================================
-   TOP STEP BAR
-===================================================== */
-
-#stepBar{
-    max-width:1200px;
-    margin:14px auto 0;
-    padding:0 16px;
-}
-
-.step{
-    display:inline-block;
-    padding:9px 14px;
-    border-radius:9px;
-    font-size:12px;
-    font-weight:700;
-}
-
-#stepOne{
-    background:#1769e0;
-    color:white;
-}
-
-#stepTwo{
-    background:#e5e7eb;
-    color:#555;
-    margin-left:6px;
-}
-
-/* =====================================================
-   COMMON
-===================================================== */
-
-.page{
-    max-width:1200px;
-    margin:auto;
-    padding:24px 16px;
-}
-
-h1{
-    text-align:center;
-    margin-bottom:6px;
-}
-
-.subtitle{
-    text-align:center;
-    color:#666;
-    margin-bottom:20px;
-}
-
-.card{
-    background:white;
-    border:1px solid #ddd;
-    border-radius:16px;
-    padding:16px;
-}
-
-.toolbar{
-    display:flex;
-    flex-wrap:wrap;
-    gap:9px;
-    justify-content:center;
-    margin-bottom:12px;
-}
-
-button,
-.fileButton{
-    padding:11px 15px;
-    border-radius:9px;
-    font-weight:700;
-}
-
-.fileButton{
-    background:#1769e0;
-    color:white;
-    cursor:pointer;
-}
-
-.fileButton input{
-    display:none;
-}
-
-.btn-dark{
-    background:#222;
-    color:white;
-}
-
-.btn-gray{
-    background:#555;
-    color:white;
-}
-
-.btn-blue{
-    background:#1769e0;
-    color:white;
-}
-
-.btn-green{
-    background:#14834b;
-    color:white;
-}
-
-.btn-orange{
-    background:#d97706;
-    color:white;
-}
-
-.status{
-    text-align:center;
-    min-height:22px;
-    color:#555;
-    margin:8px;
-}
-
-.counter{
-    text-align:center;
-    font-weight:700;
-    margin:8px 0;
-}
-
-/* =====================================================
-   IMAGE WORK AREA
-===================================================== */
-
-.imageStage{
-    position:relative;
-    background:#181818;
-    border-radius:14px;
-    min-height:420px;
-    overflow:auto;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:12px;
-}
-
-#editCanvas{
-    display:block;
-    max-width:100%;
-    height:auto;
-    cursor:crosshair;
-}
-
-.selectionBox{
-    position:absolute;
-    border:2px solid #ff3030;
-    background:rgba(255,255,255,.08);
-    display:none;
-    pointer-events:none;
-}
-
-.toolRow{
-    position:relative;
-    z-index:20;
-    pointer-events:auto;
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-top:12px;
-}
-
-.controlPanel{
-    margin-top:14px;
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-}
-
-.control{
-    background:#f7f7f8;
-    border:1px solid #ddd;
-    border-radius:10px;
-    padding:10px;
-}
-
-.control label{
-    display:flex;
-    justify-content:space-between;
-    font-size:12px;
-    font-weight:700;
-    margin-bottom:7px;
-}
-
-.control b{
-    color:#1769e0;
-}
-
-.control input[type="range"]{
-    width:100%;
-}
-
-.help{
-    text-align:center;
-    color:#666;
-    font-size:12px;
-    margin-top:10px;
-}
-
-/* =====================================================
-   FOLDER THUMBNAILS
-===================================================== */
-
-.thumbnailStrip{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding:10px 0 2px;
-}
-
-.thumb{
-    width:76px;
-    height:76px;
-    flex:0 0 76px;
-    border-radius:8px;
-    overflow:hidden;
-    border:2px solid transparent;
-    background:#ddd;
-    cursor:pointer;
-}
-
-.thumb.active{
-    border-color:#1769e0;
-}
-
-.thumb img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-/* =====================================================
-   GEO PAGE
-===================================================== */
-
-#geoPage{
-    display:none;
-    background:#0b1015;
-    color:#eef2f7;
-    min-height:calc(100vh - 65px);
-}
-
-.geoLayout{
-    display:grid;
-    grid-template-columns:370px minmax(0,1fr);
-    min-height:calc(100vh - 65px);
-}
-
-.geoAside{
-    background:#111820;
-    border-right:1px solid #26313b;
-    padding:18px;
-    overflow:auto;
-}
-
-.geoAside h2{
-    margin-bottom:5px;
-}
-
-.geoDescription{
-    color:#8e9aa6;
-    font-size:12px;
-    line-height:1.45;
-    margin-bottom:14px;
-}
-
-.notice{
-    background:#241a12;
-    border:1px solid #5a3d1a;
-    color:#f0c27b;
-    border-radius:8px;
-    padding:10px;
-    font-size:11px;
-    line-height:1.4;
-    margin-bottom:14px;
-}
-
-.sectionTitle{
-    font-size:13px;
-    font-weight:700;
-    margin:14px 0 9px;
-}
-
-.field{
-    margin-bottom:10px;
-}
-
-.field label{
-    display:block;
-    color:#aeb8c2;
-    font-size:11px;
-    margin-bottom:5px;
-}
-
-.field input,
-.field textarea,
-.field select{
-    width:100%;
-    background:#151e27;
-    color:#eef2f7;
-    border:1px solid #334250;
-    border-radius:8px;
-    padding:10px;
-    outline:none;
-}
-
-.field textarea{
-    min-height:75px;
-    resize:vertical;
-}
-
-.field input:focus,
-.field textarea:focus,
-.field select:focus{
-    border-color:#2387ff;
-}
-
-#gFind{
-    width:100%;
-    background:#1769e0;
-    margin-bottom:7px;
-}
-
-#gStatus{
-    font-size:11px;
-    color:#8e9aa6;
-    min-height:30px;
-}
-
-.coordsBox{
-    background:#151e27;
-    border:1px solid #263441;
-    border-radius:8px;
-    padding:9px;
-    margin:7px 0;
-}
-
-.coordsTitle{
-    color:#8e9aa6;
-    font-size:10px;
-    margin-bottom:4px;
-}
-
-#gCoords{
-    font-size:12px;
-}
-
-.dateGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-}
-
-.slider{
-    background:#151e27;
-    border:1px solid #263441;
-    border-radius:9px;
-    padding:9px;
-    margin-bottom:7px;
-}
-
-.sliderTop{
-    display:flex;
-    justify-content:space-between;
-    font-size:11px;
-    margin-bottom:6px;
-}
-
-.sliderTop b{
-    color:#63a8ff;
-}
-
-.slider input{
-    width:100%;
-    accent-color:#2387ff;
-}
-
-.geoButtons{
-    position:relative;
-    z-index:20;
-    pointer-events:auto;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:7px;
-    margin-top:12px;
-}
-
-.geoButtons button{
-    width:100%;
-}
-
-#gSaveNext{
-    background:#14834b;
-}
-
-#gDownloadAll{
-    background:#1769e0;
-}
-
-.geoMain{
-    padding:18px;
-    min-width:0;
-}
-
-.previewHeader{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:9px;
-}
-
-.previewHeader span{
-    color:#84919d;
-    font-size:11px;
-}
-
-.previewBox{
-    background:#05080b;
-    border:1px solid #26313b;
-    border-radius:14px;
-    min-height:550px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    overflow:auto;
-    padding:10px;
-}
-
-#gCanvas{
-    display:block;
-    max-width:100%;
-    height:auto;
-    cursor:default;
-}
-
-.mapCredit{
-    color:#84919d;
-    font-size:10px;
-    text-align:center;
-    margin-top:7px;
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#171717}
+button,input,textarea,select{font:inherit}
+button{border:0;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+#stepBar{max-width:1200px;margin:14px auto 0;padding:0 16px}
+.step{display:inline-block;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:700}
+#stepOne{background:#1769e0;color:white}
+#stepTwo{background:#e5e7eb;color:#555;margin-left:6px}
+
+.page{max-width:1200px;margin:auto;padding:24px 16px}
+h1{text-align:center;margin-bottom:6px}
+.subtitle{text-align:center;color:#666;margin-bottom:20px}
+.card{background:white;border:1px solid #ddd;border-radius:16px;padding:16px}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-bottom:12px}
+button,.fileButton{padding:11px 15px;border-radius:9px;font-weight:700}
+.fileButton{background:#1769e0;color:white;cursor:pointer}
+.fileButton input{display:none}
+.btn-dark{background:#222;color:white}
+.btn-gray{background:#555;color:white}
+.btn-blue{background:#1769e0;color:white}
+.btn-green{background:#14834b;color:white}
+.btn-orange{background:#d97706;color:white}
+.status{text-align:center;min-height:22px;color:#555;margin:8px}
+.counter{text-align:center;font-weight:700;margin:8px 0}
+
+.imageStage{position:relative;background:#181818;border-radius:14px;min-height:420px;overflow:auto;display:flex;justify-content:center;align-items:center;padding:12px}
+#editCanvas{display:block;max-width:100%;height:auto;cursor:crosshair;touch-action:none}
+.selectionBox{position:absolute;border:2px solid #ff3030;background:rgba(255,255,255,.08);display:none;pointer-events:none}
+.toolRow{position:relative;z-index:20;pointer-events:auto;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+.controlPanel{margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;position:relative;z-index:21}
+.control{background:#f7f7f8;border:1px solid #ddd;border-radius:10px;padding:10px}
+.control label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:7px}
+.control b{color:#1769e0}
+.control input[type="range"]{width:100%}
+.control .hint{font-size:11px;color:#666;line-height:1.4;margin-top:4px}
+.help{text-align:center;color:#666;font-size:12px;margin-top:10px}
+
+.thumbnailStrip{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px}
+.thumb{width:76px;height:76px;flex:0 0 76px;border-radius:8px;overflow:hidden;border:2px solid transparent;background:#ddd;cursor:pointer}
+.thumb.active{border-color:#1769e0}
+.thumb img{width:100%;height:100%;object-fit:cover}
+
+#geoPage{display:none;background:#0b1015;color:#eef2f7;min-height:calc(100vh - 65px)}
+.geoLayout{display:grid;grid-template-columns:370px minmax(0,1fr);min-height:calc(100vh - 65px)}
+.geoAside{background:#111820;border-right:1px solid #26313b;padding:18px;overflow:auto}
+.geoAside h2{margin-bottom:5px}
+.geoDescription{color:#8e9aa6;font-size:12px;line-height:1.45;margin-bottom:14px}
+.notice{background:#241a12;border:1px solid #5a3d1a;color:#f0c27b;border-radius:8px;padding:10px;font-size:11px;line-height:1.4;margin-bottom:14px}
+.sectionTitle{font-size:13px;font-weight:700;margin:14px 0 9px}
+.field{margin-bottom:10px}
+.field label{display:block;color:#aeb8c2;font-size:11px;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;background:#151e27;color:#eef2f7;border:1px solid #334250;border-radius:8px;padding:10px;outline:none}
+.field textarea{min-height:75px;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#2387ff}
+#gFind{width:100%;background:#1769e0;margin-bottom:7px}
+#gStatus{font-size:11px;color:#8e9aa6;min-height:30px}
+.coordsBox{background:#151e27;border:1px solid #263441;border-radius:8px;padding:9px;margin:7px 0}
+.coordsTitle{color:#8e9aa6;font-size:10px;margin-bottom:4px}
+#gCoords{font-size:12px}
+.dateGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slider{background:#151e27;border:1px solid #263441;border-radius:9px;padding:9px;margin-bottom:7px}
+.sliderTop{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}
+.sliderTop b{color:#63a8ff}
+.slider input{width:100%;accent-color:#2387ff}
+.geoButtons{position:relative;z-index:20;pointer-events:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.geoButtons button{width:100%}
+#gSaveNext{background:#14834b}
+#gDownloadAll{background:#1769e0}
+.geoMain{padding:18px;min-width:0}
+.previewHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.previewHeader span{color:#84919d;font-size:11px}
+.previewBox{background:#05080b;border:1px solid #26313b;border-radius:14px;min-height:550px;display:flex;justify-content:center;align-items:center;overflow:auto;padding:10px}
+#gCanvas{display:block;max-width:100%;height:auto;cursor:default;touch-action:none}
+.mapCredit{color:#84919d;font-size:10px;text-align:center;margin-top:7px}
 
 @media(max-width:850px){
-
-    .geoLayout{
-        grid-template-columns:1fr;
-    }
-
-    .geoAside{
-        border-right:0;
-        border-bottom:1px solid #26313b;
-    }
-
-    .controlPanel{
-        grid-template-columns:1fr;
-    }
-
-    .previewBox{
-        min-height:350px;
-    }
+ .geoLayout{grid-template-columns:1fr}
+ .geoAside{border-right:0;border-bottom:1px solid #26313b}
+ .controlPanel{grid-template-columns:1fr}
+ .previewBox{min-height:350px}
 }
-
 @media(max-width:600px){
-
-    .toolbar{
-        flex-direction:column;
-    }
-
-    .toolbar>*{
-        width:100%;
-        text-align:center;
-    }
-
-    .dateGrid{
-        grid-template-columns:1fr;
-    }
+ .toolbar{flex-direction:column}
+ .toolbar>*{width:100%;text-align:center}
+ .dateGrid{grid-template-columns:1fr}
 }
-
-/* Keep bottom action/navigation controls above preview layers. */
-.toolRow button, .geoButtons button, .controlPanel button {
-    position: relative;
-    z-index: 21;
-    pointer-events: auto;
-}
+.toolRow button,.geoButtons button,.controlPanel button{position:relative;z-index:21;pointer-events:auto}
 </style>
 </head>
-
 <body>
 
-<!-- =====================================================
-     STEP BAR
-===================================================== -->
-
 <div id="stepBar">
-
-    <span id="stepOne" class="step">
-        1. White Text Remover
-    </span>
-
-    <span id="stepTwo" class="step">
-        2. Location / GeoTag
-    </span>
-
+ <span id="stepOne" class="step">1. White Text Remover</span>
+ <span id="stepTwo" class="step">2. Location / GeoTag</span>
 </div>
 
-
-<!-- =====================================================
-     STEP 1
-===================================================== -->
-
+<!-- ===================== STEP 1 ===================== -->
 <section id="removePage" class="page">
+ <h1>Fast White Text Remover</h1>
+ <p class="subtitle">Upload one image or an entire folder. Process each image and use Save &amp; Next.</p>
 
-    <h1>Fast White Text Remover</h1>
+ <div class="card">
+  <div class="toolbar">
+   <label class="fileButton">📁 Upload Folder
+    <input id="folderInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple webkitdirectory directory>
+   </label>
+   <label class="fileButton">🖼️ Upload Image
+    <input id="singleInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+   </label>
+   <button id="removeBtn" class="btn-dark" disabled>⬜ Remove White Text</button>
+   <button id="undoBtn" class="btn-gray" disabled>↶ Undo</button>
+   <button id="cropBtn" class="btn-orange" disabled>✂️ Crop</button>
+   <button id="applyCropBtn" class="btn-orange" disabled>Apply Crop</button>
+   <button id="saveNextBtn" class="btn-green" disabled>💾 Save &amp; Next</button>
+   <button id="goGeoBtn" class="btn-blue" disabled>📍 Go To GeoTag</button>
+  </div>
 
-    <p class="subtitle">
-        Upload one image or an entire folder. Process each image and use Save & Next.
-    </p>
+  <div id="editStatus" class="status">Upload an image or folder to begin.</div>
+  <div id="editCounter" class="counter">No images loaded</div>
 
-    <div class="card">
+  <div class="imageStage" id="editStage">
+   <canvas id="editCanvas"></canvas>
+   <div id="selectionBox" class="selectionBox"></div>
+  </div>
 
-        <div class="toolbar">
+  <div class="toolRow">
+   <button id="prevEditBtn" class="btn-gray" disabled>← Previous</button>
+   <button id="nextEditBtn" class="btn-gray" disabled>Next →</button>
+  </div>
 
-            <label class="fileButton">
-                📁 Upload Folder
-                <input
-                    id="folderInput"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    multiple
-                    webkitdirectory
-                    directory
-                >
-            </label>
+  <div class="controlPanel">
+   <div class="control">
+    <label>White detection sensitivity <b id="whiteThresholdValue">200</b></label>
+    <input id="whiteThreshold" type="range" min="80" max="245" value="200">
+    <div class="hint">Lower = catches dimmer / grey text. Higher = only the brightest white. Changes apply live to the boxes you already drew.</div>
+   </div>
+   <div class="control">
+    <label>Max text stroke thickness <b id="textThickValue">9</b>px</label>
+    <input id="textThick" type="range" min="2" max="30" value="9">
+    <div class="hint">Raise for big / bold letters, lower for thin small text.</div>
+   </div>
+   <div class="control">
+    <label>Edge expand (halo cleanup) <b id="inpaintPassValue">5</b></label>
+    <input id="inpaintPasses" type="range" min="1" max="8" value="5">
+    <div class="hint">Grows the removed area to wipe the pale edge around letters.</div>
+   </div>
+   <div class="control">
+    <label>Removal strength <b id="whiteOpacityValue">100%</b></label>
+    <input id="whiteOpacity" type="range" min="50" max="100" value="100">
+    <div class="hint">How completely the detected text is replaced by the surrounding background.</div>
+   </div>
+  </div>
 
-            <label class="fileButton">
-                🖼️ Upload Image
-                <input
-                    id="singleInput"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                >
-            </label>
+  <div id="thumbnailStrip" class="thumbnailStrip"></div>
 
-            <button id="removeBtn" class="btn-dark" disabled>
-                ⬜ Remove White Text
-            </button>
-
-            <button id="undoBtn" class="btn-gray" disabled>
-                ↶ Undo
-            </button>
-
-            <button id="cropBtn" class="btn-orange" disabled>
-                ✂️ Crop
-            </button>
-
-            <button id="applyCropBtn" class="btn-orange" disabled>
-                Apply Crop
-            </button>
-
-            <button id="saveNextBtn" class="btn-green" disabled>
-                💾 Save & Next
-            </button>
-
-            <button id="goGeoBtn" class="btn-blue" disabled>
-                📍 Go To GeoTag
-            </button>
-
-        </div>
-
-        <div id="editStatus" class="status">
-            Upload an image or folder to begin.
-        </div>
-
-        <div id="editCounter" class="counter">
-            No images loaded
-        </div>
-
-        <div class="imageStage" id="editStage">
-
-            <canvas id="editCanvas"></canvas>
-
-            <div
-                id="selectionBox"
-                class="selectionBox"
-            ></div>
-
-        </div>
-
-        <div class="toolRow">
-
-            <button id="prevEditBtn" class="btn-gray" disabled>
-                ← Previous
-            </button>
-
-            <button id="nextEditBtn" class="btn-gray" disabled>
-                Next →
-            </button>
-
-        </div>
-
-        <div class="controlPanel">
-
-            <div class="control">
-                <label>Removal strength <b id="whiteOpacityValue">100%</b></label>
-                <input id="whiteOpacity" type="range" min="50" max="100" value="100">
-                <div style="font-size:11px;color:#666;line-height:1.4">How completely detected text pixels are replaced.</div>
-            </div>
-
-            <div class="control">
-                <label>White detection sensitivity <b id="whiteThresholdValue">165</b></label>
-                <input id="whiteThreshold" type="range" min="110" max="245" value="165">
-                <div style="font-size:11px;color:#666;line-height:1.4">Lower detects dimmer/grey text; higher targets brighter text.</div>
-            </div>
-
-            <div class="control">
-                <label>Strong inpaint passes <b id="inpaintPassValue">5</b></label>
-                <input id="inpaintPasses" type="range" min="1" max="8" value="8">
-                <div style="font-size:11px;color:#666;line-height:1.4">Default is maximum strength. One click targets the white strokes and their pale edges.</div>
-            </div>
-
-        </div>
-
-        <div
-            id="thumbnailStrip"
-            class="thumbnailStrip"
-        ></div>
-
-        <div class="help">
-            Drag around the white text, then click Remove White Text.
-            Crop by clicking Crop and dragging around the part you want to keep.
-        </div>
-
-    </div>
-
+  <div class="help">
+   Drag around the white text and it is removed automatically. Drag more boxes for more text.
+   Move any slider above to re-run the removal live. Crop: click Crop and drag around the part you want to keep.
+  </div>
+ </div>
 </section>
 
-
-<!-- =====================================================
-     STEP 2
-===================================================== -->
-
+<!-- ===================== STEP 2 ===================== -->
 <section id="geoPage">
-
-    <div class="geoLayout">
-
-        <aside class="geoAside">
-
-            <h2>📍 GeoTag / Location</h2>
-
-            <p class="geoDescription">
-                Your saved cleaned images appear here one at a time.
-                Change the location and time for each image, then use
-                Save & Next.
-            </p>
-
-            <div class="notice">
-                The visible GeoTag is a generated overlay. It is not
-                camera-generated GPS metadata.
-            </div>
-
-
-            <div class="sectionTitle">
-                Current Image
-            </div>
-
-            <div
-                id="geoCounter"
-                style="font-size:12px;margin-bottom:8px"
-            >
-                No image
-            </div>
-
-
-            <div class="sectionTitle">
-                1. Location
-            </div>
-
-
-            <div class="field">
-
-                <label>State</label>
-
-                <select id="gState"></select>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    District / Town / Subdivision
-                </label>
-
-                <input
-                    id="gPlace"
-                    type="text"
-                    placeholder="Example: Beerwah"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    Address / Location — printed on image
-                </label>
-
-                <textarea
-                    id="gAddress"
-                    placeholder="Example: Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India"
-                ></textarea>
-
-            </div>
-
-
-            <button id="gFind">
-                📍 Find Location
-            </button>
-
-
-            <div id="gStatus">
-                Enter a location and click Find Location.
-            </div>
-
-
-            <div class="coordsBox">
-
-                <div class="coordsTitle">
-                    Latitude / Longitude
-                </div>
-
-                <div id="gCoords">
-                    —
-                </div>
-
-            </div>
-
-
-            <div class="sectionTitle">
-                Date & Time
-            </div>
-
-
-            <div class="dateGrid">
-
-                <div class="field">
-
-                    <label>Date</label>
-
-                    <input
-                        id="gDate"
-                        type="date"
-                    >
-
-                </div>
-
-                <div class="field">
-
-                    <label>Time</label>
-
-                    <input
-                        id="gTime"
-                        type="time"
-                    >
-
-                </div>
-
-            </div>
-
-
-            <div class="sectionTitle">
-                2. GeoTag Appearance
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>GeoTag opacity</span>
-                    <b id="gOpacityVal">85%</b>
-                </div>
-
-                <input
-                    id="gOpacity"
-                    type="range"
-                    min="10"
-                    max="100"
-                    value="85"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Map opacity</span>
-                    <b id="gMapOpacityVal">100%</b>
-                </div>
-
-                <input
-                    id="gMapOpacity"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="100"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Stamp height</span>
-                    <b id="gHeightVal">25%</b>
-                </div>
-
-                <input
-                    id="gHeight"
-                    type="range"
-                    min="5"
-                    max="80"
-                    value="25"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Map width</span>
-                    <b id="gMapWidthVal">29%</b>
-                </div>
-
-                <input
-                    id="gMapWidth"
-                    type="range"
-                    min="10"
-                    max="60"
-                    value="29"
-                >
-
-            </div>
-
-
-            <div class="slider">
-    <div class="sliderTop">
-        <span>Map zoom (higher = closer)</span>
-        <b id="gMapZoomVal">16</b>
-    </div>
-    <input id="gMapZoom" type="range" min="12" max="18" step="1" value="16">
-</div>
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Title size</span>
-                    <b id="gTitleVal">100%</b>
-                </div>
-
-                <input
-                    id="gTitle"
-                    type="range"
-                    min="50"
-                    max="200"
-                    value="100"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Details size</span>
-                    <b id="gDetailsVal">100%</b>
-                </div>
-
-                <input
-                    id="gDetails"
-                    type="range"
-                    min="50"
-                    max="200"
-                    value="100"
-                >
-
-            </div>
-
-
-            <div class="sectionTitle">
-                3. Blue Camera Logo Position
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Logo X position</span>
-                    <b id="gLogoXVal">88%</b>
-                </div>
-
-                <input
-                    id="gLogoX"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="88"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Logo Y position</span>
-                    <b id="gLogoYVal">78%</b>
-                </div>
-
-                <input
-                    id="gLogoY"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="78"
-                >
-
-            </div>
-
-
-            <div class="slider">
-
-                <div class="sliderTop">
-                    <span>Logo size</span>
-                    <b id="gLogoSizeVal">70%</b>
-                </div>
-
-                <input
-                    id="gLogoSize"
-                    type="range"
-                    min="30"
-                    max="130"
-                    value="70"
-                >
-
-            </div>
-
-
-            <div class="geoButtons">
-
-                <button id="gBack">
-                    ← Back
-                </button>
-
-                <button id="gPrev">
-                    ← Previous
-                </button>
-
-                <button id="gSaveNext">
-                    💾 Save & Next
-                </button>
-
-                <button id="gDownloadAll">
-                    ⬇ Download All ZIP
-                </button>
-
-            </div>
-
-        </aside>
-
-
-        <main class="geoMain">
-
-            <div class="previewHeader">
-
-                <h3>GeoTag Preview</h3>
-
-                <span>
-                    Current image only
-                </span>
-
-            </div>
-
-
-            <div class="previewBox">
-
-                <canvas id="gCanvas"></canvas>
-
-            </div>
-
-
-            <div class="mapCredit">
-                Map information supplied through OpenStreetMap services.
-            </div>
-
-        </main>
-
-    </div>
-
+ <div class="geoLayout">
+  <aside class="geoAside">
+   <h2>📍 GeoTag / Location</h2>
+   <p class="geoDescription">Your saved cleaned images appear here one at a time. Change the location and time for each image, then use Save &amp; Next.</p>
+   <div class="notice">The visible GeoTag is a generated overlay. It is not camera-generated GPS metadata.</div>
+
+   <div class="sectionTitle">Current Image</div>
+   <div id="geoCounter" style="font-size:12px;margin-bottom:8px">No image</div>
+
+   <div class="sectionTitle">1. Location</div>
+   <div class="field"><label>State</label><select id="gState"></select></div>
+   <div class="field"><label>District / Town / Subdivision</label><input id="gPlace" type="text" placeholder="Example: Beerwah"></div>
+   <div class="field"><label>Address / Location — printed on image</label><textarea id="gAddress" placeholder="Example: Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India"></textarea></div>
+   <button id="gFind">📍 Find Location</button>
+   <div id="gStatus">Enter a location and click Find Location.</div>
+   <div class="coordsBox"><div class="coordsTitle">Latitude / Longitude</div><div id="gCoords">—</div></div>
+
+   <div class="sectionTitle">Date &amp; Time</div>
+   <div class="dateGrid">
+    <div class="field"><label>Date</label><input id="gDate" type="date"></div>
+    <div class="field"><label>Time</label><input id="gTime" type="time"></div>
+   </div>
+
+   <div class="sectionTitle">2. GeoTag Appearance</div>
+   <div class="slider"><div class="sliderTop"><span>GeoTag opacity</span><b id="gOpacityVal">85%</b></div><input id="gOpacity" type="range" min="10" max="100" value="85"></div>
+   <div class="slider"><div class="sliderTop"><span>Map opacity</span><b id="gMapOpacityVal">100%</b></div><input id="gMapOpacity" type="range" min="0" max="100" value="100"></div>
+   <div class="slider"><div class="sliderTop"><span>Stamp height</span><b id="gHeightVal">25%</b></div><input id="gHeight" type="range" min="5" max="80" value="25"></div>
+   <div class="slider"><div class="sliderTop"><span>Map width</span><b id="gMapWidthVal">29%</b></div><input id="gMapWidth" type="range" min="10" max="60" value="29"></div>
+   <div class="slider"><div class="sliderTop"><span>Map zoom (higher = closer)</span><b id="gMapZoomVal">16</b></div><input id="gMapZoom" type="range" min="12" max="18" step="1" value="16"></div>
+   <div class="slider"><div class="sliderTop"><span>Title size</span><b id="gTitleVal">100%</b></div><input id="gTitle" type="range" min="50" max="200" value="100"></div>
+   <div class="slider"><div class="sliderTop"><span>Details size</span><b id="gDetailsVal">100%</b></div><input id="gDetails" type="range" min="50" max="200" value="100"></div>
+
+   <div class="sectionTitle">3. Blue Camera Logo Position</div>
+   <div class="slider"><div class="sliderTop"><span>Logo X position</span><b id="gLogoXVal">88%</b></div><input id="gLogoX" type="range" min="0" max="100" value="88"></div>
+   <div class="slider"><div class="sliderTop"><span>Logo Y position</span><b id="gLogoYVal">78%</b></div><input id="gLogoY" type="range" min="0" max="100" value="78"></div>
+   <div class="slider"><div class="sliderTop"><span>Logo size</span><b id="gLogoSizeVal">70%</b></div><input id="gLogoSize" type="range" min="30" max="130" value="70"></div>
+
+   <div class="geoButtons">
+    <button id="gBack">← Back</button>
+    <button id="gPrev">← Previous</button>
+    <button id="gSaveNext">💾 Save &amp; Next</button>
+    <button id="gDownloadAll">⬇ Download All ZIP</button>
+   </div>
+  </aside>
+
+  <main class="geoMain">
+   <div class="previewHeader"><h3>GeoTag Preview</h3><span>Current image only</span></div>
+   <div class="previewBox"><canvas id="gCanvas"></canvas></div>
+   <div class="mapCredit">Map information supplied through OpenStreetMap services.</div>
+  </main>
+ </div>
 </section>
-
 
 <script>
-/* =========================================================
-   GLOBAL HELPERS
-========================================================= */
-
-const $ = id => document.getElementById(id);
-
+const $=id=>document.getElementById(id);
+const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* =========================================================
    STEP 1 VARIABLES
 ========================================================= */
+const folderInput=$("folderInput"),singleInput=$("singleInput");
+const editCanvas=$("editCanvas"),editCtx=editCanvas.getContext("2d",{willReadFrequently:true});
+const editStage=$("editStage"),selectionBox=$("selectionBox");
 
-const folderInput = $("folderInput");
-const singleInput = $("singleInput");
-
-const editCanvas = $("editCanvas");
-const editCtx = editCanvas.getContext("2d", {
-    willReadFrequently:true
-});
-
-const editStage = $("editStage");
-const selectionBox = $("selectionBox");
-
-let imageFiles = [];
-let currentEditIndex = 0;
-
-let originalCanvasData = null;
-let undoHistory = []; // per-action snapshots so each text-removal box can be undone separately
-
-let selection = null;
-let lastRemoveSel = null;   // last text-removal box, re-used for the other images
-let selecting = false;
-let selectionMode = "remove";
-
-let startX = 0;
-let startY = 0;
-
-let cropSelection = null;
-
-let cleanedImages = [];
-
-
-/* =========================================================
-   LOAD IMAGE FILE
-========================================================= */
+let imageFiles=[],currentEditIndex=0;
+let originalCanvasData=null;      // the image before any text removal (after load or after crop)
+let removeOps=[];                 // every text-removal box drawn on the current image
+let selection=null,lastRemoveSel=null,selecting=false,selectionMode="remove";
+let startX=0,startY=0,cropSelection=null,cleanedImages=[];
 
 function loadFileImage(file){
-
-    return new Promise((resolve,reject)=>{
-
-        if(!file){
-            reject(new Error("No image."));
-            return;
-        }
-
-        const url = URL.createObjectURL(file);
-
-        const image = new Image();
-
-        image.onload = ()=>{
-
-            URL.revokeObjectURL(url);
-
-            resolve(image);
-
-        };
-
-        image.onerror = ()=>{
-
-            URL.revokeObjectURL(url);
-
-            reject(new Error(
-                "Could not decode image."
-            ));
-
-        };
-
-        image.src = url;
-
-    });
-
+ return new Promise((resolve,reject)=>{
+  if(!file){reject(new Error("No image."));return}
+  const url=URL.createObjectURL(file),image=new Image();
+  image.onload=()=>{URL.revokeObjectURL(url);resolve(image)};
+  image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Could not decode image."))};
+  image.src=url;
+ });
 }
-
-
-/* =========================================================
-   ADD FILES
-========================================================= */
 
 async function setImageFiles(files){
-
-    const arr = Array.from(files || [])
-        .filter(file =>
-            file &&
-            file.type &&
-            file.type.startsWith("image/")
-        );
-
-    if(!arr.length){
-
-        $("editStatus").textContent =
-            "No supported images were found.";
-
-        return;
-
-    }
-
-    imageFiles = arr;
-
-    currentEditIndex = 0;
-
-    cleanedImages = [];
-
-    await loadCurrentEditImage();
-
-    buildThumbnails();
-
+ const arr=Array.from(files||[]).filter(f=>f&&f.type&&f.type.startsWith("image/"));
+ if(!arr.length){$("editStatus").textContent="No supported images were found.";return}
+ imageFiles=arr;currentEditIndex=0;cleanedImages=[];
+ await loadCurrentEditImage();
+ buildThumbnails();
 }
-
-
-/* =========================================================
-   FOLDER INPUT
-========================================================= */
-
-folderInput.addEventListener(
-    "change",
-    async function(){
-
-        await setImageFiles(this.files);
-
-    }
-);
-
-
-/* =========================================================
-   SINGLE IMAGE INPUT
-========================================================= */
-
-singleInput.addEventListener(
-    "change",
-    async function(){
-
-        await setImageFiles(this.files);
-
-    }
-);
-
-
-/* =========================================================
-   LOAD CURRENT EDIT IMAGE
-========================================================= */
+folderInput.addEventListener("change",async function(){await setImageFiles(this.files)});
+singleInput.addEventListener("change",async function(){await setImageFiles(this.files)});
 
 async function loadCurrentEditImage(){
-
-    if(!imageFiles.length)
-        return;
-
-    const file =
-        imageFiles[currentEditIndex];
-
-    $("editStatus").textContent =
-        "Opening " + file.name + "…";
-
-    try{
-
-        const image =
-            await loadFileImage(file);
-
-        const MAX_SIZE = 2200;
-
-        const scale =
-            Math.min(
-                1,
-                MAX_SIZE /
-                Math.max(
-                    image.naturalWidth,
-                    image.naturalHeight
-                )
-            );
-
-        editCanvas.width =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalWidth * scale
-                )
-            );
-
-        editCanvas.height =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalHeight * scale
-                )
-            );
-
-        editCtx.clearRect(
-            0,
-            0,
-            editCanvas.width,
-            editCanvas.height
-        );
-
-        editCtx.drawImage(
-            image,
-            0,
-            0,
-            editCanvas.width,
-            editCanvas.height
-        );
-
-        originalCanvasData =
-            editCtx.getImageData(
-                0,
-                0,
-                editCanvas.width,
-                editCanvas.height
-            );
-        undoHistory = [];
-
-        selection = null;
-        cropSelection = null;
-
-        selectionBox.style.display =
-            "none";
-
-        $("removeBtn").disabled = false;
-        $("undoBtn").disabled = true;
-        $("cropBtn").disabled = false;
-        $("applyCropBtn").disabled = true;
-        $("saveNextBtn").disabled = false;
-        $("goGeoBtn").disabled = false;
-
-        updateEditUI();
-
-        $("editStatus").textContent =
-            "Ready — " + file.name;
-
-    }catch(err){
-
-        console.error(err);
-
-        $("editStatus").textContent =
-            "Could not open this image. Try JPG, PNG or WebP.";
-
-    }
-
+ if(!imageFiles.length)return;
+ const file=imageFiles[currentEditIndex];
+ $("editStatus").textContent="Opening "+file.name+"…";
+ try{
+  const image=await loadFileImage(file);
+  const MAX_SIZE=2200;
+  const scale=Math.min(1,MAX_SIZE/Math.max(image.naturalWidth,image.naturalHeight));
+  editCanvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+  editCanvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  editCtx.clearRect(0,0,editCanvas.width,editCanvas.height);
+  editCtx.drawImage(image,0,0,editCanvas.width,editCanvas.height);
+  originalCanvasData=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height);
+  removeOps=[];
+  selection=null;cropSelection=null;selectionBox.style.display="none";
+  $("removeBtn").disabled=false;$("undoBtn").disabled=true;$("cropBtn").disabled=false;
+  $("applyCropBtn").disabled=true;$("saveNextBtn").disabled=false;$("goGeoBtn").disabled=false;
+  updateEditUI();
+  $("editStatus").textContent="Ready — "+file.name;
+ }catch(err){
+  console.error(err);
+  $("editStatus").textContent="Could not open this image. Try JPG, PNG or WebP.";
+ }
 }
-
-
-/* =========================================================
-   UPDATE EDIT UI
-========================================================= */
 
 function updateEditUI(){
-
-    const total =
-        imageFiles.length;
-
-    $("editCounter").textContent =
-        total
-            ? `Image ${currentEditIndex+1} of ${total} — ${imageFiles[currentEditIndex].name}`
-            : "No images loaded";
-
-    $("prevEditBtn").disabled =
-        currentEditIndex <= 0;
-
-    $("nextEditBtn").disabled =
-        currentEditIndex >= total-1;
-
-    buildThumbnails();
-
+ const total=imageFiles.length;
+ $("editCounter").textContent=total?`Image ${currentEditIndex+1} of ${total} — ${imageFiles[currentEditIndex].name}`:"No images loaded";
+ $("prevEditBtn").disabled=currentEditIndex<=0;
+ $("nextEditBtn").disabled=currentEditIndex>=total-1;
+ buildThumbnails();
 }
-
-
-/* =========================================================
-   THUMBNAILS
-========================================================= */
 
 function buildThumbnails(){
-
-    const strip =
-        $("thumbnailStrip");
-
-    strip.innerHTML = "";
-
-    imageFiles.forEach(
-        (file,index)=>{
-
-            const div =
-                document.createElement("div");
-
-            div.className =
-                "thumb" +
-                (
-                    index === currentEditIndex
-                    ? " active"
-                    : ""
-                );
-
-            const img =
-                document.createElement("img");
-
-            const url =
-                URL.createObjectURL(file);
-
-            img.src = url;
-
-            img.onload = ()=>{
-                URL.revokeObjectURL(url);
-            };
-
-            div.appendChild(img);
-
-            div.addEventListener(
-                "click",
-                async ()=>{
-
-                    await saveCurrentWithoutAdvance();
-
-                    currentEditIndex =
-                        index;
-
-                    await loadCurrentEditImage();
-
-                }
-            );
-
-            strip.appendChild(div);
-
-        }
-    );
-
+ const strip=$("thumbnailStrip");strip.innerHTML="";
+ imageFiles.forEach((file,index)=>{
+  const div=document.createElement("div");
+  div.className="thumb"+(index===currentEditIndex?" active":"");
+  const img=document.createElement("img"),url=URL.createObjectURL(file);
+  img.src=url;img.onload=()=>URL.revokeObjectURL(url);
+  div.appendChild(img);
+  div.addEventListener("click",async()=>{
+   await saveCurrentWithoutAdvance();
+   currentEditIndex=index;
+   await loadCurrentEditImage();
+  });
+  strip.appendChild(div);
+ });
 }
-
-
-/* =========================================================
-   CANVAS POINT
-========================================================= */
 
 function getEditPoint(e){
-
-    const rect =
-        editCanvas.getBoundingClientRect();
-
-    return {
-
-        x:Math.max(
-            0,
-            Math.min(
-                editCanvas.width,
-                (e.clientX-rect.left) *
-                editCanvas.width /
-                rect.width
-            )
-        ),
-
-        y:Math.max(
-            0,
-            Math.min(
-                editCanvas.height,
-                (e.clientY-rect.top) *
-                editCanvas.height /
-                rect.height
-            )
-        )
-
-    };
-
+ const rect=editCanvas.getBoundingClientRect();
+ return{
+  x:clampN((e.clientX-rect.left)*editCanvas.width/rect.width,0,editCanvas.width),
+  y:clampN((e.clientY-rect.top)*editCanvas.height/rect.height,0,editCanvas.height)
+ };
 }
-
-
-/* =========================================================
-   SHOW SELECTION
-========================================================= */
 
 function showSelection(sel){
-
-    if(!sel){
-
-        selectionBox.style.display =
-            "none";
-
-        return;
-
-    }
-
-    const canvasRect =
-        editCanvas.getBoundingClientRect();
-
-    const stageRect =
-        editStage.getBoundingClientRect();
-
-    selectionBox.style.left =
-        (
-            editCanvas.offsetLeft +
-            sel.x *
-            canvasRect.width /
-            editCanvas.width
-        ) + "px";
-
-    selectionBox.style.top =
-        (
-            editCanvas.offsetTop +
-            sel.y *
-            canvasRect.height /
-            editCanvas.height
-        ) + "px";
-
-    selectionBox.style.width =
-        (
-            sel.w *
-            canvasRect.width /
-            editCanvas.width
-        ) + "px";
-
-    selectionBox.style.height =
-        (
-            sel.h *
-            canvasRect.height /
-            editCanvas.height
-        ) + "px";
-
-    selectionBox.style.display =
-        "block";
-
-    selectionBox.style.borderColor =
-        selectionMode === "crop"
-            ? "#ff9d00"
-            : "#ff3030";
-
+ if(!sel){selectionBox.style.display="none";return}
+ const cr=editCanvas.getBoundingClientRect();
+ selectionBox.style.left=(editCanvas.offsetLeft+sel.x*cr.width/editCanvas.width)+"px";
+ selectionBox.style.top=(editCanvas.offsetTop+sel.y*cr.height/editCanvas.height)+"px";
+ selectionBox.style.width=(sel.w*cr.width/editCanvas.width)+"px";
+ selectionBox.style.height=(sel.h*cr.height/editCanvas.height)+"px";
+ selectionBox.style.display="block";
+ selectionBox.style.borderColor=selectionMode==="crop"?"#ff9d00":"#ff3030";
 }
 
-
-/* =========================================================
-   POINTER DOWN
-========================================================= */
-
-editCanvas.addEventListener(
-    "pointerdown",
-    function(e){
-
-        if(!imageFiles.length)
-            return;
-
-        selecting = true;
-
-        editCanvas.setPointerCapture(
-            e.pointerId
-        );
-
-        const p =
-            getEditPoint(e);
-
-        startX = p.x;
-        startY = p.y;
-
-        selection = {
-            x:startX,
-            y:startY,
-            w:0,
-            h:0
-        };
-
-        showSelection(selection);
-
-    }
-);
-
-
-/* =========================================================
-   POINTER MOVE
-========================================================= */
-
-editCanvas.addEventListener(
-    "pointermove",
-    function(e){
-
-        if(!selecting)
-            return;
-
-        const p =
-            getEditPoint(e);
-
-        selection = {
-
-            x:Math.min(
-                startX,
-                p.x
-            ),
-
-            y:Math.min(
-                startY,
-                p.y
-            ),
-
-            w:Math.abs(
-                p.x-startX
-            ),
-
-            h:Math.abs(
-                p.y-startY
-            )
-
-        };
-
-        showSelection(selection);
-
-    }
-);
-
-
-/* =========================================================
-   POINTER UP
-========================================================= */
-
-editCanvas.addEventListener(
-    "pointerup",
-    function(){
-
-        selecting = false;
-
-        if(
-            !selection ||
-            selection.w < 4 ||
-            selection.h < 4
-        ){
-
-            selection = null;
-
-            showSelection(null);
-
-            return;
-
-        }
-
-        if(selectionMode === "crop"){
-
-            cropSelection =
-                {...selection};
-
-            $("applyCropBtn").disabled =
-                false;
-
-            $("editStatus").textContent =
-                "Crop area selected. Click Apply Crop.";
-
-        }else{
-
-            lastRemoveSel={...selection};
-            $("removeBtn").click();   // remove automatically, no extra click
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   WHITE DETECTION
-========================================================= */
-
-function isWhitePixel(data,i){
-
-    const r = data[i];
-    const g = data[i+1];
-    const b = data[i+2];
-
-    const max =
-        Math.max(r,g,b);
-
-    const min =
-        Math.min(r,g,b);
-
-    const threshold =
-        Number(
-            $("whiteThreshold").value
-        );
-
-    return (
-        max >= threshold &&
-        max-min <= 85 &&
-        r+g+b >= threshold*3
-    );
-
-}
-
-
-/* =========================================================
-   REMOVE WHITE TEXT
-========================================================= */
-
-$("removeBtn").addEventListener("click", function(){
-    if(!selection || selection.w < 4 || selection.h < 4){
-        $("editStatus").textContent = "First drag around the white text.";
-        return;
-    }
-    if(selectionMode !== "remove"){
-        $("editStatus").textContent = "Switch to Remove White Text mode first.";
-        return;
-    }
-
-    $("editStatus").textContent = "Removing white text…";
-    try {
-        const x = Math.max(0, Math.floor(selection.x));
-        const y = Math.max(0, Math.floor(selection.y));
-        const w = Math.min(editCanvas.width-x, Math.ceil(selection.w));
-        const h = Math.min(editCanvas.height-y, Math.ceil(selection.h));
-        if(w < 2 || h < 2) return;
-
-        // Keep the whole current canvas before every removal, so multiple boxes
-        // are cumulative and Undo reverses only the most recent operation.
-        undoHistory.push(editCtx.getImageData(0, 0, editCanvas.width, editCanvas.height));
-        const imageData = editCtx.getImageData(x,y,w,h);
-        const original = new Uint8ClampedArray(imageData.data);
-        const threshold = Number($("whiteThreshold").value);
-        const strength = Number($("whiteOpacity").value)/100;
-        const passes = Math.max(1, Number($("inpaintPasses").value)||8);
-        const N=w*h, mask=new Uint8Array(N), expanded=new Uint8Array(N);
-
-        // Detect neutral bright text and its grey anti-aliased edge pixels.
-        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
-            const p=yy*w+xx, i=p*4;
-            const r=original[i],g=original[i+1],b=original[i+2];
-            const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
-            const brightness=(r+g+b)/3;
-            // Strong single-pass detection: include bright white pixels and
-            // many anti-aliased edge pixels, while rejecting strongly coloured
-            // background pixels (for example yellow/orange areas).
-            const chroma = mx - mn;
-            const nearWhite = chroma <= 145 && mx >= threshold && brightness >= threshold - 28;
-            if(nearWhite) mask[p]=1;
-        }
-
-        // Dilate the mask enough to cover the white halo without affecting the whole box.
-        // Expand farther than the visible white core so faint anti-aliased
-        // fringes are also replaced in the same click.
-        const radius=Math.max(2,Math.min(7,Math.round(passes*0.8)));
-        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
-            if(!mask[yy*w+xx]) continue;
-            for(let dy=-radius;dy<=radius;dy++) for(let dx=-radius;dx<=radius;dx++){
-                const nx=xx+dx,ny=yy+dy;
-                if(nx>=0&&ny>=0&&nx<w&&ny<h) expanded[ny*w+nx]=1;
-            }
-        }
-
-        // Directional inpainting: copy/interpolate clean pixels along the direction
-        // with the most similar surrounding colours. This avoids averaging every
-        // direction together, which creates the hazy/blurred look.
-        const current=new Uint8ClampedArray(original);
-        const known=new Uint8Array(N);
-        for(let p=0;p<N;p++) known[p]=expanded[p]?0:1;
-        const maxDist=Math.min(80,Math.max(12,Math.ceil(Math.max(w,h)*0.35)));
-
-        for(let pass=0;pass<passes;pass++){
-            const next=new Uint8ClampedArray(current);
-            let changed=false;
-            for(let yy=0;yy<h;yy++) for(let xx=0;xx<w;xx++){
-                const p=yy*w+xx;
-                if(!expanded[p] || known[p]) continue;
-                const candidates=[];
-                // horizontal and vertical clean samples; prefer short distance
-                for(const [dx,dy,axis] of [[-1,0,0],[1,0,0],[0,-1,1],[0,1,1]]){
-                    for(let d=1;d<=maxDist;d++){
-                        const nx=xx+dx*d,ny=yy+dy*d;
-                        if(nx<0||ny<0||nx>=w||ny>=h) break;
-                        const q=ny*w+nx;
-                        if(known[q]){
-                            const j=q*4;
-                            candidates.push({r:current[j],g:current[j+1],b:current[j+2],d,axis});
-                            break;
-                        }
-                    }
-                }
-                if(!candidates.length) continue;
-                // Select the direction whose two sides agree most; it is usually
-                // the least visible continuation of the background.
-                let best=null,bestScore=Infinity;
-                for(let a=0;a<candidates.length;a++) for(let b=a+1;b<candidates.length;b++){
-                    if(candidates[a].axis!==candidates[b].axis) continue;
-                    const A=candidates[a],B=candidates[b];
-                    const colourDiff=Math.abs(A.r-B.r)+Math.abs(A.g-B.g)+Math.abs(A.b-B.b);
-                    const score=colourDiff*0.7+(A.d+B.d)*1.5;
-                    if(score<bestScore){bestScore=score;best=[A,B];}
-                }
-                if(!best) best=[...candidates].sort((a,b)=>a.d-b.d).slice(0,2);
-                let rr,gg,bb;
-                if(best.length===2){
-                    const [A,B]=best,wa=1/(A.d+0.5),wb=1/(B.d+0.5);
-                    rr=(A.r*wa+B.r*wb)/(wa+wb);
-                    gg=(A.g*wa+B.g*wb)/(wa+wb);
-                    bb=(A.b*wa+B.b*wb)/(wa+wb);
-                }else{rr=best[0].r;gg=best[0].g;bb=best[0].b;}
-                const i=p*4;
-                next[i]=original[i]*(1-strength)+rr*strength;
-                next[i+1]=original[i+1]*(1-strength)+gg*strength;
-                next[i+2]=original[i+2]*(1-strength)+bb*strength;
-                known[p]=1;changed=true;
-            }
-            current.set(next);
-            if(!changed) break;
-        }
-
-        // Last-resort fill for enclosed pixels: nearest already reconstructed pixels,
-        // not a broad blur kernel.
-        for(let yy=0;yy<h;yy++) for(let xx=0;xx<w;xx++){
-            const p=yy*w+xx;
-            if(!expanded[p] || known[p]) continue;
-            let found=false;
-            for(let d=1;d<=maxDist&&!found;d++){
-                for(let dy=-d;dy<=d&&!found;dy++){
-                    const dx=d-Math.abs(dy);
-                    for(const sign of dx===0?[1]:[-1,1]){
-                        const nx=xx+sign*dx,ny=yy+dy;
-                        if(nx<0||ny<0||nx>=w||ny>=h) continue;
-                        const q=ny*w+nx;
-                        if(known[q]){
-                            const i=p*4,j=q*4;
-                            current[i]=current[j];current[i+1]=current[j+1];current[i+2]=current[j+2];
-                            known[p]=1;found=true;break;
-                        }
-                    }
-                }
-            }
-        }
-
-        editCtx.putImageData(new ImageData(current,w,h),x,y);
-        $("undoBtn").disabled=false;
-        $("editStatus").textContent = "Text removal applied. You can draw another box to remove more text.";
-        selection=null;
-        showSelection(null);
-    } catch(err) {
-        console.error(err);
-        $("editStatus").textContent = "Could not remove text from this selection. Try a smaller box.";
-    }
+editCanvas.addEventListener("pointerdown",function(e){
+ if(!imageFiles.length)return;
+ selecting=true;editCanvas.setPointerCapture(e.pointerId);
+ const p=getEditPoint(e);startX=p.x;startY=p.y;
+ selection={x:startX,y:startY,w:0,h:0};
+ showSelection(selection);
 });
+editCanvas.addEventListener("pointermove",function(e){
+ if(!selecting)return;
+ const p=getEditPoint(e);
+ selection={x:Math.min(startX,p.x),y:Math.min(startY,p.y),w:Math.abs(p.x-startX),h:Math.abs(p.y-startY)};
+ showSelection(selection);
+});
+editCanvas.addEventListener("pointerup",function(){
+ selecting=false;
+ if(!selection||selection.w<4||selection.h<4){selection=null;showSelection(null);return}
+ if(selectionMode==="crop"){
+  cropSelection={...selection};
+  $("applyCropBtn").disabled=false;
+  $("editStatus").textContent="Crop area selected. Click Apply Crop.";
+ }else{
+  lastRemoveSel={...selection};
+  $("removeBtn").click();   // remove automatically, no extra click
+ }
+});
+
+/* =========================================================
+   TEXT REMOVAL ENGINE
+   Detects only THIN bright strokes (letters) with a top-hat filter, so
+   walls, floors and coloured clothes inside the box stay untouched,
+   then rebuilds the removed pixels from the surrounding colours.
+========================================================= */
+function dilateMask(m,w,h,g){
+ const tmp=new Uint8Array(w*h),out=new Uint8Array(w*h),pre=new Int32Array(Math.max(w,h)+1);
+ for(let y=0;y<h;y++){
+  pre[0]=0;for(let x=0;x<w;x++)pre[x+1]=pre[x]+m[y*w+x];
+  for(let x=0;x<w;x++){const a=Math.max(0,x-g),b=Math.min(w,x+g+1);tmp[y*w+x]=(pre[b]-pre[a])>0?1:0}
+ }
+ for(let x=0;x<w;x++){
+  pre[0]=0;for(let y=0;y<h;y++)pre[y+1]=pre[y]+tmp[y*w+x];
+  for(let y=0;y<h;y++){const a=Math.max(0,y-g),b=Math.min(h,y+g+1);out[y*w+x]=(pre[b]-pre[a])>0?1:0}
+ }
+ return out;
+}
+function slidePass(src,dst,n,stride,lines,lineStep,r,useMax,dq){
+ for(let l=0;l<lines;l++){
+  const base=l*lineStep;let head=0,tail=0,nxt=0;
+  for(let i=0;i<n;i++){
+   const hi=Math.min(n-1,i+r);
+   while(nxt<=hi){
+    const v=src[base+nxt*stride];
+    if(useMax){while(tail>head&&src[base+dq[tail-1]*stride]<=v)tail--}
+    else{while(tail>head&&src[base+dq[tail-1]*stride]>=v)tail--}
+    dq[tail++]=nxt;nxt++;
+   }
+   while(dq[head]<i-r)head++;
+   dst[base+i*stride]=src[base+dq[head]*stride];
+  }
+ }
+}
+function sepFilter(src,w,h,r,useMax){
+ const tmp=new Float32Array(w*h),out=new Float32Array(w*h),dq=new Int32Array(Math.max(w,h)+1);
+ slidePass(src,tmp,w,1,h,w,r,useMax,dq);
+ slidePass(tmp,out,h,w,w,1,r,useMax,dq);
+ return out;
+}
+function detectWhite(d,w,h,t,x0,y0,x1,y1,mr,thk){
+ const N=w*h,lum=new Float32Array(N);
+ for(let p=0;p<N;p++){const i=p*4;lum[p]=d[i]*.299+d[i+1]*.587+d[i+2]*.114}
+ const r=Math.max(1,Math.floor((thk||8)/2));
+ const opened=sepFilter(sepFilter(lum,w,h,r,false),w,h,r,true);
+ const mask=new Uint8Array(N),weak=new Uint8Array(N);let any=false;
+ x0=Math.max(0,x0);y0=Math.max(0,y0);x1=Math.min(w,x1);y1=Math.min(h,y1);
+ for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+  const p=y*w+x,i=p*4,L=lum[p];
+  if(L<t-35)continue;
+  const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);
+  if(mx-mn>85)continue;
+  const th=L-opened[p];
+  if(mx-mn<=70&&L>=t&&th>=25){mask[p]=1;any=true}
+  else if(th>=8)weak[p]=1;
+ }
+ if(!any)return null;
+ const near=dilateMask(mask,w,h,2);
+ for(let p=0;p<N;p++)if(weak[p]&&near[p])mask[p]=1;
+ return mask;
+}
+function inpaintHole(d,w,h,hole,strength){
+ const N=w*h;
+ let hn=0;for(let p=0;p<N;p++)if(hole[p])hn++;
+ if(!hn||hn===N)return;
+ const levels=[null];
+ let cw=(w+1)>>1,ch=(h+1)>>1,val=new Float32Array(cw*ch*3),wt=new Float32Array(cw*ch);
+ for(let y=0;y<h;y++){
+  const qy=(y>>1)*cw;
+  for(let x=0;x<w;x++){
+   const p=y*w+x;
+   if(!hole[p]){const q=qy+(x>>1),i=p*4;wt[q]++;val[q*3]+=d[i];val[q*3+1]+=d[i+1];val[q*3+2]+=d[i+2]}
+  }
+ }
+ levels.push({w:cw,h:ch,val,wt});
+ while(cw>1||ch>1){
+  const nw=(cw+1)>>1,nh=(ch+1)>>1,nv=new Float32Array(nw*nh*3),nwt=new Float32Array(nw*nh);
+  for(let y=0;y<ch;y++){
+   const qy=(y>>1)*nw;
+   for(let x=0;x<cw;x++){
+    const p=y*cw+x,wp=wt[p];
+    if(wp>0){const q=qy+(x>>1);nwt[q]+=wp;nv[q*3]+=val[p*3];nv[q*3+1]+=val[p*3+1];nv[q*3+2]+=val[p*3+2]}
+   }
+  }
+  val=nv;wt=nwt;cw=nw;ch=nh;levels.push({w:cw,h:ch,val,wt});
+ }
+ const top=levels[levels.length-1];
+ let col=new Float32Array([top.val[0]/top.wt[0],top.val[1]/top.wt[0],top.val[2]/top.wt[0]]);
+ for(let k=levels.length-2;k>=1;k--){
+  const L=levels[k],lw=L.w,lh=L.h,pw=levels[k+1].w,ph=levels[k+1].h,full=Math.pow(4,k);
+  const nc=new Float32Array(lw*lh*3);
+  for(let y=0;y<lh;y++){
+   const fy=(y+.5)/2-.5,y0=Math.floor(fy),ty=fy-y0,ya=Math.max(0,Math.min(ph-1,y0)),yb=Math.max(0,Math.min(ph-1,y0+1));
+   for(let x=0;x<lw;x++){
+    const fx=(x+.5)/2-.5,x0=Math.floor(fx),tx=fx-x0,xa=Math.max(0,Math.min(pw-1,x0)),xb=Math.max(0,Math.min(pw-1,x0+1));
+    const p=y*lw+x,wp=L.wt[p],c=wp>0?Math.min(1,wp/full):0;
+    for(let q=0;q<3;q++){
+     const up=(col[(ya*pw+xa)*3+q]*(1-tx)+col[(ya*pw+xb)*3+q]*tx)*(1-ty)+(col[(yb*pw+xa)*3+q]*(1-tx)+col[(yb*pw+xb)*3+q]*tx)*ty;
+     nc[p*3+q]=c>0?(L.val[p*3+q]/wp)*c+up*(1-c):up;
+    }
+   }
+  }
+  col=nc;
+ }
+ const fill=new Float32Array(N*3);
+ {
+  const pw=levels[1].w,ph=levels[1].h;
+  for(let y=0;y<h;y++){
+   const fy=(y+.5)/2-.5,y0=Math.floor(fy),ty=fy-y0,ya=Math.max(0,Math.min(ph-1,y0)),yb=Math.max(0,Math.min(ph-1,y0+1));
+   for(let x=0;x<w;x++){
+    const p=y*w+x;
+    if(!hole[p]){const i=p*4;fill[p*3]=d[i];fill[p*3+1]=d[i+1];fill[p*3+2]=d[i+2];continue}
+    const fx=(x+.5)/2-.5,x0=Math.floor(fx),tx=fx-x0,xa=Math.max(0,Math.min(pw-1,x0)),xb=Math.max(0,Math.min(pw-1,x0+1));
+    for(let q=0;q<3;q++){
+     fill[p*3+q]=(col[(ya*pw+xa)*3+q]*(1-tx)+col[(ya*pw+xb)*3+q]*tx)*(1-ty)+(col[(yb*pw+xa)*3+q]*(1-tx)+col[(yb*pw+xb)*3+q]*tx)*ty;
+    }
+   }
+  }
+ }
+ const idx=new Int32Array(hn);let j0=0;
+ for(let p=0;p<N;p++)if(hole[p])idx[j0++]=p;
+ for(let it=0;it<10;it++){
+  for(let j=0;j<hn;j++){
+   const p=idx[j],x=p%w,y=(p/w)|0;let c=0,a=0,b=0,e=0;
+   if(x>0){const n=(p-1)*3;a+=fill[n];b+=fill[n+1];e+=fill[n+2];c++}
+   if(x<w-1){const n=(p+1)*3;a+=fill[n];b+=fill[n+1];e+=fill[n+2];c++}
+   if(y>0){const n=(p-w)*3;a+=fill[n];b+=fill[n+1];e+=fill[n+2];c++}
+   if(y<h-1){const n=(p+w)*3;a+=fill[n];b+=fill[n+1];e+=fill[n+2];c++}
+   if(c){fill[p*3]=a/c;fill[p*3+1]=b/c;fill[p*3+2]=e/c}
+  }
+ }
+ const lum=new Float32Array(N);
+ for(let p=0;p<N;p++){const i=p*4;lum[p]=d[i]*.299+d[i+1]*.587+d[i+2]*.114}
+ const hist=new Uint32Array(64);let hc=0;
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const p=y*w+x;
+  if(hole[p]||hole[p-1]||hole[p+1]||hole[p-w]||hole[p+w])continue;
+  const hp=Math.abs(lum[p]-(lum[p-1]+lum[p+1]+lum[p-w]+lum[p+w])/4);
+  hist[Math.min(63,Math.round(hp))]++;hc++;
+ }
+ let sigma=0.6;
+ if(hc>50){let acc=0,mi=0;for(;mi<64;mi++){acc+=hist[mi];if(acc>=hc/2)break}sigma=Math.min(6,(mi+.3)/.754)}
+ const amp=sigma*0.85;
+ for(let j=0;j<hn;j++){
+  const p=idx[j],i=p*4;
+  const g=(Math.random()+Math.random()+Math.random()+Math.random()-2)*1.732*amp;
+  for(let q=0;q<3;q++){
+   let v=fill[p*3+q]+g;v=v<0?0:v>255?255:v;
+   d[i+q]=d[i+q]*(1-strength)+v*strength;
+  }
+ }
+}
+
+/* removes the text inside ONE box; returns true when something was removed */
+function removeTextRect(ctx,W,H,rect){
+ if(!rect||rect.w<2||rect.h<2)return false;
+ const k=Math.max(.7,W/1080),power=5;
+ const sens=+$("whiteThreshold").value||200;
+ const strength=clampN((+$("whiteOpacity").value||100)/100,.5,1);
+ const passes=+$("inpaintPasses").value||5;
+ const thk=+$("textThick").value||9;
+ const mg=Math.round((2+power*.4)*k);
+ const rx0=Math.max(0,Math.floor(rect.x)-mg),ry0=Math.max(0,Math.floor(rect.y)-mg);
+ const rx1=Math.min(W,Math.ceil(rect.x+rect.w)+mg),ry1=Math.min(H,Math.ceil(rect.y+rect.h)+mg);
+ if(rx1-rx0<2||ry1-ry0<2)return false;
+ const T0=Math.max(70,sens-power*3);
+ const thick=Math.max(3,Math.round(thk*k));
+ const grow=Math.max(2,Math.round((passes*.5+power*.3)*k));
+ const pad=Math.max(16,grow*4+thick*2),x0=Math.max(0,rx0-pad),y0=Math.max(0,ry0-pad),x1=Math.min(W,rx1+pad),y1=Math.min(H,ry1+pad);
+ const w=x1-x0,h=y1-y0,N=w*h;if(w<2||h<2)return false;
+ const img=ctx.getImageData(x0,y0,w,h),d=img.data;
+ const ix0=rx0-x0,iy0=ry0-y0,ix1=rx1-x0,iy1=ry1-y0,area=Math.max(1,(rx1-rx0)*(ry1-ry0));
+ const inRect=m=>{let c=0;for(let y=iy0;y<iy1;y++)for(let x=ix0;x<ix1;x++)c+=m[y*w+x];return c};
+ const clipM=m=>{for(let y=0;y<h;y++)for(let x=0;x<w;x++){const gx=x+x0,gy=y+y0;if(gx<rx0||gx>=rx1||gy<ry0||gy>=ry1)m[y*w+x]=0}return m};
+ let mask=null;
+ for(let i=0,t=T0;i<6;i++,t+=14){
+  const a=detectWhite(d,w,h,t,ix0,iy0,ix1,iy1,0,thick);
+  const b=detectWhite(d,w,h,t-20,ix0,iy0,ix1,iy1,0,Math.max(2,Math.round(thick*.6)));
+  if(!a&&!b)break;
+  const m=new Uint8Array(N);
+  for(let p=0;p<N;p++)m[p]=(a&&a[p])||(b&&b[p])?1:0;
+  if(inRect(m)/area<=.12){mask=m;break}
+ }
+ if(!mask)return false;
+ inpaintHole(d,w,h,clipM(dilateMask(mask,w,h,grow)),strength);
+ const near=dilateMask(mask,w,h,grow+4);
+ for(let it=0;it<2;it++){
+  const r=detectWhite(d,w,h,T0+10,ix0,iy0,ix1,iy1,0,thick);if(!r)break;
+  const hr=new Uint8Array(N);let c=0;
+  for(let p=0;p<N;p++)if(r[p]&&near[p]){hr[p]=1;c++}
+  if(!c)break;
+  inpaintHole(d,w,h,clipM(dilateMask(hr,w,h,Math.max(1,grow-1))),1);
+ }
+ ctx.putImageData(img,x0,y0);
+ return true;
+}
+
+/* put the untouched image back, then run every box again with the CURRENT slider values */
+function reapplyAll(){
+ if(!originalCanvasData)return;
+ editCtx.putImageData(originalCanvasData,0,0);
+ for(const r of removeOps)removeTextRect(editCtx,editCanvas.width,editCanvas.height,r);
+}
+
+$("removeBtn").addEventListener("click",function(){
+ // clicking it while in crop mode simply switches back to text-removal mode
+ if(selectionMode!=="remove"){
+  selectionMode="remove";selection=null;cropSelection=null;showSelection(null);
+  $("applyCropBtn").disabled=true;
+  $("editStatus").textContent="Remove mode: drag a box around the white text.";
+  return;
+ }
+ if(!selection||selection.w<4||selection.h<4){
+  $("editStatus").textContent="Drag a box around the white text — it is removed automatically.";
+  return;
+ }
+ $("editStatus").textContent="Removing white text…";
+ try{
+  const rect={x:selection.x,y:selection.y,w:selection.w,h:selection.h};
+  const ok=removeTextRect(editCtx,editCanvas.width,editCanvas.height,rect);
+  if(ok){
+   removeOps.push(rect);
+   $("undoBtn").disabled=false;
+   $("editStatus").textContent="Text removed ("+removeOps.length+" box"+(removeOps.length>1?"es":"")+"). Drag another box for more text, or move a slider to fine-tune.";
+  }else{
+   $("editStatus").textContent="No thin white text found in that box. Try a tighter box, lower the sensitivity, or raise the stroke thickness.";
+  }
+  selection=null;showSelection(null);
+ }catch(err){
+  console.error(err);
+  $("editStatus").textContent="Could not remove text from this selection. Try a smaller box.";
+ }
+});
+
+/* every slider under the image re-runs the removal immediately */
+let liveTimer=null;
+function liveReapply(){
+ clearTimeout(liveTimer);
+ liveTimer=setTimeout(()=>{
+  if(!removeOps.length)return;
+  try{
+   reapplyAll();
+   $("editStatus").textContent="Settings applied to "+removeOps.length+" box"+(removeOps.length>1?"es":"")+".";
+  }catch(err){console.error(err)}
+ },70);
+}
+[["whiteThreshold","whiteThresholdValue",""],["textThick","textThickValue",""],["inpaintPasses","inpaintPassValue",""],["whiteOpacity","whiteOpacityValue","%"]].forEach(([id,vid,suffix])=>{
+ $(id).addEventListener("input",function(){
+  $(vid).textContent=this.value+suffix;
+  liveReapply();
+ });
+});
+
 /* =========================================================
    UNDO
 ========================================================= */
-
-$("undoBtn").addEventListener(
-    "click",
-    function(){
-
-        if(undoHistory.length){
-            const previous = undoHistory.pop();
-            if(previous.width === editCanvas.width && previous.height === editCanvas.height){
-                editCtx.putImageData(previous, 0, 0);
-            } else if(originalCanvasData){
-                // Canvas dimensions changed (for example after cropping): fall back safely.
-                editCtx.putImageData(originalCanvasData, 0, 0);
-                undoHistory = [];
-            }
-        } else if(originalCanvasData){
-            editCtx.putImageData(originalCanvasData, 0, 0);
-        } else {
-            return;
-        }
-
-        selection = null;
-        cropSelection = null;
-        showSelection(null);
-        $("undoBtn").disabled = undoHistory.length === 0;
-        $("applyCropBtn").disabled = true;
-        $("editStatus").textContent = undoHistory.length
-            ? "Last text-removal action undone. Earlier edits are preserved."
-            : "Image restored to its saved starting state.";
-
-    }
-);
-
+$("undoBtn").addEventListener("click",function(){
+ if(removeOps.length){removeOps.pop();reapplyAll()}
+ else if(originalCanvasData){editCtx.putImageData(originalCanvasData,0,0)}
+ else return;
+ selection=null;cropSelection=null;showSelection(null);
+ $("undoBtn").disabled=removeOps.length===0;
+ $("applyCropBtn").disabled=true;
+ $("editStatus").textContent=removeOps.length?"Last box undone. Earlier boxes are kept.":"Image restored to its starting state.";
+});
 
 /* =========================================================
-   CROP MODE
+   CROP
 ========================================================= */
-
-$("cropBtn").addEventListener(
-    "click",
-    function(){
-
-        selectionMode = "crop";
-
-        selection = null;
-
-        cropSelection = null;
-
-        showSelection(null);
-
-        $("applyCropBtn").disabled =
-            true;
-
-        $("editStatus").textContent =
-            "Crop mode: drag around the area you want to keep.";
-
-    }
-);
-
-
-/* =========================================================
-   APPLY CROP
-========================================================= */
-
-$("applyCropBtn").addEventListener(
-    "click",
-    function(){
-
-        if(
-            !cropSelection ||
-            cropSelection.w < 4 ||
-            cropSelection.h < 4
-        )
-            return;
-
-        const s =
-            cropSelection;
-
-        const sx =
-            Math.max(
-                0,
-                Math.floor(s.x)
-            );
-
-        const sy =
-            Math.max(
-                0,
-                Math.floor(s.y)
-            );
-
-        const sw =
-            Math.min(
-                editCanvas.width-sx,
-                Math.floor(s.w)
-            );
-
-        const sh =
-            Math.min(
-                editCanvas.height-sy,
-                Math.floor(s.h)
-            );
-
-        const temp =
-            document.createElement("canvas");
-
-        temp.width = sw;
-        temp.height = sh;
-
-        const tctx =
-            temp.getContext("2d");
-
-        tctx.drawImage(
-            editCanvas,
-            sx,
-            sy,
-            sw,
-            sh,
-            0,
-            0,
-            sw,
-            sh
-        );
-
-        editCanvas.width = sw;
-        editCanvas.height = sh;
-
-        editCtx.drawImage(
-            temp,
-            0,
-            0
-        );
-
-        originalCanvasData =
-            editCtx.getImageData(
-                0,
-                0,
-                sw,
-                sh
-            );
-        undoHistory = [];
-        $("undoBtn").disabled = true;
-
-        selection = null;
-        cropSelection = null;
-
-        selectionMode = "remove";
-
-        showSelection(null);
-
-        $("applyCropBtn").disabled =
-            true;
-
-        $("undoBtn").disabled =
-            false;
-
-        $("editStatus").textContent =
-            "Crop applied.";
-
-    }
-);
-
+$("cropBtn").addEventListener("click",function(){
+ selectionMode="crop";selection=null;cropSelection=null;showSelection(null);
+ $("applyCropBtn").disabled=true;
+ $("editStatus").textContent="Crop mode: drag around the area you want to keep. (Click Remove White Text to go back to text removal.)";
+});
+$("applyCropBtn").addEventListener("click",function(){
+ if(!cropSelection||cropSelection.w<4||cropSelection.h<4)return;
+ const s=cropSelection;
+ const sx=Math.max(0,Math.floor(s.x)),sy=Math.max(0,Math.floor(s.y));
+ const sw=Math.min(editCanvas.width-sx,Math.floor(s.w)),sh=Math.min(editCanvas.height-sy,Math.floor(s.h));
+ const temp=document.createElement("canvas");temp.width=sw;temp.height=sh;
+ temp.getContext("2d").drawImage(editCanvas,sx,sy,sw,sh,0,0,sw,sh);
+ editCanvas.width=sw;editCanvas.height=sh;
+ editCtx.drawImage(temp,0,0);
+ originalCanvasData=editCtx.getImageData(0,0,sw,sh);
+ removeOps=[];
+ selection=null;cropSelection=null;selectionMode="remove";showSelection(null);
+ $("applyCropBtn").disabled=true;$("undoBtn").disabled=true;
+ $("editStatus").textContent="Crop applied. Drag a box around the white text to remove it.";
+});
 
 /* =========================================================
    SAVE CURRENT CLEAN IMAGE
 ========================================================= */
-
 function canvasToBlob(canvas,type="image/png"){
-
-    return new Promise(
-        (resolve,reject)=>{
-
-            canvas.toBlob(
-                blob=>{
-
-                    if(blob)
-                        resolve(blob);
-                    else
-                        reject(
-                            new Error(
-                                "Could not create image."
-                            )
-                        );
-
-                },
-                type,
-                .95
-            );
-
-        }
-    );
-
+ return new Promise((resolve,reject)=>{
+  canvas.toBlob(blob=>{blob?resolve(blob):reject(new Error("Could not create image."))},type,.95);
+ });
 }
-
-
 async function saveCurrentWithoutAdvance(){
-
-    if(!imageFiles.length)
-        return null;
-
-    const file =
-        imageFiles[currentEditIndex];
-
-    const blob =
-        await canvasToBlob(
-            editCanvas,
-            "image/png"
-        );
-
-    /*
-      Preserve the original filename.
-      Only the extension changes to PNG if needed.
-      The base name remains exactly the same.
-    */
-
-    const originalName =
-        file.name;
-
-    const dot =
-        originalName.lastIndexOf(".");
-
-    const baseName =
-        dot > 0
-            ? originalName.slice(0,dot)
-            : originalName;
-
-    const outputName =
-        baseName + ".png";
-
-    const item = {
-
-        index:currentEditIndex,
-
-        originalName:originalName,
-
-        outputName:outputName,
-
-        blob:blob
-
-    };
-
-    const existing =
-        cleanedImages.findIndex(
-            x =>
-                x.index === currentEditIndex
-        );
-
-    if(existing >= 0)
-        cleanedImages[existing] = item;
-    else
-        cleanedImages.push(item);
-
-    cleanedImages.sort(
-        (a,b)=>a.index-b.index
-    );
-
-    $("goGeoBtn").disabled =
-        false;
-
-    return item;
-
+ if(!imageFiles.length)return null;
+ const file=imageFiles[currentEditIndex];
+ const blob=await canvasToBlob(editCanvas,"image/png");
+ const originalName=file.name,dot=originalName.lastIndexOf(".");
+ const baseName=dot>0?originalName.slice(0,dot):originalName;
+ const item={index:currentEditIndex,originalName,outputName:baseName+".png",blob};
+ const existing=cleanedImages.findIndex(x=>x.index===currentEditIndex);
+ if(existing>=0)cleanedImages[existing]=item;else cleanedImages.push(item);
+ cleanedImages.sort((a,b)=>a.index-b.index);
+ $("goGeoBtn").disabled=false;
+ return item;
 }
 
-
-/* =========================================================
-   SAVE & NEXT
-========================================================= */
-
-$("saveNextBtn").addEventListener(
-    "click",
-    async function(){
-
-        if(!imageFiles.length)
-            return;
-
-        const btn =
-            $("saveNextBtn");
-
-        btn.disabled = true;
-
-        btn.textContent =
-            "Saving…";
-
-        try{
-
-            await saveCurrentWithoutAdvance();
-
-            if(
-                currentEditIndex <
-                imageFiles.length-1
-            ){
-
-                currentEditIndex++;
-
-                await loadCurrentEditImage();
-
-                $("editStatus").textContent =
-                    "Saved. Now processing " +
-                    imageFiles[currentEditIndex].name;
-
-            }else{
-
-                $("editStatus").textContent =
-                    `All ${cleanedImages.length} images saved.`;
-
-                $("goGeoBtn").disabled =
-                    false;
-
-            }
-
-        }catch(err){
-
-            console.error(err);
-
-            $("editStatus").textContent =
-                "Could not save this image.";
-
-        }finally{
-
-            btn.disabled = false;
-
-            btn.textContent =
-                "💾 Save & Next";
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   PREVIOUS / NEXT EDIT
-========================================================= */
-
-$("prevEditBtn").addEventListener(
-    "click",
-    async function(){
-
-        if(currentEditIndex <= 0)
-            return;
-
-        try {
-            await saveCurrentWithoutAdvance();
-            currentEditIndex--;
-            await loadCurrentEditImage();
-        } catch (err) {
-            console.error(err);
-            $("editStatus").textContent = "Previous image failed: " + (err.message || err);
-        }
-
-    }
-);
-
-
-$("nextEditBtn").addEventListener(
-    "click",
-    async function(){
-
-        if(
-            currentEditIndex >=
-            imageFiles.length-1
-        )
-            return;
-
-        try {
-            await saveCurrentWithoutAdvance();
-            currentEditIndex++;
-            await loadCurrentEditImage();
-        } catch (err) {
-            console.error(err);
-            $("editStatus").textContent = "Next image failed: " + (err.message || err);
-        }
-
-    }
-);
-
-
-/* =========================================================
-   WHITE REMOVAL SLIDERS
-========================================================= */
-
-$("whiteOpacity").addEventListener(
-    "input",
-    function(){
-
-        $("whiteOpacityValue").textContent =
-            this.value + "%";
-
-    }
-);
-
-
-$("whiteThreshold").addEventListener(
-    "input",
-    function(){
-
-        $("whiteThresholdValue").textContent =
-            this.value;
-
-    }
-);
-
-$("inpaintPasses").addEventListener("input", function(){
-    $("inpaintPassValue").textContent = this.value;
+$("saveNextBtn").addEventListener("click",async function(){
+ if(!imageFiles.length)return;
+ const btn=$("saveNextBtn");btn.disabled=true;btn.textContent="Saving…";
+ try{
+  await saveCurrentWithoutAdvance();
+  if(currentEditIndex<imageFiles.length-1){
+   currentEditIndex++;
+   await loadCurrentEditImage();
+   $("editStatus").textContent="Saved. Now processing "+imageFiles[currentEditIndex].name;
+  }else{
+   $("editStatus").textContent=`All ${cleanedImages.length} images saved.`;
+   $("goGeoBtn").disabled=false;
+  }
+ }catch(err){
+  console.error(err);
+  $("editStatus").textContent="Could not save this image.";
+ }finally{
+  btn.disabled=false;btn.textContent="💾 Save & Next";
+ }
 });
 
+$("prevEditBtn").addEventListener("click",async function(){
+ if(currentEditIndex<=0)return;
+ try{await saveCurrentWithoutAdvance();currentEditIndex--;await loadCurrentEditImage()}
+ catch(err){console.error(err);$("editStatus").textContent="Previous image failed: "+(err.message||err)}
+});
+$("nextEditBtn").addEventListener("click",async function(){
+ if(currentEditIndex>=imageFiles.length-1)return;
+ try{await saveCurrentWithoutAdvance();currentEditIndex++;await loadCurrentEditImage()}
+ catch(err){console.error(err);$("editStatus").textContent="Next image failed: "+(err.message||err)}
+});
 
 /* =========================================================
    GEO VARIABLES
 ========================================================= */
+const gCanvas=$("gCanvas"),gCtx=gCanvas.getContext("2d");
+let geoIndex=0,geoImages=[],gLat=null,gLon=null,geoTok=0;
 
-const gCanvas =
-    $("gCanvas");
+const stateNames=["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh","Andaman and Nicobar Islands","Dadra and Nagar Haveli and Daman and Diu","Lakshadweep"];
+stateNames.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;$("gState").appendChild(o)});
+$("gState").value="Jammu and Kashmir";
+$("gPlace").value="Beerwah";
+$("gAddress").value="Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India";
 
-const gCtx =
-    gCanvas.getContext("2d");
-
-let geoIndex = 0;
-
-let geoImages = [];
-
-let gLat = null;
-let gLon = null;
-
-
-/* =========================================================
-   STATE LIST
-========================================================= */
-
-const stateNames = [
-
-    "Andhra Pradesh",
-    "Arunachal Pradesh",
-    "Assam",
-    "Bihar",
-    "Chhattisgarh",
-    "Goa",
-    "Gujarat",
-    "Haryana",
-    "Himachal Pradesh",
-    "Jharkhand",
-    "Karnataka",
-    "Kerala",
-    "Madhya Pradesh",
-    "Maharashtra",
-    "Manipur",
-    "Meghalaya",
-    "Mizoram",
-    "Nagaland",
-    "Odisha",
-    "Punjab",
-    "Rajasthan",
-    "Sikkim",
-    "Tamil Nadu",
-    "Telangana",
-    "Tripura",
-    "Uttar Pradesh",
-    "Uttarakhand",
-    "West Bengal",
-    "Delhi",
-    "Jammu and Kashmir",
-    "Ladakh",
-    "Puducherry",
-    "Chandigarh",
-    "Andaman and Nicobar Islands",
-    "Dadra and Nagar Haveli and Daman and Diu",
-    "Lakshadweep"
-
-];
-
-
-stateNames.forEach(
-    state=>{
-
-        const option =
-            document.createElement("option");
-
-        option.value = state;
-        option.textContent = state;
-
-        $("gState").appendChild(
-            option
-        );
-
-    }
-);
-
-
-$("gState").value =
-    "Jammu and Kashmir";
-
-
-/* =========================================================
-   DEFAULT LOCATION
-========================================================= */
-
-$("gPlace").value =
-    "Beerwah";
-
-$("gAddress").value =
-    "Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India";
-
-
-/* =========================================================
-   GEO SETTINGS
-========================================================= */
-
-const GEO = {
-
-    opacity:85,
-
-    mapOpacity:100,
-
-    height:25,
-
-    mapWidth:29,
-
-    mapZoom:16,
-
-    titleSize:100,
-
-    detailsSize:100,
-
-    logoX:88,
-
-    logoY:78,
-
-    logoSize:70
-
-};
-
-
-/* =========================================================
-   CURRENT DATE/TIME
-========================================================= */
+const GEO={opacity:85,mapOpacity:100,height:25,mapWidth:29,mapZoom:16,titleSize:100,detailsSize:100,logoX:88,logoY:78,logoSize:70};
 
 function setCurrentDateTime(){
-
-    const now =
-        new Date();
-
-    $("gDate").value =
-        now.getFullYear() +
-        "-" +
-        String(
-            now.getMonth()+1
-        ).padStart(2,"0") +
-        "-" +
-        String(
-            now.getDate()
-        ).padStart(2,"0");
-
-    $("gTime").value =
-        String(
-            now.getHours()
-        ).padStart(2,"0") +
-        ":" +
-        String(
-            now.getMinutes()
-        ).padStart(2,"0");
-
+ const now=new Date();
+ $("gDate").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+ $("gTime").value=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
 }
-
 setCurrentDateTime();
 
-
-/* =========================================================
-   CONVERT BLOB TO IMAGE
-========================================================= */
-
 function blobToImage(blob){
-
-    return new Promise(
-        (resolve,reject)=>{
-
-            const url =
-                URL.createObjectURL(blob);
-
-            const image =
-                new Image();
-
-            image.onload =
-                function(){
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-                    resolve(image);
-
-                };
-
-            image.onerror =
-                function(){
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-                    reject(
-                        new Error(
-                            "Could not load saved image."
-                        )
-                    );
-
-                };
-
-            image.src = url;
-
-        }
-    );
-
+ return new Promise((resolve,reject)=>{
+  const url=URL.createObjectURL(blob),image=new Image();
+  image.onload=()=>{URL.revokeObjectURL(url);resolve(image)};
+  image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Could not load saved image."))};
+  image.src=url;
+ });
 }
-
 
 /* =========================================================
    OPEN GEOTAG PAGE
+   (every image you did not press Save & Next on is cleaned automatically with the same text boxes)
 ========================================================= */
-
-/* Every image you did not press Save & Next on is cleaned automatically with the same text box, then saved. */
 async function saveAllRemaining(){
  const keep=currentEditIndex,btn=$("goGeoBtn"),old=btn.textContent;let did=false;
  try{
@@ -2416,7 +744,8 @@ async function saveAllRemaining(){
    did=true;btn.textContent="Preparing "+(i+1)+"/"+imageFiles.length+"…";
    currentEditIndex=i;await loadCurrentEditImage();
    if(lastRemoveSel){
-    const W=editCanvas.width,H=editCanvas.height,sx=Math.max(0,Math.min(lastRemoveSel.x,W-4)),sy=Math.max(0,Math.min(lastRemoveSel.y,H-4));
+    const W=editCanvas.width,H=editCanvas.height;
+    const sx=Math.max(0,Math.min(lastRemoveSel.x,W-4)),sy=Math.max(0,Math.min(lastRemoveSel.y,H-4));
     selection={x:sx,y:sy,w:Math.min(lastRemoveSel.w,W-sx),h:Math.min(lastRemoveSel.h,H-sy)};
     selectionMode="remove";$("removeBtn").click();
    }
@@ -2425,464 +754,93 @@ async function saveAllRemaining(){
  }catch(err){console.error(err)}
  finally{btn.textContent=old;if(did){currentEditIndex=keep;try{await loadCurrentEditImage()}catch(e){}}}
 }
-$("goGeoBtn").addEventListener(
-    "click",
-    async function(){
 
-        /*
-          Save current image first.
-        */
+$("goGeoBtn").addEventListener("click",async function(){
+ try{await saveCurrentWithoutAdvance()}catch(err){console.error(err)}
+ await saveAllRemaining();
+ geoImages=cleanedImages.slice().sort((a,b)=>a.index-b.index);
+ if(!geoImages.length){alert("Please save at least one cleaned image first.");return}
+ geoIndex=0;
+ $("removePage").style.display="none";
+ $("geoPage").style.display="block";
+ $("stepOne").style.background="#e5e7eb";$("stepOne").style.color="#555";
+ $("stepTwo").style.background="#1769e0";$("stepTwo").style.color="#fff";
+ await loadGeoImage();
+});
 
-        try{
-
-            await saveCurrentWithoutAdvance();
-
-        }catch(err){
-
-            console.error(err);
-
-        }
-await saveAllRemaining();
-
-        geoImages =
-            cleanedImages
-            .slice()
-            .sort(
-                (a,b)=>a.index-b.index
-            );
-
-        if(!geoImages.length){
-
-            alert(
-                "Please save at least one cleaned image first."
-            );
-
-            return;
-
-        }
-
-        geoIndex = 0;
-
-        $("removePage").style.display =
-            "none";
-
-        $("geoPage").style.display =
-            "block";
-
-        $("stepOne").style.background =
-            "#e5e7eb";
-
-        $("stepOne").style.color =
-            "#555";
-
-        $("stepTwo").style.background =
-            "#1769e0";
-
-        $("stepTwo").style.color =
-            "#fff";
-
-        await loadGeoImage();
-
-    }
-);
-
-
-/* =========================================================
-   LOAD GEO IMAGE
-========================================================= */
-
+/* draw the saved clean image onto the geo canvas, then the stamp (a newer redraw cancels an older one) */
 async function loadGeoImage(){
-
-    if(!geoImages.length)
-        return;
-
-    const item =
-        geoImages[geoIndex];
-
-    $("geoCounter").textContent =
-        `Image ${geoIndex+1} of ${geoImages.length} — ${item.originalName}`;
-
-    try{
-
-        const image =
-            await blobToImage(
-                item.blob
-            );
-
-        const maxWidth =
-            1800;
-
-        const scale =
-            Math.min(
-                1,
-                maxWidth /
-                image.naturalWidth
-            );
-
-        const W =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalWidth*scale
-                )
-            );
-
-        const H =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalHeight*scale
-                )
-            );
-
-        gCanvas.width = W;
-        gCanvas.height = H;
-
-        gCtx.setTransform(
-            1,0,0,1,0,0
-        );
-
-        gCtx.clearRect(
-            0,
-            0,
-            W,
-            H
-        );
-
-        gCtx.drawImage(
-            image,
-            0,
-            0,
-            W,
-            H
-        );
-
-        $("gPrev").disabled =
-            geoIndex <= 0;
-
-        await drawGeo();
-
-    }catch(err){
-
-        console.error(err);
-
-        $("gStatus").textContent =
-            "Could not display this saved image.";
-
-    }
-
+ if(!geoImages.length)return;
+ const item=geoImages[geoIndex];
+ $("geoCounter").textContent=`Image ${geoIndex+1} of ${geoImages.length} — ${item.originalName}`;
+ try{
+  await redrawGeoFromSaved();
+  $("gPrev").disabled=geoIndex<=0;
+ }catch(err){
+  console.error(err);
+  $("gStatus").textContent="Could not display this saved image.";
+ }
+}
+async function redrawGeoFromSaved(){
+ if(!geoImages.length)return;
+ const tok=++geoTok,item=geoImages[geoIndex];
+ try{
+  const image=await blobToImage(item.blob);
+  if(tok!==geoTok)return;
+  const scale=Math.min(1,1800/image.naturalWidth);
+  const W=Math.max(1,Math.round(image.naturalWidth*scale)),H=Math.max(1,Math.round(image.naturalHeight*scale));
+  gCanvas.width=W;gCanvas.height=H;
+  gCtx.setTransform(1,0,0,1,0,0);
+  gCtx.clearRect(0,0,W,H);
+  gCtx.drawImage(image,0,0,W,H);
+  await drawGeo(tok);
+ }catch(err){console.error(err)}
 }
 
-
 /* =========================================================
-   TEXT WRAPPING
+   TEXT / DATE HELPERS
 ========================================================= */
-
-function wrapGeoText(
-    text,
-    maxWidth,
-    font,
-    maxLines
-){
-
-    gCtx.font = font;
-
-    const words =
-        String(text || "")
-        .trim()
-        .split(/\s+/);
-
-    const lines = [];
-
-    let line = "";
-
-    for(
-        const word of words
-    ){
-
-        const test =
-            line
-                ? line + " " + word
-                : word;
-
-        if(
-            gCtx.measureText(test).width >
-            maxWidth &&
-            line
-        ){
-
-            lines.push(line);
-
-            line = word;
-
-            if(
-                lines.length >=
-                maxLines
-            )
-                break;
-
-        }else{
-
-            line = test;
-
-        }
-
-    }
-
-    if(
-        line &&
-        lines.length < maxLines
-    ){
-
-        lines.push(line);
-
-    }
-
-    return lines;
-
+function wrapGeoText(text,maxWidth,font,maxLines){
+ gCtx.font=font;
+ const words=String(text||"").trim().split(/\s+/),lines=[];let line="";
+ for(const word of words){
+  const test=line?line+" "+word:word;
+  if(gCtx.measureText(test).width>maxWidth&&line){
+   lines.push(line);line=word;
+   if(lines.length>=maxLines)break;
+  }else line=test;
+ }
+ if(line&&lines.length<maxLines)lines.push(line);
+ return lines;
+}
+function formatDate(v){
+ if(!v)return "Date";
+ const p=v.split("-");
+ return p.length!==3?v:p[2]+"/"+p[1]+"/"+p[0];
+}
+function formatTime(v){
+ if(!v)return "Time";
+ const p=v.split(":");let h=Number(p[0]);const m=p[1]||"00";
+ const suffix=h>=12?"PM":"AM";h=h%12||12;
+ return String(h).padStart(2,"0")+":"+m+" "+suffix;
 }
 
-
 /* =========================================================
-   DATE FORMAT
+   MAP
 ========================================================= */
-
-function formatDate(value){
-
-    if(!value)
-        return "Date";
-
-    const p =
-        value.split("-");
-
-    if(p.length !== 3)
-        return value;
-
-    return (
-        p[2] +
-        "/" +
-        p[1] +
-        "/" +
-        p[0]
-    );
-
+function drawFallbackMap(x,y,w,h){
+ gCtx.save();gCtx.beginPath();gCtx.rect(x,y,w,h);gCtx.clip();
+ gCtx.fillStyle="#d7dcde";gCtx.fillRect(x,y,w,h);
+ gCtx.strokeStyle="rgba(100,110,115,.30)";gCtx.lineWidth=Math.max(2,w*.006);
+ for(let i=-h;i<w+h;i+=Math.max(30,w*.14)){gCtx.beginPath();gCtx.moveTo(x+i,y);gCtx.lineTo(x+i+h,y+h);gCtx.stroke()}
+ for(let i=0;i<h;i+=Math.max(30,h*.17)){gCtx.beginPath();gCtx.moveTo(x,y+i);gCtx.lineTo(x+w,y+i+h*.12);gCtx.stroke()}
+ const px=x+w/2,py=y+h/2,r=Math.max(7,h*.065);
+ gCtx.fillStyle="#e53935";gCtx.beginPath();gCtx.arc(px,py,r,0,Math.PI*2);gCtx.fill();
+ gCtx.beginPath();gCtx.moveTo(px-r*.7,py+r*.3);gCtx.lineTo(px,py+r*1.8);gCtx.lineTo(px+r*.7,py+r*.3);gCtx.closePath();gCtx.fill();
+ gCtx.fillStyle="#fff";gCtx.beginPath();gCtx.arc(px,py,r*.38,0,Math.PI*2);gCtx.fill();
+ gCtx.restore();
 }
 
-
-/* =========================================================
-   TIME FORMAT
-========================================================= */
-
-function formatTime(value){
-
-    if(!value)
-        return "Time";
-
-    const p =
-        value.split(":");
-
-    let h =
-        Number(p[0]);
-
-    const m =
-        p[1] || "00";
-
-    const suffix =
-        h >= 12
-            ? "PM"
-            : "AM";
-
-    h =
-        h % 12 || 12;
-
-    return (
-        String(h).padStart(2,"0") +
-        ":" +
-        m +
-        " " +
-        suffix
-    );
-
-}
-
-
-/* =========================================================
-   DRAW FALLBACK MAP
-========================================================= */
-
-function drawFallbackMap(
-    x,
-    y,
-    w,
-    h
-){
-
-    gCtx.save();
-
-    gCtx.beginPath();
-
-    gCtx.rect(
-        x,
-        y,
-        w,
-        h
-    );
-
-    gCtx.clip();
-
-    gCtx.fillStyle =
-        "#d7dcde";
-
-    gCtx.fillRect(
-        x,
-        y,
-        w,
-        h
-    );
-
-
-    /*
-      Map-like roads.
-    */
-
-    gCtx.strokeStyle =
-        "rgba(100,110,115,.30)";
-
-    gCtx.lineWidth =
-        Math.max(
-            2,
-            w*.006
-        );
-
-    for(
-        let i=-h;
-        i<w+h;
-        i+=Math.max(
-            30,
-            w*.14
-        )
-    ){
-
-        gCtx.beginPath();
-
-        gCtx.moveTo(
-            x+i,
-            y
-        );
-
-        gCtx.lineTo(
-            x+i+h,
-            y+h
-        );
-
-        gCtx.stroke();
-
-    }
-
-
-    for(
-        let i=0;
-        i<h;
-        i+=Math.max(
-            30,
-            h*.17
-        )
-    ){
-
-        gCtx.beginPath();
-
-        gCtx.moveTo(
-            x,
-            y+i
-        );
-
-        gCtx.lineTo(
-            x+w,
-            y+i+h*.12
-        );
-
-        gCtx.stroke();
-
-    }
-
-
-    /*
-      Location marker.
-    */
-
-    const px =
-        x+w/2;
-
-    const py =
-        y+h/2;
-
-    const r =
-        Math.max(
-            7,
-            h*.065
-        );
-
-    gCtx.fillStyle =
-        "#e53935";
-
-    gCtx.beginPath();
-
-    gCtx.arc(
-        px,
-        py,
-        r,
-        0,
-        Math.PI*2
-    );
-
-    gCtx.fill();
-
-    gCtx.beginPath();
-
-    gCtx.moveTo(
-        px-r*.7,
-        py+r*.3
-    );
-
-    gCtx.lineTo(
-        px,
-        py+r*1.8
-    );
-
-    gCtx.lineTo(
-        px+r*.7,
-        py+r*.3
-    );
-
-    gCtx.closePath();
-
-    gCtx.fill();
-
-    gCtx.fillStyle =
-        "#fff";
-
-    gCtx.beginPath();
-
-    gCtx.arc(
-        px,
-        py,
-        r*.38,
-        0,
-        Math.PI*2
-    );
-
-    gCtx.fill();
-
-    gCtx.restore();
-
-}
-
-
-/* =========================================================
-   MAP TILE
-========================================================= */
-
-/* Map built the same way as the video tool: tiles centred exactly on the location, red pin, tile-source fallbacks. */
 const tileCache=new Map();
 const MAP_SRC=[
  {name:'© OpenStreetMap contributors',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`},
@@ -2890,14 +848,15 @@ const MAP_SRC=[
  {name:'© Esri',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`}
 ];
 function tileXY(lat,lon,z){
- const n=2**z,x=(lon+180)/360*n,y=(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n;return {x,y,n}
+ const n=2**z,x=(lon+180)/360*n,y=(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n;
+ return{x,y,n};
 }
 function loadTile(src,z,x,y){
  const key=src.url(z,x,y);
  if(tileCache.has(key))return Promise.resolve(tileCache.get(key));
  return new Promise(res=>{
-  const im=new Image();im.crossOrigin='anonymous';let fin=false;
-  const done=v=>{if(fin)return;fin=true;if(v){if(tileCache.size>300)tileCache.clear();tileCache.set(key,v);}res(v);};
+  const im=new Image();im.crossOrigin="anonymous";let fin=false;
+  const done=v=>{if(fin)return;fin=true;if(v){if(tileCache.size>300)tileCache.clear();tileCache.set(key,v)}res(v)};
   im.onload=()=>done(im);im.onerror=()=>done(null);setTimeout(()=>done(null),8000);
   im.src=src.url(z,x,y);
  });
@@ -2905,13 +864,12 @@ function loadTile(src,z,x,y){
 async function makeMapCanvas(la,lo,w,h){
  let cw=Math.round(w*2),ch=Math.round(h*2);
  const big=Math.max(cw,ch);
- if(big>1400){cw=Math.round(cw*1400/big);ch=Math.round(ch*1400/big);}
+ if(big>1400){cw=Math.round(cw*1400/big);ch=Math.round(ch*1400/big)}
  cw=Math.max(160,cw);ch=Math.max(160,ch);
- const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
- const z=Math.max(12,Math.min(18,Math.round(GEO.mapZoom||16))),n=2**z,c=tileXY(la,lo,z);
- const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
- const cc=cv.getContext('2d');
- cc.fillStyle='#e8e8e8';cc.fillRect(0,0,cw,ch);
+ const z=clampN(Math.round(GEO.mapZoom||16),12,18),n=2**z,c=tileXY(la,lo,z);
+ const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+ const cc=cv.getContext("2d");
+ cc.fillStyle="#e8e8e8";cc.fillRect(0,0,cw,ch);
  const x0=Math.floor(c.x-cw/512),x1=Math.floor(c.x+cw/512),y0=Math.floor(c.y-ch/512),y1=Math.floor(c.y+ch/512);
  const pos=[];
  for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++)if(ty>=0&&ty<n)pos.push([tx,ty]);
@@ -2919,1724 +877,327 @@ async function makeMapCanvas(la,lo,w,h){
  for(const s of MAP_SRC){
   const imgs=await Promise.all(pos.map(([tx,ty])=>loadTile(s,z,((tx%n)+n)%n,ty)));
   if(imgs.filter(Boolean).length<Math.max(1,Math.ceil(pos.length*.6)))continue;
-  pos.forEach(([tx,ty],i)=>{if(imgs[i])cc.drawImage(imgs[i],cw/2+(tx-c.x)*256,ch/2+(ty-c.y)*256,256,256);});
+  pos.forEach(([tx,ty],i)=>{if(imgs[i])cc.drawImage(imgs[i],cw/2+(tx-c.x)*256,ch/2+(ty-c.y)*256,256,256)});
   used=s;break;
  }
  if(!used)return null;
- const pr=cl(Math.min(cw,ch)/40,6,14);
- cc.save();cc.fillStyle='#e53935';cc.beginPath();cc.arc(cw/2,ch/2,pr,0,Math.PI*2);cc.fill();
- cc.strokeStyle='#fff';cc.lineWidth=Math.max(2,pr*.3);cc.stroke();cc.restore();
- const t=used.name,fs=cl(Math.min(cw,ch)*.035,9,14);
- cc.font=`600 ${fs}px Arial, sans-serif`;cc.textAlign='right';cc.textBaseline='alphabetic';
+ const pr=clampN(Math.min(cw,ch)/40,6,14);
+ cc.save();cc.fillStyle="#e53935";cc.beginPath();cc.arc(cw/2,ch/2,pr,0,Math.PI*2);cc.fill();
+ cc.strokeStyle="#fff";cc.lineWidth=Math.max(2,pr*.3);cc.stroke();cc.restore();
+ const t=used.name,fs=clampN(Math.min(cw,ch)*.035,9,14);
+ cc.font=`600 ${fs}px Arial, sans-serif`;cc.textAlign="right";cc.textBaseline="alphabetic";
  const tw=cc.measureText(t).width+fs;
- cc.fillStyle='rgba(255,255,255,.75)';cc.fillRect(cw-tw,ch-fs*1.6,tw,fs*1.6);
- cc.fillStyle='#333';cc.fillText(t,cw-fs*.5,ch-fs*.45);
+ cc.fillStyle="rgba(255,255,255,.75)";cc.fillRect(cw-tw,ch-fs*1.6,tw,fs*1.6);
+ cc.fillStyle="#333";cc.fillText(t,cw-fs*.5,ch-fs*.45);
  return cv;
 }
-async function drawMap(x,y,w,h){
- if(gLat===null||gLon===null){drawFallbackMap(x,y,w,h);return;}
- let cv=null;
- try{cv=await makeMapCanvas(gLat,gLon,w,h)}catch(err){console.warn("Map could not be built.",err)}
- if(!cv){drawFallbackMap(x,y,w,h);return;}
- gCtx.save();
- gCtx.beginPath();
- gCtx.rect(x,y,w,h);   // square map corners
- gCtx.clip();
+function paintMap(cv,x,y,w,h){
+ if(!cv){drawFallbackMap(x,y,w,h);return}
+ gCtx.save();gCtx.beginPath();gCtx.rect(x,y,w,h);gCtx.clip();   // square map corners
  gCtx.globalAlpha=GEO.mapOpacity/100;
  const ms=Math.max(w/cv.width,h/cv.height),dw=cv.width*ms,dh=cv.height*ms;
  gCtx.drawImage(cv,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
- gCtx.globalAlpha=1;
- gCtx.restore();
+ gCtx.globalAlpha=1;gCtx.restore();
 }
 
 /* =========================================================
    CAMERA LOGO
 ========================================================= */
-
-function drawCameraLogo(
-    W,
-    H,
-    stampY,
-    stampHeight
-){
-
-    const size =
-        Math.max(
-            30,
-            Math.min(
-                stampHeight*.60,
-                130
-            ) *
-            GEO.logoSize /
-            70
-        );
-
-
-    /*
-      Position is percentage of image.
-    */
-
-    let x =
-        W *
-        GEO.logoX /
-        100;
-
-    let y =
-        stampY +
-        stampHeight *
-        GEO.logoY /
-        100;
-
-
-    /*
-      Keep logo inside stamp.
-    */
-
-    x =
-        Math.max(
-            0,
-            Math.min(
-                W-size-8,
-                x
-            )
-        );
-
-    y =
-        Math.max(
-            stampY+5,
-            Math.min(
-                stampY+stampHeight-size-5,
-                y
-            )
-        );
-
-
-    const radius =
-        size*.17;
-
-
-    gCtx.save();
-
-    /*
-      Blue rounded square.
-    */
-
-    gCtx.beginPath();
-
-    gCtx.roundRect(
-        x,
-        y,
-        size,
-        size,
-        radius
-    );
-
-    gCtx.fillStyle =
-        "#1595d0";
-
-    gCtx.fill();
-
-
-    /*
-      Camera body.
-    */
-
-    const bx =
-        x+size*.18;
-
-    const by =
-        y+size*.31;
-
-    const bw =
-        size*.64;
-
-    const bh =
-        size*.40;
-
-    gCtx.fillStyle =
-        "#fff";
-
-    gCtx.beginPath();
-
-    gCtx.roundRect(
-        bx,
-        by,
-        bw,
-        bh,
-        size*.06
-    );
-
-    gCtx.fill();
-
-
-    /*
-      Camera top.
-    */
-
-    gCtx.beginPath();
-
-    gCtx.moveTo(
-        bx+size*.10,
-        by
-    );
-
-    gCtx.lineTo(
-        bx+size*.19,
-        by-size*.08
-    );
-
-    gCtx.lineTo(
-        bx+size*.34,
-        by-size*.08
-    );
-
-    gCtx.lineTo(
-        bx+size*.40,
-        by
-    );
-
-    gCtx.closePath();
-
-    gCtx.fill();
-
-
-    /*
-      Lens.
-    */
-
-    gCtx.fillStyle =
-        "#1595d0";
-
-    gCtx.beginPath();
-
-    gCtx.arc(
-        x+size*.50,
-        y+size*.51,
-        size*.14,
-        0,
-        Math.PI*2
-    );
-
-    gCtx.fill();
-
-    gCtx.fillStyle =
-        "#fff";
-
-    gCtx.beginPath();
-
-    gCtx.arc(
-        x+size*.50,
-        y+size*.51,
-        size*.07,
-        0,
-        Math.PI*2
-    );
-
-    gCtx.fill();
-
-    gCtx.restore();
-
+function logoGeometry(W,H,stampY,stampHeight){
+ const size=Math.max(30,Math.min(stampHeight*.60,130)*GEO.logoSize/70);
+ let x=W*GEO.logoX/100,y=stampY+stampHeight*GEO.logoY/100;
+ x=Math.max(0,Math.min(W-size-8,x));
+ y=Math.max(stampY+5,Math.min(stampY+stampHeight-size-5,y));
+ return{size,x,y};
 }
-
+function drawCameraLogo(W,H,stampY,stampHeight){
+ const {size,x,y}=logoGeometry(W,H,stampY,stampHeight),radius=size*.17;
+ gCtx.save();
+ gCtx.beginPath();gCtx.roundRect(x,y,size,size,radius);gCtx.fillStyle="#1595d0";gCtx.fill();
+ const bx=x+size*.18,by=y+size*.31,bw=size*.64,bh=size*.40;
+ gCtx.fillStyle="#fff";gCtx.beginPath();gCtx.roundRect(bx,by,bw,bh,size*.06);gCtx.fill();
+ gCtx.beginPath();gCtx.moveTo(bx+size*.10,by);gCtx.lineTo(bx+size*.19,by-size*.08);gCtx.lineTo(bx+size*.34,by-size*.08);gCtx.lineTo(bx+size*.40,by);gCtx.closePath();gCtx.fill();
+ gCtx.fillStyle="#1595d0";gCtx.beginPath();gCtx.arc(x+size*.50,y+size*.51,size*.14,0,Math.PI*2);gCtx.fill();
+ gCtx.fillStyle="#fff";gCtx.beginPath();gCtx.arc(x+size*.50,y+size*.51,size*.07,0,Math.PI*2);gCtx.fill();
+ gCtx.restore();
+}
 
 /* =========================================================
    MAIN GEOTAG RENDER
 ========================================================= */
-
-async function drawGeo(){
-
-    if(
-        !gCanvas.width ||
-        !gCanvas.height
-    )
-        return;
-
-    const W =
-        gCanvas.width;
-
-    const H =
-        gCanvas.height;
-
-
-    /*
-      Start with the already saved clean image.
-    */
-
-    /*
-      The current image is already underneath
-      everything because loadGeoImage() drew it.
-    */
-
-
-    /*
-      No coordinates = don't draw stamp.
-    */
-
-    if(
-        gLat === null ||
-        gLon === null
-    )
-        return;
-
-
-    const stampHeight =
-        Math.max(
-            1,
-            Math.min(
-                H,
-                Math.round(
-                    H*GEO.height/100
-                )
-            )
-        );
-
-
-    const stampY =
-        H-stampHeight;
-
-
-    const mapWidth =
-        Math.max(
-            1,
-            Math.min(
-                W,
-                Math.round(
-                    W*GEO.mapWidth/100
-                )
-            )
-        );
-
-
-    const infoWidth =
-        W-mapWidth;
-
-
-    /*
-      Rounded outer GeoTag shape.
-    */
-
-    gCtx.save();
-
-    gCtx.beginPath();
-
-    gCtx.roundRect(
-        0,
-        stampY,
-        W,
-        stampHeight,
-        (()=>{const r=Math.min(22,stampHeight*.14);return [0,r,r,0]})()
-    );
-
-    gCtx.clip();
-
-
-    /*
-      Map.
-    */
-
-    await drawMap(
-        0,
-        stampY,
-        mapWidth,
-        stampHeight
-    );
-
-
-    /*
-      Information background.
-    */
-
-    gCtx.fillStyle =
-        `rgba(0,0,0,${GEO.opacity/100})`;
-
-    gCtx.fillRect(
-        mapWidth,
-        stampY,
-        infoWidth,
-        stampHeight
-    );
-
-
-    const left =
-        mapWidth +
-        Math.max(
-            12,
-            infoWidth*.04
-        );
-
-
-    const right =
-        Math.max(
-            12,
-            infoWidth*.04
-        );
-
-
-    /*
-      Reserve space for logo.
-    */
-
-    const reservedLogo =
-        Math.min(
-            infoWidth*.27,
-            120
-        );
-
-
-    const maxTextWidth =
-        Math.max(
-            60,
-            infoWidth-left+mapWidth-right-reservedLogo
-        );
-
-
-    const titleSize =
-        Math.max(
-            14,
-            Math.round(
-                stampHeight*.135*
-                GEO.titleSize/100
-            )
-        );
-
-
-    const detailSize =
-        Math.max(
-            9,
-            Math.round(
-                titleSize*.58*
-                GEO.detailsSize/100
-            )
-        );
-
-
-    gCtx.textAlign =
-        "left";
-
-    gCtx.textBaseline =
-        "top";
-
-
-    /*
-      TITLE
-    */
-
-    const place =
-        $("gPlace").value.trim();
-
-    const state =
-        $("gState").value.trim();
-
-    const title =
-        place
-            ? `${place}, ${state}`
-            : state;
-
-
-    gCtx.font =
-        `700 ${titleSize}px Arial`;
-
-    gCtx.fillStyle =
-        "#ffffff";
-
-
-    let currentY =
-        stampY +
-        stampHeight*.09;
-
-
-    const titleLines =
-        wrapGeoText(
-            title,
-            maxTextWidth,
-            `700 ${titleSize}px Arial`,
-            2
-        );
-
-
-    for(
-        const line of titleLines
-    ){
-
-        gCtx.fillText(
-            line,
-            left,
-            currentY
-        );
-
-        currentY +=
-            titleSize*1.04;
-
-    }
-
-
-    /*
-      ADDRESS
-    */
-
-    const address =
-        $("gAddress").value.trim();
-
-
-    gCtx.font =
-        `400 ${detailSize}px Arial`;
-
-    gCtx.fillStyle =
-        "rgba(255,255,255,.98)";
-
-
-    const addressLines =
-        wrapGeoText(
-            address ||
-            "Location",
-            maxTextWidth,
-            `400 ${detailSize}px Arial`,
-            3
-        );
-
-
-    currentY +=
-        detailSize*.08;
-
-
-    for(
-        const line of addressLines
-    ){
-
-        gCtx.fillText(
-            line,
-            left,
-            currentY
-        );
-
-        currentY +=
-            detailSize*1.18;
-
-    }
-
-
-    /*
-      COORDINATES
-    */
-
-    currentY +=
-        detailSize*.18;
-
-
-    gCtx.font =
-        `600 ${detailSize}px Arial`;
-
-    gCtx.fillStyle =
-        "#ffffff";
-
-
-    gCtx.fillText(
-        `Lat ${gLat.toFixed(6)}° Long ${gLon.toFixed(6)}°`,
-        left,
-        currentY
-    );
-
-
-    /*
-      DATE / TIME
-    */
-
-    currentY +=
-        detailSize*1.3;
-
-
-    gCtx.font =
-        `400 ${detailSize}px Arial`;
-
-
-    gCtx.fillText(
-        `${formatDate($("gDate").value)} ${formatTime($("gTime").value)}`,
-        left,
-        currentY
-    );
-
-
-    /*
-      BLUE CAMERA LOGO
-    */
-
-    drawCameraLogo(
-        W,
-        H,
-        stampY,
-        stampHeight
-    );
-
-
-    gCtx.restore();
-
+async function drawGeo(tok){
+ const W=gCanvas.width,H=gCanvas.height;
+ if(!W||!H)return;
+ if(gLat===null||gLon===null)return;
+
+ const stampHeight=Math.max(1,Math.min(H,Math.round(H*GEO.height/100)));
+ const stampY=H-stampHeight;
+ const mapWidth=Math.max(1,Math.min(W,Math.round(W*GEO.mapWidth/100)));
+ const infoWidth=W-mapWidth;
+
+ let mapCv=null;
+ try{mapCv=await makeMapCanvas(gLat,gLon,mapWidth,stampHeight)}catch(err){console.warn("Map could not be built.",err)}
+ if(tok!==undefined&&tok!==geoTok)return;   // a newer redraw has started
+
+ gCtx.save();
+ gCtx.beginPath();
+ gCtx.roundRect(0,stampY,W,stampHeight,(()=>{const r=Math.min(22,stampHeight*.14);return[0,r,r,0]})());
+ gCtx.clip();
+
+ paintMap(mapCv,0,stampY,mapWidth,stampHeight);
+
+ gCtx.fillStyle=`rgba(0,0,0,${GEO.opacity/100})`;
+ gCtx.fillRect(mapWidth,stampY,infoWidth,stampHeight);
+
+ const left=mapWidth+Math.max(12,infoWidth*.04);
+ const right=Math.max(12,infoWidth*.04);
+ const reservedLogo=Math.min(infoWidth*.27,120);
+ const maxTextWidth=Math.max(60,infoWidth-left+mapWidth-right-reservedLogo);
+ const titleSize=Math.max(14,Math.round(stampHeight*.135*GEO.titleSize/100));
+ const detailSize=Math.max(9,Math.round(titleSize*.58*GEO.detailsSize/100));
+
+ gCtx.textAlign="left";gCtx.textBaseline="top";
+
+ const place=$("gPlace").value.trim(),state=$("gState").value.trim();
+ const title=place?`${place}, ${state}`:state;
+ gCtx.font=`700 ${titleSize}px Arial`;gCtx.fillStyle="#ffffff";
+ let currentY=stampY+stampHeight*.09;
+ for(const line of wrapGeoText(title,maxTextWidth,`700 ${titleSize}px Arial`,2)){
+  gCtx.fillText(line,left,currentY);currentY+=titleSize*1.04;
+ }
+
+ const address=$("gAddress").value.trim();
+ gCtx.font=`400 ${detailSize}px Arial`;gCtx.fillStyle="rgba(255,255,255,.98)";
+ currentY+=detailSize*.08;
+ for(const line of wrapGeoText(address||"Location",maxTextWidth,`400 ${detailSize}px Arial`,3)){
+  gCtx.fillText(line,left,currentY);currentY+=detailSize*1.18;
+ }
+
+ currentY+=detailSize*.18;
+ gCtx.font=`600 ${detailSize}px Arial`;gCtx.fillStyle="#ffffff";
+ gCtx.fillText(`Lat ${gLat.toFixed(6)}° Long ${gLon.toFixed(6)}°`,left,currentY);
+
+ currentY+=detailSize*1.3;
+ gCtx.font=`400 ${detailSize}px Arial`;
+ gCtx.fillText(`${formatDate($("gDate").value)} ${formatTime($("gTime").value)}`,left,currentY);
+
+ drawCameraLogo(W,H,stampY,stampHeight);
+ gCtx.restore();
 }
 
-
 /* =========================================================
-   GEO SLIDERS
+   GEO SLIDERS / LIVE TEXT  (each change redraws cleanly from the saved image)
 ========================================================= */
-
-function connectSlider(
-    id,
-    property,
-    valueId
-){
-
-    $(id).addEventListener(
-        "input",
-        function(){
-
-            GEO[property] =
-                Number(this.value);
-
-            $(valueId).textContent =
-                this.value+"%";
-
-            drawGeo();
-
-        }
-    );
-
+function connectSlider(id,property,valueId){
+ $(id).addEventListener("input",function(){
+  GEO[property]=Number(this.value);
+  $(valueId).textContent=this.value+"%";
+  redrawGeoFromSaved();
+ });
 }
-
-
-connectSlider(
-    "gOpacity",
-    "opacity",
-    "gOpacityVal"
-);
-
-connectSlider(
-    "gMapOpacity",
-    "mapOpacity",
-    "gMapOpacityVal"
-);
-
-connectSlider(
-    "gHeight",
-    "height",
-    "gHeightVal"
-);
-
-connectSlider(
-    "gMapWidth",
-    "mapWidth",
-    "gMapWidthVal"
-);
-
-connectSlider(
-    "gTitle",
-    "titleSize",
-    "gTitleVal"
-);
-
-connectSlider(
-    "gDetails",
-    "detailsSize",
-    "gDetailsVal"
-);
-
-connectSlider(
-    "gLogoX",
-    "logoX",
-    "gLogoXVal"
-);
-
-connectSlider(
-    "gLogoY",
-    "logoY",
-    "gLogoYVal"
-);
-
-connectSlider(
-    "gLogoSize",
-    "logoSize",
-    "gLogoSizeVal"
-);
-
-
-/* =========================================================
-   LIVE GEO TEXT
-========================================================= */
-
-[
-    "gPlace",
-    "gAddress",
-    "gDate",
-    "gTime"
-].forEach(
-    id=>{
-
-        $(id).addEventListener(
-            "input",
-            function(){
-
-                if(
-                    gLat !== null &&
-                    gLon !== null
-                ){
-
-                    drawGeo();
-
-                }
-
-            }
-        );
-
-    }
-);
-
+connectSlider("gOpacity","opacity","gOpacityVal");
+connectSlider("gMapOpacity","mapOpacity","gMapOpacityVal");
+connectSlider("gHeight","height","gHeightVal");
+connectSlider("gMapWidth","mapWidth","gMapWidthVal");
+connectSlider("gTitle","titleSize","gTitleVal");
+connectSlider("gDetails","detailsSize","gDetailsVal");
+connectSlider("gLogoX","logoX","gLogoXVal");
+connectSlider("gLogoY","logoY","gLogoYVal");
+connectSlider("gLogoSize","logoSize","gLogoSizeVal");
+$("gMapZoom").addEventListener("input",function(){
+ GEO.mapZoom=Number(this.value);
+ $("gMapZoomVal").textContent=this.value;
+ redrawGeoFromSaved();
+});
+["gPlace","gAddress","gDate","gTime"].forEach(id=>{
+ $(id).addEventListener("input",function(){
+  if(gLat!==null&&gLon!==null)redrawGeoFromSaved();
+ });
+});
 
 /* =========================================================
    FIND LOCATION
 ========================================================= */
-
-$("gFind").addEventListener(
-    "click",
-    findLocation
-);
-
-
+$("gFind").addEventListener("click",findLocation);
 async function findLocation(){
-
-    const state =
-        $("gState").value.trim();
-
-    const place =
-        $("gPlace").value.trim();
-
-    const address =
-        $("gAddress").value.trim();
-
-
-    if(!state){
-
-        $("gStatus").textContent =
-            "Select a state.";
-
-        return;
-
-    }
-
-    if(!place){
-
-        $("gStatus").textContent =
-            "Enter a district, town or subdivision.";
-
-        return;
-
-    }
-
-
-    const btn =
-        $("gFind");
-
-    btn.disabled = true;
-
-    btn.textContent =
-        "📍 Finding…";
-
-    $("gStatus").textContent =
-        "Searching OpenStreetMap…";
-
-
-    const queries = [
-
-        [
-            place,
-            state,
-            "India"
-        ].join(", "),
-
-        [
-            address,
-            place,
-            state,
-            "India"
-        ]
-        .filter(Boolean)
-        .join(", ")
-
-    ];
-
-
-    try{
-
-        let found = null;
-
-
-        for(
-            const query of queries
-        ){
-
-            const url =
-                "https://nominatim.openstreetmap.org/search?" +
-                new URLSearchParams({
-
-                    q:query,
-
-                    format:"jsonv2",
-
-                    addressdetails:"1",
-
-                    limit:"5",
-
-                    countrycodes:"in",
-
-                    "accept-language":"en"
-
-                });
-
-
-            try{
-
-                const response =
-                    await fetch(
-                        url,
-                        {
-                            headers:{
-                                "Accept":
-                                    "application/json"
-                            }
-                        }
-                    );
-
-
-                if(!response.ok)
-                    continue;
-
-
-                const results =
-                    await response.json();
-
-
-                if(
-                    !results ||
-                    !results.length
-                )
-                    continue;
-
-
-                found =
-                    results[0];
-
-
-                if(found)
-                    break;
-
-            }catch(err){
-
-                console.warn(
-                    err
-                );
-
-            }
-
-        }
-
-
-        if(!found)
-            throw new Error(
-                "Location not found."
-            );
-
-
-        const lat =
-            Number(found.lat);
-
-        const lon =
-            Number(found.lon);
-
-
-        if(
-            !Number.isFinite(lat) ||
-            !Number.isFinite(lon)
-        )
-            throw new Error(
-                "Invalid coordinates."
-            );
-
-
-        gLat = lat;
-        gLon = lon;
-
-
-        $("gCoords").textContent =
-            `Lat ${lat.toFixed(6)}° Long ${lon.toFixed(6)}°`;
-
-
-        $("gStatus").textContent =
-            "Location found successfully.";
-
-
-        await drawGeo();
-
-    }catch(err){
-
-        console.error(err);
-
-        gLat = null;
-        gLon = null;
-
-        $("gCoords").textContent =
-            "—";
-
-        $("gStatus").textContent =
-            "Location not found. Try a town/district with the state and PIN code.";
-
-    }finally{
-
-        btn.disabled = false;
-
-        btn.textContent =
-            "📍 Find Location";
-
-    }
-
-}
-
-
-/* =========================================================
-   SAVE CURRENT GEOTAG
-========================================================= */
-
-async function saveCurrentGeo(){
-
-    if(!geoImages.length)
-        return;
-
-    const item =
-        geoImages[geoIndex];
-
-    /*
-      PNG preserves the rendered result.
-      Original base filename is retained.
-    */
-
-    const blob =
-        await canvasToBlob(
-            gCanvas,
-            "image/png"
-        );
-
-
-    item.geoBlob =
-        blob;
-
-    /*
-      Preserve original filename.
-    */
-
-    const original =
-        item.originalName;
-
-    const dot =
-        original.lastIndexOf(".");
-
-    const base =
-        dot > 0
-            ? original.slice(0,dot)
-            : original;
-
-    item.geoName =
-        base + ".png";
-
-}
-
-
-/* =========================================================
-   GEO SAVE & NEXT
-========================================================= */
-
-$("gSaveNext").addEventListener(
-    "click",
-    async function(){
-
-        if(!geoImages.length)
-            return;
-
-
-        const btn =
-            $("gSaveNext");
-
-        btn.disabled = true;
-
-        btn.textContent =
-            "Saving…";
-
-
-        try{
-
-            await saveCurrentGeo();
-
-
-            if(
-                geoIndex <
-                geoImages.length-1
-            ){
-
-                geoIndex++;
-
-                /*
-                  Keep same location and visual
-                  settings, but give the next image
-                  its own date/time if desired.
-                */
-
-                await loadGeoImage();
-
-                $("gStatus").textContent =
-                    "Saved. Now edit the next image.";
-
-            }else{
-
-                $("gStatus").textContent =
-                    "All GeoTag images are complete.";
-
-            }
-
-        }catch(err){
-
-            console.error(err);
-
-            $("gStatus").textContent =
-                "Could not save this GeoTag image.";
-
-        }finally{
-
-            btn.disabled = false;
-
-            btn.textContent =
-                "💾 Save & Next";
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   GEO PREVIOUS
-========================================================= */
-
-$("gPrev").addEventListener(
-    "click",
-    async function(){
-
-        if(geoIndex <= 0)
-            return;
-
-        /*
-          Save current first.
-        */
-
-        await saveCurrentGeo();
-
-        geoIndex--;
-
-        await loadGeoImage();
-
-    }
-);
-
-
-/* =========================================================
-   BACK TO WHITE REMOVER
-========================================================= */
-
-$("gBack").addEventListener(
-    "click",
-    function(){
-
-        $("geoPage").style.display =
-            "none";
-
-        $("removePage").style.display =
-            "block";
-
-        $("stepOne").style.background =
-            "#1769e0";
-
-        $("stepOne").style.color =
-            "#fff";
-
-        $("stepTwo").style.background =
-            "#e5e7eb";
-
-        $("stepTwo").style.color =
-            "#555";
-
-    }
-);
-
-
-/* =========================================================
-   DOWNLOAD ALL ZIP
-========================================================= */
-
-$("gDownloadAll").addEventListener(
-    "click",
-    async function(){
-
-        /*
-          Save current image before making ZIP.
-        */
-
-        if(geoImages.length){
-
-            await saveCurrentGeo();
-
-        }
-/* Also render every GeoTag image you did not press Save & Next on, using the current settings. */
-if(geoImages.length){
- const keepGeo=geoIndex,zb=$("gDownloadAll"),zt=zb.textContent;
+ const state=$("gState").value.trim(),place=$("gPlace").value.trim(),address=$("gAddress").value.trim();
+ if(!state){$("gStatus").textContent="Select a state.";return}
+ if(!place){$("gStatus").textContent="Enter a district, town or subdivision.";return}
+ const btn=$("gFind");btn.disabled=true;btn.textContent="📍 Finding…";
+ $("gStatus").textContent="Searching OpenStreetMap…";
+ const queries=[
+  [place,state,"India"].join(", "),
+  [address,place,state,"India"].filter(Boolean).join(", ")
+ ];
  try{
-  for(let i=0;i<geoImages.length;i++){
-   if(geoImages[i].geoBlob)continue;
-   zb.textContent="Rendering "+(i+1)+"/"+geoImages.length+"…";
-   geoIndex=i;await loadGeoImage();await saveCurrentGeo();
+  let found=null;
+  for(const query of queries){
+   const url="https://nominatim.openstreetmap.org/search?"+new URLSearchParams({q:query,format:"jsonv2",addressdetails:"1",limit:"5",countrycodes:"in","accept-language":"en"});
+   try{
+    const response=await fetch(url,{headers:{"Accept":"application/json"}});
+    if(!response.ok)continue;
+    const results=await response.json();
+    if(!results||!results.length)continue;
+    found=results[0];
+    if(found)break;
+   }catch(err){console.warn(err)}
   }
- }catch(err){console.error(err)}
- geoIndex=keepGeo;zb.textContent=zt;try{await loadGeoImage()}catch(e){}
+  if(!found)throw new Error("Location not found.");
+  const lat=Number(found.lat),lon=Number(found.lon);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon))throw new Error("Invalid coordinates.");
+  gLat=lat;gLon=lon;
+  $("gCoords").textContent=`Lat ${lat.toFixed(6)}° Long ${lon.toFixed(6)}°`;
+  $("gStatus").textContent="Location found successfully.";
+  await redrawGeoFromSaved();
+ }catch(err){
+  console.error(err);
+  gLat=null;gLon=null;
+  $("gCoords").textContent="—";
+  $("gStatus").textContent="Location not found. Try a town/district with the state and PIN code.";
+ }finally{
+  btn.disabled=false;btn.textContent="📍 Find Location";
+ }
 }
 
-
-        const completed =
-            geoImages.filter(
-                item =>
-                    item.geoBlob
-            );
-
-
-        if(!completed.length){
-
-            alert(
-                "No completed GeoTag images yet."
-            );
-
-            return;
-
-        }
-
-
-        if(
-            typeof JSZip ===
-            "undefined"
-        ){
-
-            alert(
-                "ZIP library could not load. Check your internet connection and reload the page."
-            );
-
-            return;
-
-        }
-
-
-        const btn =
-            $("gDownloadAll");
-
-        btn.disabled = true;
-
-        btn.textContent =
-            "Preparing ZIP…";
-
-
-        try{
-
-            const zip =
-                new JSZip();
-
-
-            /*
-              Preserve original names.
-              If two uploaded files have exactly
-              the same filename, JSZip gets a unique
-              name without overwriting.
-            */
-
-            const usedNames =
-                new Set();
-
-
-            for(
-                const item of completed
-            ){
-
-                let name =
-                    item.geoName ||
-                    item.outputName ||
-                    item.originalName;
-
-
-                let finalName =
-                    name;
-
-                let counter=2;
-
-
-                while(
-                    usedNames.has(
-                        finalName
-                    )
-                ){
-
-                    const dot =
-                        name.lastIndexOf(".");
-
-
-                    if(dot > 0){
-
-                        finalName =
-                            name.slice(0,dot) +
-                            ` (${counter})` +
-                            name.slice(dot);
-
-                    }else{
-
-                        finalName =
-                            name +
-                            ` (${counter})`;
-
-                    }
-
-                    counter++;
-
-                }
-
-
-                usedNames.add(
-                    finalName
-                );
-
-
-                zip.file(
-                    finalName,
-                    item.geoBlob
-                );
-
-            }
-
-
-            const zipBlob =
-                await zip.generateAsync(
-                    {
-                        type:"blob",
-                        compression:"DEFLATE",
-                        compressionOptions:{
-                            level:6
-                        }
-                    },
-                    metadata=>{
-
-                        const percent =
-                            Math.round(
-                                metadata.percent
-                            );
-
-                        btn.textContent =
-                            `ZIP ${percent}%`;
-
-                    }
-                );
-
-
-            const url =
-                URL.createObjectURL(
-                    zipBlob
-                );
-
-
-            const a =
-                document.createElement("a");
-
-            a.href = url;
-
-            a.download =
-                "GeoTagged_Images.zip";
-
-            document.body.appendChild(a);
-
-            a.click();
-
-            a.remove();
-
-
-            setTimeout(
-                ()=>{
-                    URL.revokeObjectURL(
-                        url
-                    );
-                },
-                3000
-            );
-
-
-            $("gStatus").textContent =
-                `${completed.length} image(s) downloaded in ZIP.`;
-
-        }catch(err){
-
-            console.error(err);
-
-            alert(
-                "Could not create the ZIP. Try again."
-            );
-
-        }finally{
-
-            btn.disabled = false;
-
-            btn.textContent =
-                "⬇ Download All ZIP";
-
-        }
-
-    }
-);
-
-
 /* =========================================================
-   GEO CANVAS LOGO DRAGGING
+   SAVE GEOTAG / NAVIGATION
 ========================================================= */
-
-/*
-  You can also drag the blue camera logo directly
-  on the GeoTag preview.
-*/
-
-let draggingLogo = false;
-
-
-function geoPoint(e){
-
-    const rect =
-        gCanvas.getBoundingClientRect();
-
-    return {
-
-        x:
-            (e.clientX-rect.left) *
-            gCanvas.width /
-            rect.width,
-
-        y:
-            (e.clientY-rect.top) *
-            gCanvas.height /
-            rect.height
-
-    };
-
+async function saveCurrentGeo(){
+ if(!geoImages.length)return;
+ const item=geoImages[geoIndex];
+ await redrawGeoFromSaved();   // make sure the canvas shows the finished stamp
+ item.geoBlob=await canvasToBlob(gCanvas,"image/png");
+ const original=item.originalName,dot=original.lastIndexOf(".");
+ item.geoName=(dot>0?original.slice(0,dot):original)+".png";
 }
 
-
-gCanvas.addEventListener(
-    "pointerdown",
-    function(e){
-
-        if(
-            gLat === null ||
-            gLon === null
-        )
-            return;
-
-
-        const p =
-            geoPoint(e);
-
-
-        const stampHeight =
-            gCanvas.height*
-            GEO.height/100;
-
-        const stampY =
-            gCanvas.height-
-            stampHeight;
-
-
-        const size =
-            Math.max(
-                30,
-                Math.min(
-                    stampHeight*.60,
-                    130
-                ) *
-                GEO.logoSize/70
-            );
-
-
-        let lx =
-            gCanvas.width*
-            GEO.logoX/100;
-
-        let ly =
-            stampY+
-            stampHeight*
-            GEO.logoY/100;
-
-
-        lx =
-            Math.max(
-                0,
-                Math.min(
-                    gCanvas.width-size-8,
-                    lx
-                )
-            );
-
-
-        ly =
-            Math.max(
-                stampY+5,
-                Math.min(
-                    stampY+stampHeight-size-5,
-                    ly
-                )
-            );
-
-
-        if(
-            p.x>=lx &&
-            p.x<=lx+size &&
-            p.y>=ly &&
-            p.y<=ly+size
-        ){
-
-            draggingLogo = true;
-
-            gCanvas.setPointerCapture(
-                e.pointerId
-            );
-
-        }
-
-    }
-);
-
-
-gCanvas.addEventListener(
-    "pointermove",
-    function(e){
-
-        if(!draggingLogo)
-            return;
-
-
-        const p =
-            geoPoint(e);
-
-
-        const stampHeight =
-            gCanvas.height*
-            GEO.height/100;
-
-        const stampY =
-            gCanvas.height-
-            stampHeight;
-
-
-        const size =
-            Math.max(
-                30,
-                Math.min(
-                    stampHeight*.60,
-                    130
-                ) *
-                GEO.logoSize/70
-            );
-
-
-        GEO.logoX =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    (p.x-size/2) /
-                    gCanvas.width *
-                    100
-                )
-            );
-
-
-        GEO.logoY =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    (p.y-size/2-stampY) /
-                    stampHeight *
-                    100
-                )
-            );
-
-
-        $("gLogoX").value =
-            Math.round(
-                GEO.logoX
-            );
-
-        $("gLogoY").value =
-            Math.round(
-                GEO.logoY
-            );
-
-        $("gLogoXVal").textContent =
-            Math.round(
-                GEO.logoX
-            )+"%";
-
-        $("gLogoYVal").textContent =
-            Math.round(
-                GEO.logoY
-            )+"%";
-
-
-        /*
-          Reload image then redraw because drawGeo
-          adds the overlay to the original.
-        */
-
-        redrawGeoFromSaved();
-
-    }
-);
-
-
-gCanvas.addEventListener(
-    "pointerup",
-    function(){
-
-        draggingLogo = false;
-
-    }
-);
-
-
-gCanvas.addEventListener(
-    "pointercancel",
-    function(){
-
-        draggingLogo = false;
-
-    }
-);
-
-
-/* =========================================================
-   REDRAW GEO FROM SAVED IMAGE
-========================================================= */
-
-async function redrawGeoFromSaved(){
-
-    if(!geoImages.length)
-        return;
-
-    const item =
-        geoImages[geoIndex];
-
-    try{
-
-        const image =
-            await blobToImage(
-                item.blob
-            );
-
-        const maxWidth =
-            1800;
-
-        const scale =
-            Math.min(
-                1,
-                maxWidth/image.naturalWidth
-            );
-
-        const W =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalWidth*scale
-                )
-            );
-
-        const H =
-            Math.max(
-                1,
-                Math.round(
-                    image.naturalHeight*scale
-                )
-            );
-
-        gCanvas.width = W;
-        gCanvas.height = H;
-
-        gCtx.setTransform(
-            1,0,0,1,0,0
-        );
-
-        gCtx.drawImage(
-            image,
-            0,
-            0,
-            W,
-            H
-        );
-
-        await drawGeo();
-
-    }catch(err){
-
-        console.error(err);
-
-    }
-
-}
-
-
-/* =========================================================
-   REDRAW WHEN GEO SLIDER CHANGES
-========================================================= */
-
-/*
-  The slider currently calls drawGeo() directly.
-  For a canvas, that would stack overlays.
-  Replace the behaviour with a clean redraw.
-*/
-
-
-$("gMapZoom").addEventListener("input",function(){
-    GEO.mapZoom=Number(this.value);
-    $("gMapZoomVal").textContent=this.value;
+$("gSaveNext").addEventListener("click",async function(){
+ if(!geoImages.length)return;
+ const btn=$("gSaveNext");btn.disabled=true;btn.textContent="Saving…";
+ try{
+  await saveCurrentGeo();
+  if(geoIndex<geoImages.length-1){
+   geoIndex++;
+   await loadGeoImage();
+   $("gStatus").textContent="Saved. Now edit the next image.";
+  }else{
+   $("gStatus").textContent="All GeoTag images are complete.";
+  }
+ }catch(err){
+  console.error(err);
+  $("gStatus").textContent="Could not save this GeoTag image.";
+ }finally{
+  btn.disabled=false;btn.textContent="💾 Save & Next";
+ }
 });
 
-[
-    "gOpacity",
-    "gMapOpacity",
-    "gMapZoom",
-    "gHeight",
-    "gMapWidth",
-    "gTitle",
-    "gDetails",
-    "gLogoX",
-    "gLogoY",
-    "gLogoSize"
-].forEach(
-    id=>{
+$("gPrev").addEventListener("click",async function(){
+ if(geoIndex<=0)return;
+ await saveCurrentGeo();
+ geoIndex--;
+ await loadGeoImage();
+});
 
-        $(id).addEventListener(
-            "input",
-            function(){
-
-                setTimeout(
-                    redrawGeoFromSaved,
-                    0
-                );
-
-            }
-        );
-
-    }
-);
-
+$("gBack").addEventListener("click",function(){
+ $("geoPage").style.display="none";
+ $("removePage").style.display="block";
+ $("stepOne").style.background="#1769e0";$("stepOne").style.color="#fff";
+ $("stepTwo").style.background="#e5e7eb";$("stepTwo").style.color="#555";
+});
 
 /* =========================================================
-   TEXT INPUT ALSO NEEDS CLEAN REDRAW
+   DOWNLOAD ALL ZIP  (also renders every image you did not press Save & Next on)
 ========================================================= */
+$("gDownloadAll").addEventListener("click",async function(){
+ if(geoImages.length)await saveCurrentGeo();
+ if(geoImages.length){
+  const keepGeo=geoIndex,zb=$("gDownloadAll"),zt=zb.textContent;
+  try{
+   for(let i=0;i<geoImages.length;i++){
+    if(geoImages[i].geoBlob)continue;
+    zb.textContent="Rendering "+(i+1)+"/"+geoImages.length+"…";
+    geoIndex=i;await loadGeoImage();await saveCurrentGeo();
+   }
+  }catch(err){console.error(err)}
+  geoIndex=keepGeo;zb.textContent=zt;
+  try{await loadGeoImage()}catch(e){}
+ }
+ const completed=geoImages.filter(item=>item.geoBlob);
+ if(!completed.length){alert("No completed GeoTag images yet.");return}
+ if(typeof JSZip==="undefined"){alert("ZIP library could not load. Check your internet connection and reload the page.");return}
 
-[
-    "gPlace",
-    "gAddress",
-    "gDate",
-    "gTime"
-].forEach(
-    id=>{
-
-        $(id).addEventListener(
-            "input",
-            function(){
-
-                if(
-                    gLat !== null &&
-                    gLon !== null
-                ){
-
-                    redrawGeoFromSaved();
-
-                }
-
-            }
-        );
-
-    }
-);
-
+ const btn=$("gDownloadAll");btn.disabled=true;btn.textContent="Preparing ZIP…";
+ try{
+  const zip=new JSZip(),usedNames=new Set();
+  for(const item of completed){
+   const name=item.geoName||item.outputName||item.originalName;
+   let finalName=name,counter=2;
+   while(usedNames.has(finalName)){
+    const dot=name.lastIndexOf(".");
+    finalName=dot>0?name.slice(0,dot)+` (${counter})`+name.slice(dot):name+` (${counter})`;
+    counter++;
+   }
+   usedNames.add(finalName);
+   zip.file(finalName,item.geoBlob);
+  }
+  const zipBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}},meta=>{btn.textContent=`ZIP ${Math.round(meta.percent)}%`});
+  const url=URL.createObjectURL(zipBlob),a=document.createElement("a");
+  a.href=url;a.download="GeoTagged_Images.zip";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  $("gStatus").textContent=`${completed.length} image(s) downloaded in ZIP.`;
+ }catch(err){
+  console.error(err);
+  alert("Could not create the ZIP. Try again.");
+ }finally{
+  btn.disabled=false;btn.textContent="⬇ Download All ZIP";
+ }
+});
 
 /* =========================================================
-   INITIAL EDIT CANVAS
+   DRAG THE BLUE CAMERA LOGO ON THE PREVIEW
 ========================================================= */
-
-editCanvas.width = 900;
-editCanvas.height = 550;
-
-editCtx.fillStyle =
-    "#222";
-
-editCtx.fillRect(
-    0,
-    0,
-    900,
-    550
-);
-
-editCtx.fillStyle =
-    "#888";
-
-editCtx.font =
-    "22px Arial";
-
-editCtx.textAlign =
-    "center";
-
-editCtx.fillText(
-    "Upload an image or folder",
-    450,
-    275
-);
-
+let draggingLogo=false;
+function geoPoint(e){
+ const rect=gCanvas.getBoundingClientRect();
+ return{x:(e.clientX-rect.left)*gCanvas.width/rect.width,y:(e.clientY-rect.top)*gCanvas.height/rect.height};
+}
+gCanvas.addEventListener("pointerdown",function(e){
+ if(gLat===null||gLon===null)return;
+ const p=geoPoint(e);
+ const stampHeight=gCanvas.height*GEO.height/100,stampY=gCanvas.height-stampHeight;
+ const {size,x,y}=logoGeometry(gCanvas.width,gCanvas.height,stampY,stampHeight);
+ if(p.x>=x&&p.x<=x+size&&p.y>=y&&p.y<=y+size){
+  draggingLogo=true;gCanvas.setPointerCapture(e.pointerId);
+ }
+});
+gCanvas.addEventListener("pointermove",function(e){
+ if(!draggingLogo)return;
+ const p=geoPoint(e);
+ const stampHeight=gCanvas.height*GEO.height/100,stampY=gCanvas.height-stampHeight;
+ const size=Math.max(30,Math.min(stampHeight*.60,130)*GEO.logoSize/70);
+ GEO.logoX=clampN((p.x-size/2)/gCanvas.width*100,0,100);
+ GEO.logoY=clampN((p.y-size/2-stampY)/stampHeight*100,0,100);
+ $("gLogoX").value=Math.round(GEO.logoX);$("gLogoY").value=Math.round(GEO.logoY);
+ $("gLogoXVal").textContent=Math.round(GEO.logoX)+"%";
+ $("gLogoYVal").textContent=Math.round(GEO.logoY)+"%";
+ redrawGeoFromSaved();
+});
+gCanvas.addEventListener("pointerup",()=>{draggingLogo=false});
+gCanvas.addEventListener("pointercancel",()=>{draggingLogo=false});
 
 /* =========================================================
-   INITIAL GEO CANVAS
+   INITIAL CANVASES
 ========================================================= */
+editCanvas.width=900;editCanvas.height=550;
+editCtx.fillStyle="#222";editCtx.fillRect(0,0,900,550);
+editCtx.fillStyle="#888";editCtx.font="22px Arial";editCtx.textAlign="center";
+editCtx.fillText("Upload an image or folder",450,275);
 
-gCanvas.width = 900;
-gCanvas.height = 550;
-
-gCtx.fillStyle =
-    "#17202a";
-
-gCtx.fillRect(
-    0,
-    0,
-    900,
-    550
-);
-
-gCtx.fillStyle =
-    "#81909d";
-
-gCtx.font =
-    "22px Arial";
-
-gCtx.textAlign =
-    "center";
-
-gCtx.fillText(
-    "Complete White Text Remover first",
-    450,
-    275
-);
-
+gCanvas.width=900;gCanvas.height=550;
+gCtx.fillStyle="#17202a";gCtx.fillRect(0,0,900,550);
+gCtx.fillStyle="#81909d";gCtx.font="22px Arial";gCtx.textAlign="center";
+gCtx.fillText("Complete White Text Remover first",450,275);
 </script>
-
 </body>
 </html>
