@@ -194,14 +194,6 @@ button,
     pointer-events:none;
 }
 
-#selectionBox2{
-    position:absolute;
-    border:2px dashed #00e5ff;
-    background:transparent;
-    display:none;
-    pointer-events:none;
-}
-
 .toolRow{
     display:flex;
     justify-content:center;
@@ -280,306 +272,252 @@ button,
 }
 
 /* =====================================================
-   GEO PAGE — SAME FORMAT AS VIDEO TOOL
+   GEO PAGE
 ===================================================== */
 
 #geoPage{
     display:none;
-    background:#0b1117;
-    color:#e9eef3;
+    background:#0b1015;
+    color:#eef2f7;
     min-height:calc(100vh - 65px);
 }
 
-#geoPage .geoPage{
-    max-width:1400px;
-    margin:auto;
-    padding:16px;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    width:100%;
-}
-
-#geoPage .card{
-    background:#121b24;
-    border:1px solid #273440;
-    border-radius:12px;
-    padding:14px;
-}
-
-#geoPage .geoPreviewCard{
-    width:100%;
-}
-
-#geoPage .geoPreviewHead{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:8px;
-}
-
-#geoPage .geoPreviewHead h2{
-    margin:0 0 5px;
-}
-
-#geoPage .geoPreviewHint{
-    font-size:11px;
-    color:#8fa0ad;
-    text-align:right;
-    max-width:480px;
-}
-
-#geoPage .previewBox{
-    background:#05090d;
-    border:1px solid #26313b;
-    border-radius:10px;
-    height:calc(100vh - 390px);
-    min-height:330px;
-    max-height:620px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    position:relative;
-}
-
-#geoPage #gCanvas{
-    max-width:100%;
-    max-height:100%;
-    width:auto;
-    height:auto;
-    display:block;
-    cursor:default;
-    touch-action:none;
-}
-
-#geoPage .geoPreviewNote{
-    font-size:11px;
-    color:#94a3af;
-    line-height:1.4;
-    margin-top:7px;
-}
-
-#geoPage .geoOptionGrid{
+.geoLayout{
     display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:12px;
+    grid-template-columns:370px minmax(0,1fr);
+    min-height:calc(100vh - 65px);
 }
 
-#geoPage .geoOptionCard{
-    min-width:0;
-    padding:12px;
+.geoAside{
+    background:#111820;
+    border-right:1px solid #26313b;
+    padding:18px;
+    overflow:auto;
 }
 
-#geoPage .geoOptionCard h3{
-    margin:0 0 10px;
+.geoAside h2{
+    margin-bottom:5px;
 }
 
-#geoPage .sliderTop{
-    display:flex;
-    justify-content:space-between;
+.geoDescription{
+    color:#8e9aa6;
     font-size:12px;
-    color:#cbd4dc;
-    margin-top:7px;
+    line-height:1.45;
+    margin-bottom:14px;
 }
 
-#geoPage .sliderTop b{
-    color:#6fb1ff;
-}
-
-#geoPage .slider{
-    background:transparent;
-    border:0;
-    padding:0;
-    margin:0;
-}
-
-#geoPage input[type=range]{
-    width:100%;
-    margin:0 0 2px;
-}
-
-#geoPage .geoInfoGrid{
-    display:grid;
-    grid-template-columns:minmax(0,2fr) minmax(280px,1fr);
-    gap:12px;
-    align-items:start;
-}
-
-#geoPage .geoInfoGrid .card{
-    min-width:0;
-}
-
-#geoPage .geoFields3{
-    display:grid;
-    grid-template-columns:1fr 1fr 2fr;
-    gap:8px;
-}
-
-#geoPage label{
-    display:block;
-    font-weight:600;
-    margin:4px 0 2px;
-    color:#cdd6de;
-    font-size:12px;
-}
-
-#geoPage input[type=text],
-#geoPage input[type=date],
-#geoPage input[type=time],
-#geoPage textarea,
-#geoPage select{
-    width:100%;
-    padding:9px;
+.notice{
+    background:#241a12;
+    border:1px solid #5a3d1a;
+    color:#f0c27b;
     border-radius:8px;
-    border:1px solid #344553;
-    background:#0d151d;
-    color:#eef3f7;
+    padding:10px;
+    font-size:11px;
+    line-height:1.4;
+    margin-bottom:14px;
 }
 
-#geoPage textarea{
-    min-height:48px;
+.sectionTitle{
+    font-size:13px;
+    font-weight:700;
+    margin:14px 0 9px;
+}
+
+.field{
+    margin-bottom:10px;
+}
+
+.field label{
+    display:block;
+    color:#aeb8c2;
+    font-size:11px;
+    margin-bottom:5px;
+}
+
+.field input,
+.field textarea,
+.field select{
+    width:100%;
+    background:#151e27;
+    color:#eef2f7;
+    border:1px solid #334250;
+    border-radius:8px;
+    padding:10px;
+    outline:none;
+}
+
+.field textarea{
+    min-height:75px;
     resize:vertical;
 }
 
-#geoPage button{
-    border:0;
-    border-radius:8px;
-    padding:8px 10px;
-    background:#1976e8;
-    color:#fff;
-    font-weight:700;
-    cursor:pointer;
-    margin:4px 3px 0 0;
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+    border-color:#2387ff;
 }
 
-#geoPage button:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-}
-
-#geoPage button.secondary{
-    background:#293643;
-}
-
-#geoPage .status{
-    padding:7px;
-    background:#0d151d;
-    border-radius:8px;
-    color:#aebbc6;
-    line-height:1.4;
-    margin-top:7px;
-    font-size:11px;
-}
-
-#geoPage .runningBox{
-    border-top:1px solid #263440;
-    margin-top:10px;
-    padding-top:10px;
-}
-
-#geoPage .runningBox h3{
-    margin:0 0 6px;
-}
-
-#geoPage .small{
-    font-size:11px;
-    color:#94a3af;
-    line-height:1.35;
-}
-
-#geoPage .geoDateCard .geoActions{
-    border-top:1px solid #263440;
-    margin-top:14px;
-    padding-top:10px;
-}
-
-#geoPage .geoDateCard .geoActions button{
-    margin-right:4px;
-}
-
-#geoPage #mapPreview{
+#gFind{
     width:100%;
-    height:90px;
-    object-fit:cover;
-    background:#d7dde1;
-    border-radius:8px;
-    margin-top:8px;
-    cursor:crosshair;
-    touch-action:none;
-    display:none;
+    background:#1769e0;
+    margin-bottom:7px;
 }
 
-#geoPage #gStatus{
-    min-height:22px;
+#gStatus{
+    font-size:11px;
+    color:#8e9aa6;
+    min-height:30px;
+}
+
+.coordsBox{
+    background:#151e27;
+    border:1px solid #263441;
+    border-radius:8px;
+    padding:9px;
+    margin:7px 0;
+}
+
+.coordsTitle{
+    color:#8e9aa6;
+    font-size:10px;
+    margin-bottom:4px;
+}
+
+#gCoords{
+    font-size:12px;
+}
+
+.dateGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+
+.slider{
+    background:#151e27;
+    border:1px solid #263441;
+    border-radius:9px;
+    padding:9px;
+    margin-bottom:7px;
+}
+
+.sliderTop{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    margin-bottom:6px;
+}
+
+.sliderTop b{
+    color:#63a8ff;
+}
+
+.slider input{
+    width:100%;
+    accent-color:#2387ff;
+}
+
+.geoButtons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:12px;
+}
+
+.geoButtons button{
+    width:100%;
+}
+
+#gSaveNext{
+    background:#14834b;
+}
+
+#gDownloadAll{
+    background:#1769e0;
+}
+
+.geoMain{
+    padding:18px;
+    min-width:0;
+}
+
+.previewHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+}
+
+.previewHeader span{
+    color:#84919d;
+    font-size:11px;
+}
+
+.previewBox{
+    background:#05080b;
+    border:1px solid #26313b;
+    border-radius:14px;
+    min-height:550px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:auto;
+    padding:10px;
+}
+
+#gCanvas{
+    display:block;
+    max-width:100%;
+    height:auto;
+    cursor:default;
+}
+
+.mapCredit{
+    color:#84919d;
+    font-size:10px;
+    text-align:center;
+    margin-top:7px;
 }
 
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
-@media(max-width:900px){
-    #geoPage .geoOptionGrid{
-        grid-template-columns:1fr 1fr;
-    }
+@media(max-width:850px){
 
-    #geoPage .geoInfoGrid{
+    .geoLayout{
         grid-template-columns:1fr;
     }
 
-    #geoPage .geoFields3{
-        grid-template-columns:1fr 1fr;
+    .geoAside{
+        border-right:0;
+        border-bottom:1px solid #26313b;
     }
 
-    #geoPage .geoFields3>div:last-child{
-        grid-column:1 / -1;
+    .controlPanel{
+        grid-template-columns:1fr;
     }
 
-    #geoPage .previewBox{
-        height:calc(100vh - 360px);
-        min-height:280px;
+    .previewBox{
+        min-height:350px;
     }
 }
 
-@media(max-width:640px){
-    #geoPage .geoPage{
-        padding:10px;
-    }
+@media(max-width:600px){
 
-    #geoPage .geoOptionGrid{
-        grid-template-columns:1fr;
-    }
-
-    #geoPage .geoFields3{
-        grid-template-columns:1fr;
-    }
-
-    #geoPage .geoFields3>div:last-child{
-        grid-column:auto;
-    }
-
-    #geoPage .geoPreviewHead{
-        align-items:flex-start;
+    .toolbar{
         flex-direction:column;
     }
 
-    #geoPage .geoPreviewHint{
-        text-align:left;
-    }
-
-    #geoPage .previewBox{
-        height:auto;
-        min-height:260px;
-    }
-
-    #geoPage button{
+    .toolbar>*{
         width:100%;
-        margin:5px 0 0;
-        padding:10px;
+        text-align:center;
+    }
+
+    .dateGrid{
+        grid-template-columns:1fr;
     }
 }
-
 </style>
 </head>
 
@@ -640,7 +578,7 @@ button,
             </label>
 
             <button id="removeBtn" class="btn-dark" disabled>
-                ⬜ Re-run White Text Removal
+                ⬜ Remove White Text
             </button>
 
             <button id="undoBtn" class="btn-gray" disabled>
@@ -679,11 +617,6 @@ button,
 
             <div
                 id="selectionBox"
-                class="selectionBox"
-            ></div>
-
-            <div
-                id="selectionBox2"
                 class="selectionBox"
             ></div>
 
@@ -740,99 +673,6 @@ button,
             <div class="control">
 
                 <label>
-                    Text removal strength
-                    <b id="removeStrengthValue">100%</b>
-                </label>
-
-                <input
-                    id="removeStrength"
-                    type="range"
-                    min="50"
-                    max="150"
-                    value="100"
-                >
-
-            </div>
-
-            <div class="control">
-
-                <label>
-                    Inpaint passes
-                    <b id="photoInpaintPassValue">8</b>
-                </label>
-
-                <input
-                    id="photoInpaintPasses"
-                    type="range"
-                    min="2"
-                    max="14"
-                    value="8"
-                >
-
-            </div>
-
-            <div class="control">
-
-                <label>
-                    Max text stroke thickness
-                    <b id="photoTextThickValue">9</b>px
-                </label>
-
-                <input
-                    id="photoTextThick"
-                    type="range"
-                    min="2"
-                    max="30"
-                    value="9"
-                >
-
-            </div>
-
-            <div class="control">
-                <label>
-                    Second box strength
-                    <b id="secondStrengthValue">160%</b>
-                </label>
-                <input
-                    id="secondStrength"
-                    type="range"
-                    min="100"
-                    max="220"
-                    value="160"
-                >
-            </div>
-
-            <div class="control">
-                <label>
-                    Second box inpaint passes
-                    <b id="secondPassValue">12</b>
-                </label>
-                <input
-                    id="secondPasses"
-                    type="range"
-                    min="4"
-                    max="18"
-                    value="12"
-                >
-            </div>
-
-            <div class="control">
-                <label>
-                    Second box text thickness
-                    <b id="secondThickValue">12</b>px
-                </label>
-                <input
-                    id="secondThick"
-                    type="range"
-                    min="3"
-                    max="30"
-                    value="12"
-                >
-            </div>
-
-            <div class="control">
-
-                <label>
                     Working image size
                     <b>2200px max</b>
                 </label>
@@ -865,171 +705,358 @@ button,
 ===================================================== -->
 
 <section id="geoPage">
-    <div class="geoPage">
 
-        <!-- SAME PREVIEW-FIRST FORMAT AS VIDEO -->
-        <main class="card geoPreviewCard">
-            <div class="geoPreviewHead">
-                <div>
-                    <h2>📍 GeoTag Preview</h2>
-                    <div id="geoCounter" class="badge">No image</div>
+    <div class="geoLayout">
+
+        <aside class="geoAside">
+
+            <h2>📍 GeoTag / Location</h2>
+
+            <p class="geoDescription">
+                Your saved cleaned images appear here one at a time.
+                Change the location and time for each image, then use
+                Save & Next.
+            </p>
+
+            <div class="notice">
+                The visible GeoTag is a generated overlay. It is not
+                camera-generated GPS metadata.
+            </div>
+
+
+            <div class="sectionTitle">
+                Current Image
+            </div>
+
+            <div
+                id="geoCounter"
+                style="font-size:12px;margin-bottom:8px"
+            >
+                No image
+            </div>
+
+
+            <div class="sectionTitle">
+                1. Location
+            </div>
+
+
+            <div class="field">
+
+                <label>State</label>
+
+                <select id="gState"></select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    District / Town / Subdivision
+                </label>
+
+                <input
+                    id="gPlace"
+                    type="text"
+                    placeholder="Example: Beerwah"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Address / Location — printed on image
+                </label>
+
+                <textarea
+                    id="gAddress"
+                    placeholder="Example: Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India"
+                ></textarea>
+
+            </div>
+
+
+            <button id="gFind">
+                📍 Find Location
+            </button>
+
+
+            <div id="gStatus">
+                Enter a location and click Find Location.
+            </div>
+
+
+            <div class="coordsBox">
+
+                <div class="coordsTitle">
+                    Latitude / Longitude
                 </div>
-                <div class="geoPreviewHint">
-                    Drag the map to move it. Drag the bottom-right corner to resize it.
-                    Drag the blue camera logo to reposition it.
+
+                <div id="gCoords">
+                    —
                 </div>
+
             </div>
 
-            <div class="previewBox">
-                <canvas id="gCanvas"></canvas>
+
+            <div class="sectionTitle">
+                Date & Time
             </div>
 
-            <div class="geoPreviewNote">
-                This is a generated visual GeoTag overlay, not camera GPS metadata.
-                The map uses OpenStreetMap tiles, matching the Video GeoTag map style.
+
+            <div class="dateGrid">
+
+                <div class="field">
+
+                    <label>Date</label>
+
+                    <input
+                        id="gDate"
+                        type="date"
+                    >
+
+                </div>
+
+                <div class="field">
+
+                    <label>Time</label>
+
+                    <input
+                        id="gTime"
+                        type="time"
+                    >
+
+                </div>
+
             </div>
-        </main>
 
-        <!-- OVERLAY + LOGO DIRECTLY BELOW PREVIEW -->
-        <div class="geoOptionGrid">
 
-            <div class="card geoOptionCard">
-                <h3>Overlay</h3>
+            <div class="sectionTitle">
+                2. GeoTag Appearance
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>GeoTag opacity</span>
                     <b id="gOpacityVal">85%</b>
                 </div>
-                <input id="gOpacity" type="range" min="0" max="100" value="85">
+
+                <input
+                    id="gOpacity"
+                    type="range"
+                    min="10"
+                    max="100"
+                    value="85"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Map opacity</span>
                     <b id="gMapOpacityVal">100%</b>
                 </div>
-                <input id="gMapOpacity" type="range" min="0" max="100" value="100">
+
+                <input
+                    id="gMapOpacity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Stamp height</span>
-                    <b id="gHeightVal">35%</b>
+                    <b id="gHeightVal">25%</b>
                 </div>
-                <input id="gHeight" type="range" min="10" max="90" value="35">
+
+                <input
+                    id="gHeight"
+                    type="range"
+                    min="5"
+                    max="80"
+                    value="25"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Map width</span>
-                    <b id="gMapWidthVal">30%</b>
+                    <b id="gMapWidthVal">29%</b>
                 </div>
-                <input id="gMapWidth" type="range" min="5" max="90" value="30">
 
-                <div class="sliderTop">
-                    <span>Map height</span>
-                    <b id="gMapHeightVal">35%</b>
-                </div>
-                <input id="gMapHeight" type="range" min="5" max="90" value="35">
+                <input
+                    id="gMapWidth"
+                    type="range"
+                    min="10"
+                    max="60"
+                    value="29"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Title size</span>
                     <b id="gTitleVal">100%</b>
                 </div>
-                <input id="gTitle" type="range" min="50" max="180" value="100">
+
+                <input
+                    id="gTitle"
+                    type="range"
+                    min="50"
+                    max="200"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Details size</span>
                     <b id="gDetailsVal">100%</b>
                 </div>
-                <input id="gDetails" type="range" min="50" max="180" value="100">
+
+                <input
+                    id="gDetails"
+                    type="range"
+                    min="50"
+                    max="200"
+                    value="100"
+                >
+
             </div>
 
-            <div class="card geoOptionCard">
-                <h3>Blue Camera Logo Position</h3>
+
+            <div class="sectionTitle">
+                3. Blue Camera Logo Position
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
-                    <span>Horizontal</span>
-                    <b id="gLogoXVal">90%</b>
+                    <span>Logo X position</span>
+                    <b id="gLogoXVal">88%</b>
                 </div>
-                <input id="gLogoX" type="range" min="0" max="100" value="90">
+
+                <input
+                    id="gLogoX"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="88"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
-                    <span>Vertical</span>
-                    <b id="gLogoYVal">50%</b>
+                    <span>Logo Y position</span>
+                    <b id="gLogoYVal">78%</b>
                 </div>
-                <input id="gLogoY" type="range" min="0" max="100" value="50">
+
+                <input
+                    id="gLogoY"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="78"
+                >
+
+            </div>
+
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Logo size</span>
                     <b id="gLogoSizeVal">70%</b>
                 </div>
-                <input id="gLogoSize" type="range" min="25" max="140" value="70">
+
+                <input
+                    id="gLogoSize"
+                    type="range"
+                    min="30"
+                    max="130"
+                    value="70"
+                >
+
             </div>
 
-        </div>
 
-        <!-- LOCATION + DATE BELOW OPTIONS -->
-        <div class="geoInfoGrid">
+            <div class="geoButtons">
 
-            <div class="card">
-                <h3>Location</h3>
+                <button id="gBack">
+                    ← Back
+                </button>
 
-                <div class="geoFields3">
-                    <div>
-                        <label>State</label>
-                        <select id="gState"></select>
-                    </div>
+                <button id="gPrev">
+                    ← Previous
+                </button>
 
-                    <div>
-                        <label>District / Town / Subdivision</label>
-                        <input id="gPlace" type="text" placeholder="Example: Beerwah">
-                    </div>
+                <button id="gSaveNext">
+                    💾 Save & Next
+                </button>
 
-                    <div>
-                        <label>Address / Location — printed on image</label>
-                        <input id="gAddress" type="text" placeholder="Example: Sbi Complex, Beerwah, 193411, Jammu and Kashmir, India">
-                    </div>
-                </div>
+                <button id="gDownloadAll">
+                    ⬇ Download All ZIP
+                </button>
 
-                <button id="gFind">📍 Find Location</button>
-                <div id="gStatus" class="status">Enter a location and click Find Location.</div>
-                <div id="gCoords" class="status">Latitude / Longitude —</div>
-
-                <div class="runningBox">
-                    <h3>Map</h3>
-                    <div class="small">
-                        The map is centered on the location you find and is loaded from
-                        OpenStreetMap, using the same 25-tile map method as the Video tool.
-                    </div>
-                </div>
-
-                <canvas id="mapPreview"></canvas>
             </div>
 
-            <div class="card geoDateCard">
-                <h3>Date &amp; Time</h3>
+        </aside>
 
-                <div class="row">
-                    <div class="field">
-                        <label>Date</label>
-                        <input id="gDate" type="date">
-                    </div>
 
-                    <div class="field">
-                        <label>Time</label>
-                        <input id="gTime" type="time" step="1">
-                    </div>
-                </div>
+        <main class="geoMain">
 
-                <div class="small">
-                    Set the date and time that should appear on the photo.
-                </div>
+            <div class="previewHeader">
 
-                <div class="geoActions">
-                    <button id="gBack" class="secondary">← Back</button>
-                    <button id="gPrev" class="secondary">← Previous</button>
-                    <button id="gSaveNext">💾 Save &amp; Next</button>
-                    <button id="gDownloadAll">⬇ Download All ZIP</button>
-                </div>
+                <h3>GeoTag Preview</h3>
+
+                <span>
+                    Current image only
+                </span>
+
             </div>
 
-        </div>
+
+            <div class="previewBox">
+
+                <canvas id="gCanvas"></canvas>
+
+            </div>
+
+
+            <div class="mapCredit">
+                Map information supplied through OpenStreetMap services.
+            </div>
+
+        </main>
+
     </div>
+
 </section>
 
 
@@ -1055,7 +1082,6 @@ const editCtx = editCanvas.getContext("2d", {
 
 const editStage = $("editStage");
 const selectionBox = $("selectionBox");
-const selectionBox2 = $("selectionBox2");
 
 let imageFiles = [];
 let currentEditIndex = 0;
@@ -1063,9 +1089,7 @@ let currentEditIndex = 0;
 let originalCanvasData = null;
 
 let selection = null;
-let selection2 = null;
 let selecting = false;
-let firstRemovalDone = false;
 let selectionMode = "remove";
 
 let startX = 0;
@@ -1253,13 +1277,9 @@ async function loadCurrentEditImage(){
             );
 
         selection = null;
-        selection2 = null;
         cropSelection = null;
-        firstRemovalDone = false;
 
         selectionBox.style.display =
-            "none";
-        selectionBox2.style.display =
             "none";
 
         $("removeBtn").disabled = false;
@@ -1414,309 +1434,589 @@ function getEditPoint(e){
 ========================================================= */
 
 function showSelection(sel){
-    const box=firstRemovalDone ? selectionBox2 : selectionBox;
-    if(!sel){
-        selectionBox.style.display='none';
-        selectionBox2.style.display='none';
-        return;
-    }
-    const canvasRect=editCanvas.getBoundingClientRect();
-    box.style.left=(editCanvas.offsetLeft + sel.x*canvasRect.width/editCanvas.width)+'px';
-    box.style.top=(editCanvas.offsetTop + sel.y*canvasRect.height/editCanvas.height)+'px';
-    box.style.width=(sel.w*canvasRect.width/editCanvas.width)+'px';
-    box.style.height=(sel.h*canvasRect.height/editCanvas.height)+'px';
-    box.style.display='block';
-    if(box===selectionBox){
-        selectionBox2.style.display='none';
-        selectionBox.style.borderColor=selectionMode==='crop'?'#ff9d00':'#ff3030';
-    }else{
-        selectionBox.style.display='none';
-        selectionBox2.style.borderColor='#00e5ff';
-    }
-}
 
+    if(!sel){
+
+        selectionBox.style.display =
+            "none";
+
+        return;
+
+    }
+
+    const canvasRect =
+        editCanvas.getBoundingClientRect();
+
+    const stageRect =
+        editStage.getBoundingClientRect();
+
+    selectionBox.style.left =
+        (
+            editCanvas.offsetLeft +
+            sel.x *
+            canvasRect.width /
+            editCanvas.width
+        ) + "px";
+
+    selectionBox.style.top =
+        (
+            editCanvas.offsetTop +
+            sel.y *
+            canvasRect.height /
+            editCanvas.height
+        ) + "px";
+
+    selectionBox.style.width =
+        (
+            sel.w *
+            canvasRect.width /
+            editCanvas.width
+        ) + "px";
+
+    selectionBox.style.height =
+        (
+            sel.h *
+            canvasRect.height /
+            editCanvas.height
+        ) + "px";
+
+    selectionBox.style.display =
+        "block";
+
+    selectionBox.style.borderColor =
+        selectionMode === "crop"
+            ? "#ff9d00"
+            : "#ff3030";
+
+}
 
 
 /* =========================================================
    POINTER DOWN
 ========================================================= */
 
-editCanvas.addEventListener("pointerdown",function(e){
-    if(!imageFiles.length) return;
-    selecting=true;
-    editCanvas.setPointerCapture(e.pointerId);
-    const p=getEditPoint(e);
-    startX=p.x; startY=p.y;
-    selection={x:startX,y:startY,w:0,h:0};
-    showSelection(selection);
-});
+editCanvas.addEventListener(
+    "pointerdown",
+    function(e){
 
-editCanvas.addEventListener("pointermove",function(e){
-    if(!selecting) return;
-    const p=getEditPoint(e);
-    selection={x:Math.min(startX,p.x),y:Math.min(startY,p.y),w:Math.abs(p.x-startX),h:Math.abs(p.y-startY)};
-    showSelection(selection);
-});
+        if(!imageFiles.length)
+            return;
 
-editCanvas.addEventListener("pointerup",async function(){
-    selecting=false;
-    if(!selection || selection.w<4 || selection.h<4){ selection=null; showSelection(null); return; }
-    if(selectionMode==='crop'){
-        cropSelection={...selection};
-        $('applyCropBtn').disabled=false;
-        $('editStatus').textContent='Crop area selected. Click Apply Crop.';
-        return;
+        selecting = true;
+
+        editCanvas.setPointerCapture(
+            e.pointerId
+        );
+
+        const p =
+            getEditPoint(e);
+
+        startX = p.x;
+        startY = p.y;
+
+        selection = {
+            x:startX,
+            y:startY,
+            w:0,
+            h:0
+        };
+
+        showSelection(selection);
+
     }
+);
 
-    const current={...selection};
-    const isSecond=firstRemovalDone;
-    $('editStatus').textContent=isSecond?'Running detailed second-box removal…':'Running automatic white-text removal…';
-    const ok=await removeWhiteFromRect(current,{
-        strength:isSecond?(Number($('secondStrength').value)||160):(Number($('removeStrength').value)||100),
-        inpaintPasses:isSecond?(Number($('secondPasses').value)||12):(Number($('photoInpaintPasses').value)||8),
-        stroke:isSecond?(Number($('secondThick').value)||12):(Number($('photoTextThick').value)||9),
-        threshold:isSecond?Math.max(95,(Number($('whiteThreshold').value)||150)-18):(Number($('whiteThreshold').value)||150),
-        expandPasses:isSecond?2:1
-    });
-    if(ok){
-        firstRemovalDone=true;
-        selection=null;
-        showSelection(null);
-        $('undoBtn').disabled=false;
-        $('editStatus').textContent=isSecond?'Second box removed with detailed precision. Drag another box if needed.':'First box removed automatically. Drag a second box for stronger precision removal.';
-    }else{
-        $('editStatus').textContent='No suitable white text found in that area. Increase strength and drag the box again.';
-        selection=null;
-        showSelection(null);
+
+/* =========================================================
+   POINTER MOVE
+========================================================= */
+
+editCanvas.addEventListener(
+    "pointermove",
+    function(e){
+
+        if(!selecting)
+            return;
+
+        const p =
+            getEditPoint(e);
+
+        selection = {
+
+            x:Math.min(
+                startX,
+                p.x
+            ),
+
+            y:Math.min(
+                startY,
+                p.y
+            ),
+
+            w:Math.abs(
+                p.x-startX
+            ),
+
+            h:Math.abs(
+                p.y-startY
+            )
+
+        };
+
+        showSelection(selection);
+
     }
-});
+);
 
+
+/* =========================================================
+   POINTER UP
+========================================================= */
+
+editCanvas.addEventListener(
+    "pointerup",
+    function(){
+
+        selecting = false;
+
+        if(
+            !selection ||
+            selection.w < 4 ||
+            selection.h < 4
+        ){
+
+            selection = null;
+
+            showSelection(null);
+
+            return;
+
+        }
+
+        if(selectionMode === "crop"){
+
+            cropSelection =
+                {...selection};
+
+            $("applyCropBtn").disabled =
+                false;
+
+            $("editStatus").textContent =
+                "Crop area selected. Click Apply Crop.";
+
+        }else{
+
+            $("editStatus").textContent =
+                "White text area selected. Click Remove White Text.";
+
+        }
+
+    }
+);
 
 
 /* =========================================================
    WHITE DETECTION
 ========================================================= */
 
-function isWhitePixel(data,i,opts={}){
+function isWhitePixel(data,i){
 
-    const r=data[i], g=data[i+1], b=data[i+2];
-    const max=Math.max(r,g,b), min=Math.min(r,g,b);
-    const baseThreshold=Number(opts.threshold ?? $('whiteThreshold').value) || 150;
-    const strength=Number(opts.strength ?? $('removeStrength').value) || 100;
-    const threshold=Math.max(78, baseThreshold - 24*(strength/100-1) - 8);
+    const r = data[i];
+    const g = data[i+1];
+    const b = data[i+2];
 
-    // White/grey text tends to be bright and relatively neutral. Keep a
-    // small colour-spread allowance for JPEG/compressed anti-aliased edges.
-    return max>=threshold && (max-min)<=92 && (r+g+b)>=threshold*2.78;
+    const max =
+        Math.max(r,g,b);
+
+    const min =
+        Math.min(r,g,b);
+
+    const threshold =
+        Number(
+            $("whiteThreshold").value
+        );
+
+    return (
+        max >= threshold &&
+        max-min <= 85 &&
+        r+g+b >= threshold*3
+    );
+
 }
 
 
-
 /* =========================================================
-   REMOVE WHITE TEXT — STRONGER VIDEO-STYLE INPAINT
+   REMOVE WHITE TEXT
 ========================================================= */
 
-async function removeWhiteFromRect(rect,opts={}){
+$("removeBtn").addEventListener(
+    "click",
+    function(){
 
-    if(!rect || rect.w<4 || rect.h<4) return false;
+        if(
+            !selection ||
+            selection.w < 4 ||
+            selection.h < 4
+        ){
 
-    const x=Math.max(0,Math.floor(rect.x));
-    const y=Math.max(0,Math.floor(rect.y));
-    const w=Math.min(editCanvas.width-x,Math.ceil(rect.w));
-    const h=Math.min(editCanvas.height-y,Math.ceil(rect.h));
-    if(w<4||h<4) return false;
+            $("editStatus").textContent =
+                "First drag around the white text.";
 
-    const imageData=editCtx.getImageData(x,y,w,h);
-    const pixels=imageData.data;
-    const mask=new Uint8Array(w*h);
-    const strength=Number(opts.strength ?? $('removeStrength').value)||100;
-    const inpaintPasses=Number(opts.inpaintPasses ?? $('photoInpaintPasses').value)||8;
-    const stroke=Math.max(2,Number(opts.stroke ?? $('photoTextThick').value)||9);
+            return;
 
-
-
-        // Detect the white/light text at pixel level.
-        for(let yy=0;yy<h;yy++){
-            for(let xx=0;xx<w;xx++){
-                const i=(yy*w+xx)*4;
-                if(isWhitePixel(pixels,i,{threshold:opts.threshold,strength})) mask[yy*w+xx]=1;
-            }
         }
 
-        // Stronger anti-aliasing capture, but still confined to the selected box.
-        const expandPasses=Math.max(1,Math.min(3,Math.round(opts.expandPasses ?? (strength>=150?2:1))));
-        for(let pass=0;pass<expandPasses;pass++){
-            const old=mask.slice();
-            for(let yy=0;yy<h;yy++){
-                for(let xx=0;xx<w;xx++){
-                    if(old[yy*w+xx]) continue;
+        if(selectionMode !== "remove"){
+
+            $("editStatus").textContent =
+                "Click Crop again to leave crop mode.";
+
+            return;
+
+        }
+
+        $("editStatus").textContent =
+            "Removing white text…";
+
+        const x =
+            Math.max(
+                0,
+                Math.floor(selection.x)
+            );
+
+        const y =
+            Math.max(
+                0,
+                Math.floor(selection.y)
+            );
+
+        const w =
+            Math.min(
+                editCanvas.width-x,
+                Math.ceil(selection.w)
+            );
+
+        const h =
+            Math.min(
+                editCanvas.height-y,
+                Math.ceil(selection.h)
+            );
+
+        const imageData =
+            editCtx.getImageData(
+                x,
+                y,
+                w,
+                h
+            );
+
+        const pixels =
+            imageData.data;
+
+        const mask =
+            new Uint8Array(w*h);
+
+
+        /* Detect */
+
+        for(
+            let yy=0;
+            yy<h;
+            yy++
+        ){
+
+            for(
+                let xx=0;
+                xx<w;
+                xx++
+            ){
+
+                const i =
+                    (yy*w+xx)*4;
+
+                if(
+                    isWhitePixel(
+                        pixels,
+                        i
+                    )
+                ){
+
+                    mask[
+                        yy*w+xx
+                    ] = 1;
+
+                }
+
+            }
+
+        }
+
+
+        /* Expand */
+
+        for(
+            let pass=0;
+            pass<2;
+            pass++
+        ){
+
+            const old =
+                mask.slice();
+
+            for(
+                let yy=0;
+                yy<h;
+                yy++
+            ){
+
+                for(
+                    let xx=0;
+                    xx<w;
+                    xx++
+                ){
+
+                    if(
+                        old[yy*w+xx]
+                    )
+                        continue;
+
                     let hit=false;
-                    for(let dy=-1;dy<=1 && !hit;dy++){
-                        for(let dx=-1;dx<=1;dx++){
-                            const nx=xx+dx,ny=yy+dy;
-                            if(nx>=0&&nx<w&&ny>=0&&ny<h&&old[ny*w+nx]){
-                                hit=true;break;
+
+                    for(
+                        let dy=-1;
+                        dy<=1 && !hit;
+                        dy++
+                    ){
+
+                        for(
+                            let dx=-1;
+                            dx<=1;
+                            dx++
+                        ){
+
+                            const nx =
+                                xx+dx;
+
+                            const ny =
+                                yy+dy;
+
+                            if(
+                                nx>=0 &&
+                                nx<w &&
+                                ny>=0 &&
+                                ny<h &&
+                                old[
+                                    ny*w+nx
+                                ]
+                            ){
+
+                                hit=true;
+                                break;
+
                             }
+
                         }
+
                     }
-                    if(hit) mask[yy*w+xx]=1;
+
+                    if(hit)
+                        mask[
+                            yy*w+xx
+                        ]=1;
+
                 }
+
             }
+
         }
 
-        let count=0;
-        for(let p=0;p<mask.length;p++) count+=mask[p];
-        if(!count){
-            return false;
-        }
 
-        // Match the video remover's push/pull style: build a multiscale
-        // real-pixel fill, then relax the fill edge against neighbouring pixels.
-        const N=w*h;
-        let cw=(w+1)>>1,ch=(h+1)>>1;
-        let val=new Float32Array(cw*ch*3),wt=new Float32Array(cw*ch);
-        for(let yy=0;yy<h;yy++){
-            const qy=(yy>>1)*cw;
-            for(let xx=0;xx<w;xx++){
-                const p=yy*w+xx;
-                if(!mask[p]){
-                    const q=qy+(xx>>1),i=p*4;
-                    wt[q]++;
-                    val[q*3]+=pixels[i];
-                    val[q*3+1]+=pixels[i+1];
-                    val[q*3+2]+=pixels[i+2];
-                }
-            }
-        }
+        /*
+          Inpaint using nearby non-white pixels.
+        */
 
-        const levels=[null,{w:cw,h:ch,val,wt}];
-        while(cw>1||ch>1){
-            const nw=(cw+1)>>1,nh=(ch+1)>>1;
-            const nv=new Float32Array(nw*nh*3),nwt=new Float32Array(nw*nh);
-            for(let yy=0;yy<ch;yy++){
-                const qy=(yy>>1)*nw;
-                for(let xx=0;xx<cw;xx++){
-                    const p=yy*cw+xx,wp=wt[p];
-                    if(wp>0){
-                        const q=qy+(xx>>1);
-                        nwt[q]+=wp;
-                        nv[q*3]+=val[p*3];
-                        nv[q*3+1]+=val[p*3+1];
-                        nv[q*3+2]+=val[p*3+2];
+        const distances =
+            [
+                1,2,3,4,5,
+                7,9,12,16,
+                20,25
+            ];
+
+
+        for(
+            let pass=0;
+            pass<6;
+            pass++
+        ){
+
+            const old =
+                pixels.slice();
+
+            for(
+                let yy=0;
+                yy<h;
+                yy++
+            ){
+
+                for(
+                    let xx=0;
+                    xx<w;
+                    xx++
+                ){
+
+                    if(
+                        !mask[yy*w+xx]
+                    )
+                        continue;
+
+                    const samples=[];
+
+                    for(
+                        const d of distances
+                    ){
+
+                        const candidates=[
+
+                            [xx-d,yy],
+                            [xx+d,yy],
+                            [xx,yy-d],
+                            [xx,yy+d],
+                            [xx-d,yy-d],
+                            [xx+d,yy-d],
+                            [xx-d,yy+d],
+                            [xx+d,yy+d]
+
+                        ];
+
+                        for(
+                            const pair of candidates
+                        ){
+
+                            const nx =
+                                pair[0];
+
+                            const ny =
+                                pair[1];
+
+                            if(
+                                nx>=0 &&
+                                nx<w &&
+                                ny>=0 &&
+                                ny<h &&
+                                !mask[
+                                    ny*w+nx
+                                ]
+                            ){
+
+                                samples.push(
+                                    (ny*w+nx)*4
+                                );
+
+                            }
+
+                        }
+
+                        if(
+                            samples.length >= 10
+                        )
+                            break;
+
                     }
-                }
-            }
-            val=nv;wt=nwt;cw=nw;ch=nh;
-            levels.push({w:cw,h:ch,val,wt});
-        }
 
-        // If the selected area is almost completely masked, fall back to
-        // local samples rather than filling the entire rectangle.
-        const top=levels[levels.length-1];
-        const topCount=top.wt.reduce((a,b)=>a+b,0);
-        if(!topCount){
-            return false;
-        }
+                    if(!samples.length)
+                        continue;
 
-        let col=new Float32Array([
-            top.val[0]/Math.max(1,top.wt[0]),
-            top.val[1]/Math.max(1,top.wt[0]),
-            top.val[2]/Math.max(1,top.wt[0])
-        ]);
+                    let r=0;
+                    let g=0;
+                    let b=0;
 
-        for(let k=levels.length-2;k>=1;k--){
-            const L=levels[k],lw=L.w,lh=L.h,pw=levels[k+1].w,ph=levels[k+1].h;
-            const nc=new Float32Array(lw*lh*3);
-            for(let yy=0;yy<lh;yy++){
-                const fy=(yy+.5)/2-.5,y0=Math.floor(fy),ty=fy-y0;
-                const ya=Math.max(0,Math.min(ph-1,y0)),yb=Math.max(0,Math.min(ph-1,y0+1));
-                for(let xx=0;xx<lw;xx++){
-                    const fx=(xx+.5)/2-.5,x0=Math.floor(fx),tx=fx-x0;
-                    const xa=Math.max(0,Math.min(pw-1,x0)),xb=Math.max(0,Math.min(pw-1,x0+1));
-                    const p=yy*lw+xx,wp=L.wt[p],c=wp>0?Math.min(1,wp/Math.pow(4,k)):0;
-                    for(let q=0;q<3;q++){
-                        const up=(col[(ya*pw+xa)*3+q]*(1-tx)+col[(ya*pw+xb)*3+q]*tx)*(1-ty)+
-                                 (col[(yb*pw+xa)*3+q]*(1-tx)+col[(yb*pw+xb)*3+q]*tx)*ty;
-                        nc[p*3+q]=c>0?(L.val[p*3+q]/wp)*c+up*(1-c):up;
+                    const count =
+                        Math.min(
+                            samples.length,
+                            12
+                        );
+
+                    for(
+                        let s=0;
+                        s<count;
+                        s++
+                    ){
+
+                        const i =
+                            samples[s];
+
+                        r += old[i];
+                        g += old[i+1];
+                        b += old[i+2];
+
                     }
+
+                    const i =
+                        (yy*w+xx)*4;
+
+                    const opacity =
+                        Number(
+                            $("whiteOpacity").value
+                        ) / 100;
+
+                    const nr =
+                        Math.round(r/count);
+
+                    const ng =
+                        Math.round(g/count);
+
+                    const nb =
+                        Math.round(b/count);
+
+                    pixels[i] =
+                        Math.round(
+                            pixels[i] *
+                            (1-opacity) +
+                            nr *
+                            opacity
+                        );
+
+                    pixels[i+1] =
+                        Math.round(
+                            pixels[i+1] *
+                            (1-opacity) +
+                            ng *
+                            opacity
+                        );
+
+                    pixels[i+2] =
+                        Math.round(
+                            pixels[i+2] *
+                            (1-opacity) +
+                            nb *
+                            opacity
+                        );
+
                 }
+
             }
-            col=nc;
+
         }
 
-        const fill=new Float32Array(N*3);
-        const pw=levels[1].w,ph=levels[1].h;
-        for(let yy=0;yy<h;yy++){
-            const fy=(yy+.5)/2-.5,y0=Math.floor(fy),ty=fy-y0;
-            const ya=Math.max(0,Math.min(ph-1,y0)),yb=Math.max(0,Math.min(ph-1,y0+1));
-            for(let xx=0;xx<w;xx++){
-                const p=yy*w+xx;
-                if(!mask[p]){
-                    const i=p*4;fill[p*3]=pixels[i];fill[p*3+1]=pixels[i+1];fill[p*3+2]=pixels[i+2];continue;
-                }
-                const fx=(xx+.5)/2-.5,x0=Math.floor(fx),tx=fx-x0;
-                const xa=Math.max(0,Math.min(pw-1,x0)),xb=Math.max(0,Math.min(pw-1,x0+1));
-                for(let q=0;q<3;q++){
-                    fill[p*3+q]=(col[(ya*pw+xa)*3+q]*(1-tx)+col[(ya*pw+xb)*3+q]*tx)*(1-ty)+
-                                 (col[(yb*pw+xa)*3+q]*(1-tx)+col[(yb*pw+xb)*3+q]*tx)*ty;
-                }
-            }
-        }
 
-        const idx=new Int32Array(count);let j0=0;
-        for(let p=0;p<N;p++)if(mask[p])idx[j0++]=p;
-        for(let it=0;it<inpaintPasses;it++){
-            for(let j=0;j<count;j++){
-                const p=idx[j],xx=p%w,yy=(p/w)|0;
-                let c=0,r=0,g=0,b=0;
-                if(xx>0){const q=(p-1)*3;r+=fill[q];g+=fill[q+1];b+=fill[q+2];c++;}
-                if(xx<w-1){const q=(p+1)*3;r+=fill[q];g+=fill[q+1];b+=fill[q+2];c++;}
-                if(yy>0){const q=(p-w)*3;r+=fill[q];g+=fill[q+1];b+=fill[q+2];c++;}
-                if(yy<h-1){const q=(p+w)*3;r+=fill[q];g+=fill[q+1];b+=fill[q+2];c++;}
-                if(c){
-                    const blend=Math.min(0.92,0.58+strength/500);
-                    fill[p*3]=fill[p*3]*(1-blend)+(r/c)*blend;
-                    fill[p*3+1]=fill[p*3+1]*(1-blend)+(g/c)*blend;
-                    fill[p*3+2]=fill[p*3+2]*(1-blend)+(b/c)*blend;
-                }
-            }
-        }
+        editCtx.putImageData(
+            imageData,
+            x,
+            y
+        );
 
-        // Write only masked pixels. The rest of the photo remains byte-for-byte
-        // as it was in the canvas.
-        for(let j=0;j<count;j++){
-            const p=idx[j],i=p*4;
-            const opacity=Number($('whiteOpacity').value)/100;
-            pixels[i]=Math.round(pixels[i]*(1-opacity)+fill[p*3]*opacity);
-            pixels[i+1]=Math.round(pixels[i+1]*(1-opacity)+fill[p*3+1]*opacity);
-            pixels[i+2]=Math.round(pixels[i+2]*(1-opacity)+fill[p*3+2]*opacity);
-        }
+        selection = null;
 
-        editCtx.putImageData(imageData,x,y);
-        return true;
-    }
-
-
-$('removeBtn').addEventListener('click',async function(){
-    if(!selection) return;
-    $('editStatus').textContent='Removing selected white text…';
-    const ok=await removeWhiteFromRect(selection,{
-        strength:Number($('removeStrength').value)||100,
-        inpaintPasses:Number($('photoInpaintPasses').value)||8,
-        stroke:Number($('photoTextThick').value)||9,
-        expandPasses:1
-    });
-    if(ok){
-        firstRemovalDone=true;
-        selection=null;
         showSelection(null);
-        $('undoBtn').disabled=false;
-        $('editStatus').textContent='First text area removed. Drag a second box for precision removal — it will run automatically.';
-    }else{
-        $('editStatus').textContent='No suitable white text found. Try increasing Text removal strength.';
-    }
-});
 
+        $("undoBtn").disabled =
+            false;
+
+        $("editStatus").textContent =
+            "White text removed. You can continue editing or Save & Next.";
+
+    }
+);
 
 
 /* =========================================================
@@ -1737,9 +2037,7 @@ $("undoBtn").addEventListener(
         );
 
         selection = null;
-        selection2 = null;
         cropSelection = null;
-        firstRemovalDone = false;
 
         showSelection(null);
 
@@ -1767,7 +2065,7 @@ $("cropBtn").addEventListener(
         selectionMode = "crop";
 
         selection = null;
-        firstRemovalDone = false;
+
         cropSelection = null;
 
         showSelection(null);
@@ -1863,8 +2161,6 @@ $("applyCropBtn").addEventListener(
             );
 
         selection = null;
-        selection2 = null;
-        firstRemovalDone = false;
         cropSelection = null;
 
         selectionMode = "remove";
@@ -2117,32 +2413,6 @@ $("whiteThreshold").addEventListener(
     }
 );
 
-$("removeStrength").addEventListener(
-    "input",
-    function(){
-        $("removeStrengthValue").textContent=this.value+"%";
-    }
-);
-
-$("photoInpaintPasses").addEventListener(
-    "input",
-    function(){
-        $("photoInpaintPassValue").textContent=this.value;
-    }
-);
-
-$("photoTextThick").addEventListener(
-    "input",
-    function(){
-        $("photoTextThickValue").textContent=this.value;
-    }
-);
-
-
-$('secondStrength').addEventListener('input',function(){ $('secondStrengthValue').textContent=this.value+'%'; });
-$('secondPasses').addEventListener('input',function(){ $('secondPassValue').textContent=this.value; });
-$('secondThick').addEventListener('input',function(){ $('secondThickValue').textContent=this.value+'px'; });
-
 
 /* =========================================================
    GEO VARIABLES
@@ -2160,7 +2430,6 @@ let geoImages = [];
 
 let gLat = null;
 let gLon = null;
-let mapImg = null;
 
 
 /* =========================================================
@@ -2247,41 +2516,58 @@ $("gAddress").value =
 
 const GEO = {
 
-    /* same defaults as the Video GeoTag tool */
-
     opacity:85,
-    mapOpacity:100,
-    height:35,
 
-    /* Match the Video GeoTag stamp: map inset at the left of the black stamp. */
-    mapX:1.5,
-    mapY:67.5,
-    mapWidth:30,
-    mapHeight:30,
+    mapOpacity:100,
+
+    height:25,
+
+    mapWidth:29,
 
     titleSize:100,
+
     detailsSize:100,
 
-    logoX:90,
-    logoY:50,
-    logoSize:70,
+    logoX:88,
 
-    showHandles:true
+    logoY:78,
+
+    logoSize:70
 
 };
 
 
+/* =========================================================
+   CURRENT DATE/TIME
+========================================================= */
+
 function setCurrentDateTime(){
-    const now = new Date();
+
+    const now =
+        new Date();
+
     $("gDate").value =
-        now.getFullYear() + "-" +
-        String(now.getMonth()+1).padStart(2,"0") + "-" +
-        String(now.getDate()).padStart(2,"0");
+        now.getFullYear() +
+        "-" +
+        String(
+            now.getMonth()+1
+        ).padStart(2,"0") +
+        "-" +
+        String(
+            now.getDate()
+        ).padStart(2,"0");
+
     $("gTime").value =
-        String(now.getHours()).padStart(2,"0") + ":" +
-        String(now.getMinutes()).padStart(2,"0") + ":" +
-        String(now.getSeconds()).padStart(2,"0");
+        String(
+            now.getHours()
+        ).padStart(2,"0") +
+        ":" +
+        String(
+            now.getMinutes()
+        ).padStart(2,"0");
+
 }
+
 setCurrentDateTime();
 
 
@@ -2408,14 +2694,80 @@ async function loadGeoImage(){
     if(!geoImages.length)
         return;
 
-    const item = geoImages[geoIndex];
+    const item =
+        geoImages[geoIndex];
 
     $("geoCounter").textContent =
         `Image ${geoIndex+1} of ${geoImages.length} — ${item.originalName}`;
 
-    $("gPrev").disabled = geoIndex <= 0;
+    try{
 
-    await redrawGeoFromSaved();
+        const image =
+            await blobToImage(
+                item.blob
+            );
+
+        const maxWidth =
+            1800;
+
+        const scale =
+            Math.min(
+                1,
+                maxWidth /
+                image.naturalWidth
+            );
+
+        const W =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalWidth*scale
+                )
+            );
+
+        const H =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalHeight*scale
+                )
+            );
+
+        gCanvas.width = W;
+        gCanvas.height = H;
+
+        gCtx.setTransform(
+            1,0,0,1,0,0
+        );
+
+        gCtx.clearRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+        gCtx.drawImage(
+            image,
+            0,
+            0,
+            W,
+            H
+        );
+
+        $("gPrev").disabled =
+            geoIndex <= 0;
+
+        await drawGeo();
+
+    }catch(err){
+
+        console.error(err);
+
+        $("gStatus").textContent =
+            "Could not display this saved image.";
+
+    }
 
 }
 
@@ -2728,444 +3080,596 @@ function drawFallbackMap(
    MAP TILE
 ========================================================= */
 
+/* Map built the same way as the video tool: tiles centred exactly on the location, red pin, tile-source fallbacks. */
+const tileCache=new Map();
+const MAP_SRC=[
+ {name:'© OpenStreetMap contributors',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`},
+ {name:'© OpenStreetMap contributors, OSM France',url:(z,x,y)=>`https://a.tile.openstreetmap.fr/osmfr/${z}/${x}/${y}.png`},
+ {name:'© Esri',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`}
+];
 function tileXY(lat,lon,z){
-    const n = 2**z;
-    const x = (lon+180)/360*n;
-    const y = (1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n;
-    return {x,y,n};
+ const n=2**z,x=(lon+180)/360*n,y=(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n;return {x,y,n}
 }
-
-async function makeMap(lat,lon){
-    /*
-      Same map engine as the Video GeoTag tool:
-      zoom 15, 25 OpenStreetMap tiles loaded in parallel,
-      centered on the selected latitude/longitude.
-    */
-    const z = 15;
-    const t = tileXY(lat,lon,z);
-    const cx = Math.floor(t.x);
-    const cy = Math.floor(t.y);
-    const size = 1280;
-
-    const c = document.createElement("canvas");
-    c.width = size;
-    c.height = size;
-
-    const cctx = c.getContext("2d");
-    cctx.clearRect(0,0,size,size);
-
-    const jobs = [];
-
-    for(let dy=-2;dy<=2;dy++){
-        for(let dx=-2;dx<=2;dx++){
-
-            jobs.push(new Promise(resolve=>{
-
-                const im = new Image();
-                im.crossOrigin = "anonymous";
-
-                const draw = ()=>{
-                    try{
-                        cctx.drawImage(
-                            im,
-                            size/2+(dx-(t.x-cx))*256,
-                            size/2+(dy-(t.y-cy))*256,
-                            256,
-                            256
-                        );
-                    }catch(e){}
-
-                    resolve();
-                };
-
-                im.onload = draw;
-                im.onerror = ()=>resolve();
-
-                im.src =
-                    `https://tile.openstreetmap.org/${z}/${cx+dx}/${cy+dy}.png`;
-
-            }));
-
-        }
-    }
-
-    await Promise.all(jobs);
-
-    /*
-      Keep the same center marker and attribution as Video.
-    */
-    cctx.fillStyle = "#e53935";
-    cctx.beginPath();
-    cctx.arc(size/2,size/2,10,0,Math.PI*2);
-    cctx.fill();
-
-    cctx.strokeStyle = "#fff";
-    cctx.lineWidth = 4;
-    cctx.stroke();
-
-    cctx.fillStyle = "rgba(255,255,255,.85)";
-    cctx.fillRect(8,size-28,145,20);
-
-    cctx.fillStyle = "#333";
-    cctx.font = "12px Arial";
-    cctx.fillText(
-        "© OpenStreetMap contributors",
-        12,
-        size-14
-    );
-
-    return c;
+function loadTile(src,z,x,y){
+ const key=src.url(z,x,y);
+ if(tileCache.has(key))return Promise.resolve(tileCache.get(key));
+ return new Promise(res=>{
+  const im=new Image();im.crossOrigin='anonymous';let fin=false;
+  const done=v=>{if(fin)return;fin=true;if(v){if(tileCache.size>300)tileCache.clear();tileCache.set(key,v);}res(v);};
+  im.onload=()=>done(im);im.onerror=()=>done(null);setTimeout(()=>done(null),8000);
+  im.src=src.url(z,x,y);
+ });
 }
-
-async function drawMap(x,y,w,h,alpha){
-
-    if(!mapImg || !mapImg.width || !mapImg.height)
-        return;
-
-    /* Video-style map: rounded tile crop, cover-fit, and a thin white edge. */
-    const radius = Math.max(5, Math.min(w,h)*.06);
-    gCtx.save();
-    gCtx.globalAlpha = alpha === undefined ? 1 : alpha;
-    geoRoundRectCorners(gCtx,x,y,w,h,radius,radius,radius,radius);
-    gCtx.clip();
-
-    const scale = Math.max(w/mapImg.width,h/mapImg.height);
-    const dw = mapImg.width*scale;
-    const dh = mapImg.height*scale;
-    gCtx.imageSmoothingEnabled = true;
-    gCtx.imageSmoothingQuality = "high";
-    gCtx.drawImage(mapImg,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
-    gCtx.restore();
-
-    gCtx.save();
-    gCtx.globalAlpha = alpha === undefined ? 1 : alpha;
-    gCtx.strokeStyle = "rgba(255,255,255,.95)";
-    gCtx.lineWidth = Math.max(1.5,Math.min(w,h)*.018);
-    geoRoundRectCorners(gCtx,x,y,w,h,radius,radius,radius,radius);
-    gCtx.stroke();
-    gCtx.restore();
+async function makeMapCanvas(la,lo,w,h){
+ let cw=Math.round(w*2),ch=Math.round(h*2);
+ const big=Math.max(cw,ch);
+ if(big>1400){cw=Math.round(cw*1400/big);ch=Math.round(ch*1400/big);}
+ cw=Math.max(160,cw);ch=Math.max(160,ch);
+ const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const z=16,n=2**z,c=tileXY(la,lo,z);
+ const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+ const cc=cv.getContext('2d');
+ cc.fillStyle='#e8e8e8';cc.fillRect(0,0,cw,ch);
+ const x0=Math.floor(c.x-cw/512),x1=Math.floor(c.x+cw/512),y0=Math.floor(c.y-ch/512),y1=Math.floor(c.y+ch/512);
+ const pos=[];
+ for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++)if(ty>=0&&ty<n)pos.push([tx,ty]);
+ let used=null;
+ for(const s of MAP_SRC){
+  const imgs=await Promise.all(pos.map(([tx,ty])=>loadTile(s,z,((tx%n)+n)%n,ty)));
+  if(imgs.filter(Boolean).length<Math.max(1,Math.ceil(pos.length*.6)))continue;
+  pos.forEach(([tx,ty],i)=>{if(imgs[i])cc.drawImage(imgs[i],cw/2+(tx-c.x)*256,ch/2+(ty-c.y)*256,256,256);});
+  used=s;break;
+ }
+ if(!used)return null;
+ const pr=cl(Math.min(cw,ch)/40,6,14);
+ cc.save();cc.fillStyle='#e53935';cc.beginPath();cc.arc(cw/2,ch/2,pr,0,Math.PI*2);cc.fill();
+ cc.strokeStyle='#fff';cc.lineWidth=Math.max(2,pr*.3);cc.stroke();cc.restore();
+ const t=used.name,fs=cl(Math.min(cw,ch)*.035,9,14);
+ cc.font=`600 ${fs}px Arial, sans-serif`;cc.textAlign='right';cc.textBaseline='alphabetic';
+ const tw=cc.measureText(t).width+fs;
+ cc.fillStyle='rgba(255,255,255,.75)';cc.fillRect(cw-tw,ch-fs*1.6,tw,fs*1.6);
+ cc.fillStyle='#333';cc.fillText(t,cw-fs*.5,ch-fs*.45);
+ return cv;
+}
+async function drawMap(x,y,w,h){
+ if(gLat===null||gLon===null){drawFallbackMap(x,y,w,h);return;}
+ let cv=null;
+ try{cv=await makeMapCanvas(gLat,gLon,w,h)}catch(err){console.warn("Map could not be built.",err)}
+ if(!cv){drawFallbackMap(x,y,w,h);return;}
+ gCtx.save();
+ gCtx.beginPath();
+ gCtx.roundRect(x,y,w,h,Math.min(18,h*.07));
+ gCtx.clip();
+ gCtx.globalAlpha=GEO.mapOpacity/100;
+ const ms=Math.max(w/cv.width,h/cv.height),dw=cv.width*ms,dh=cv.height*ms;
+ gCtx.drawImage(cv,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+ gCtx.globalAlpha=1;
+ gCtx.restore();
 }
 
 /* =========================================================
    CAMERA LOGO
 ========================================================= */
 
-function geoClamp(n,a,b){
-    return Math.max(a,Math.min(b,n));
-}
+function drawCameraLogo(
+    W,
+    H,
+    stampY,
+    stampHeight
+){
 
-/* Same geometry as the Video GeoTag tool.
-   Used for drawing AND for mouse/touch hit-testing. */
+    const size =
+        Math.max(
+            30,
+            Math.min(
+                stampHeight*.60,
+                130
+            ) *
+            GEO.logoSize /
+            70
+        );
 
-function geoLayout(W,H){
 
-    const stampH = geoClamp(
-        H*GEO.height/100,
-        Math.max(70,H*.10),
-        H*.90
+    /*
+      Position is percentage of image.
+    */
+
+    let x =
+        W *
+        GEO.logoX /
+        100;
+
+    let y =
+        stampY +
+        stampHeight *
+        GEO.logoY /
+        100;
+
+
+    /*
+      Keep logo inside stamp.
+    */
+
+    x =
+        Math.max(
+            0,
+            Math.min(
+                W-size-8,
+                x
+            )
+        );
+
+    y =
+        Math.max(
+            stampY+5,
+            Math.min(
+                stampY+stampHeight-size-5,
+                y
+            )
+        );
+
+
+    const radius =
+        size*.17;
+
+
+    gCtx.save();
+
+    /*
+      Blue rounded square.
+    */
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        x,
+        y,
+        size,
+        size,
+        radius
     );
 
-    const stampX = 0;
-    const stampY = Math.round(H-stampH);
-    const stampW = W;
+    gCtx.fillStyle =
+        "#1595d0";
 
-    const stampRadius = Math.max(18,Math.round(stampH*.14));
-    const stampPad    = Math.max(5,Math.round(stampH*.022));
-    const stampGap    = Math.max(12,Math.round(stampH*.045));
+    gCtx.fill();
 
-    const mapX = geoClamp(W*GEO.mapX/100,0,Math.max(0,W-20));
-    const mapY = geoClamp(H*GEO.mapY/100,0,Math.max(0,H-20));
-    const mapW = geoClamp(W*GEO.mapWidth/100,20,W-mapX);
-    const mapH = geoClamp(H*GEO.mapHeight/100,20,H-mapY);
 
-    const logoSize = geoClamp(
-        stampH*.38*(GEO.logoSize/70),
-        40,
-        Math.min(110,stampH*.55)
+    /*
+      Camera body.
+    */
+
+    const bx =
+        x+size*.18;
+
+    const by =
+        y+size*.31;
+
+    const bw =
+        size*.64;
+
+    const bh =
+        size*.40;
+
+    gCtx.fillStyle =
+        "#fff";
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        bx,
+        by,
+        bw,
+        bh,
+        size*.06
     );
 
-    const logoCX = geoClamp(
-        W*GEO.logoX/100,
-        stampX+stampW*.72+logoSize/2,
-        stampX+stampW-logoSize/2-stampPad
+    gCtx.fill();
+
+
+    /*
+      Camera top.
+    */
+
+    gCtx.beginPath();
+
+    gCtx.moveTo(
+        bx+size*.10,
+        by
     );
 
-    const logoCY = geoClamp(
-        stampY+stampH*(GEO.logoY/100),
-        stampY+logoSize/2+stampPad,
-        stampY+stampH-logoSize/2-stampPad
+    gCtx.lineTo(
+        bx+size*.19,
+        by-size*.08
     );
 
-    return {
-        W,H,
-        stampX,stampY,stampW,stampH,stampRadius,stampPad,stampGap,
-        mapX,mapY,mapW,mapH,
-        logoSize,logoCX,logoCY
-    };
+    gCtx.lineTo(
+        bx+size*.34,
+        by-size*.08
+    );
 
-}
+    gCtx.lineTo(
+        bx+size*.40,
+        by
+    );
 
-function geoScale(){
-    const r = gCanvas.getBoundingClientRect();
-    return r.width ? gCanvas.width/r.width : 1;
-}
+    gCtx.closePath();
 
-function geoHandleSize(){
-    return Math.max(12,14*geoScale());
-}
+    gCtx.fill();
 
-function geoRoundRectCorners(ctx,x,y,w,h,tl,tr,br,bl){
-    ctx.beginPath();
-    ctx.moveTo(x+tl,y);
-    ctx.lineTo(x+w-tr,y);
-    ctx.arcTo(x+w,y,x+w,y+tr,tr);
-    ctx.lineTo(x+w,y+h-br);
-    ctx.arcTo(x+w,y+h,x+w-br,y+h,br);
-    ctx.lineTo(x+bl,y+h);
-    ctx.arcTo(x,y+h,x,y+h-bl,bl);
-    ctx.lineTo(x,y+tl);
-    ctx.arcTo(x,y,x+tl,y,tl);
-    ctx.closePath();
-}
 
-function geoWrapText(ctx,text,max,font,maxLines){
-    ctx.font = font;
-    const words = String(text||"").trim().split(/\s+/);
-    const lines = [];
-    let line = "";
-    for(const word of words){
-        const test = line ? line+" "+word : word;
-        if(ctx.measureText(test).width>max && line){
-            lines.push(line);
-            line = word;
-            if(lines.length>=maxLines) break;
-        }else{
-            line = test;
-        }
-    }
-    if(line && lines.length<maxLines) lines.push(line);
-    return lines;
-}
+    /*
+      Lens.
+    */
 
-function geoClock(value){
-    if(!value) return "00:00:00";
-    const p = value.split(":").map(Number);
-    return [p[0]||0,p[1]||0,p[2]||0]
-        .map(n=>String(n).padStart(2,"0"))
-        .join(":");
-}
+    gCtx.fillStyle =
+        "#1595d0";
 
-/* Blue camera logo — identical to the Video tool (centre based). */
+    gCtx.beginPath();
 
-function geoDrawLogo(ctx,x,y,size){
+    gCtx.arc(
+        x+size*.50,
+        y+size*.51,
+        size*.14,
+        0,
+        Math.PI*2
+    );
 
-    ctx.save();
-    ctx.translate(x,y);
+    gCtx.fill();
 
-    const r = Math.max(8,size*.18);
+    gCtx.fillStyle =
+        "#fff";
 
-    ctx.fillStyle = "#149bd3";
-    ctx.beginPath();
-    ctx.roundRect(-size/2,-size/2,size,size,r);
-    ctx.fill();
+    gCtx.beginPath();
 
-    const bodyW = size*.68;
-    const bodyH = size*.40;
-    const bodyX = -bodyW/2;
-    const bodyY = -bodyH/2+size*.035;
+    gCtx.arc(
+        x+size*.50,
+        y+size*.51,
+        size*.07,
+        0,
+        Math.PI*2
+    );
 
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.roundRect(bodyX,bodyY,bodyW,bodyH,Math.max(3,size*.025));
-    ctx.fill();
+    gCtx.fill();
 
-    const bumpW = size*.25;
-    const bumpH = size*.10;
-
-    ctx.beginPath();
-    ctx.roundRect(-bumpW*.42,bodyY-bumpH*.72,bumpW,bumpH,Math.max(2,size*.015));
-    ctx.fill();
-
-    ctx.fillStyle = "#149bd3";
-    ctx.beginPath();
-    ctx.arc(0,bodyY+bodyH/2,size*.145,0,Math.PI*2);
-    ctx.fill();
-
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = Math.max(2,size*.035);
-    ctx.beginPath();
-    ctx.arc(0,bodyY+bodyH/2,size*.19,0,Math.PI*2);
-    ctx.stroke();
-
-    ctx.restore();
+    gCtx.restore();
 
 }
 
 
 /* =========================================================
-   DRAW GEOTAG  (same layout as the Video GeoTag tool)
+   MAIN GEOTAG RENDER
 ========================================================= */
 
 async function drawGeo(){
 
-    if(!gCanvas.width || !gCanvas.height)
+    if(
+        !gCanvas.width ||
+        !gCanvas.height
+    )
         return;
 
-    /* No coordinates = no stamp. */
+    const W =
+        gCanvas.width;
 
-    if(gLat === null || gLon === null)
-        return;
+    const H =
+        gCanvas.height;
 
-    const ctx = gCtx;
-    const W = gCanvas.width;
-    const H = gCanvas.height;
-    const L = geoLayout(W,H);
 
-    const stampOpacity = geoClamp(GEO.opacity/100,0,1);
-    const mapOpacity   = geoClamp(GEO.mapOpacity/100,0,1);
+    /*
+      Start with the already saved clean image.
+    */
 
-    /* ---------- STAMP BLOCK ---------- */
+    /*
+      The current image is already underneath
+      everything because loadGeoImage() drew it.
+    */
 
-    ctx.save();
-    ctx.globalAlpha = stampOpacity;
-    ctx.fillStyle = "rgba(0,0,0,.76)";
-    geoRoundRectCorners(
-        ctx,
-        L.stampX,L.stampY,L.stampW,L.stampH,
-        L.stampRadius,L.stampRadius,0,0
-    );
-    ctx.fill();
-    ctx.restore();
 
-    /* ---------- MAP BLOCK (independent position + size) ---------- */
-
-    await drawMap(
-        L.mapX,
-        L.mapY,
-        L.mapW,
-        L.mapH,
-        stampOpacity*mapOpacity
-    );
-
-    /* ---------- STAMP TEXT ---------- */
-
-    const logoLeft  = L.logoCX-L.logoSize/2;
-    let textX = L.stampX+L.stampW*.255;
-
-    /* keep the text clear of the map when the map sits on the stamp */
+    /*
+      No coordinates = don't draw stamp.
+    */
 
     if(
-        L.mapY+L.mapH > L.stampY+1 &&
-        L.mapY < L.stampY+L.stampH &&
-        L.mapX < textX
-    ){
-        textX = Math.min(
-            Math.max(textX,L.mapX+L.mapW+L.stampGap),
-            L.stampW*.62
+        gLat === null ||
+        gLon === null
+    )
+        return;
+
+
+    const stampHeight =
+        Math.max(
+            1,
+            Math.min(
+                H,
+                Math.round(
+                    H*GEO.height/100
+                )
+            )
         );
+
+
+    const stampY =
+        H-stampHeight;
+
+
+    const mapWidth =
+        Math.max(
+            1,
+            Math.min(
+                W,
+                Math.round(
+                    W*GEO.mapWidth/100
+                )
+            )
+        );
+
+
+    const infoWidth =
+        W-mapWidth;
+
+
+    /*
+      Rounded outer GeoTag shape.
+    */
+
+    gCtx.save();
+
+    gCtx.beginPath();
+
+    gCtx.roundRect(
+        0,
+        stampY,
+        W,
+        stampHeight,
+        Math.min(
+            22,
+            stampHeight*.14
+        )
+    );
+
+    gCtx.clip();
+
+
+    /*
+      Map.
+    */
+
+    await drawMap(
+        0,
+        stampY,
+        mapWidth,
+        stampHeight
+    );
+
+
+    /*
+      Information background.
+    */
+
+    gCtx.fillStyle =
+        `rgba(0,0,0,${GEO.opacity/100})`;
+
+    gCtx.fillRect(
+        mapWidth,
+        stampY,
+        infoWidth,
+        stampHeight
+    );
+
+
+    const left =
+        mapWidth +
+        Math.max(
+            12,
+            infoWidth*.04
+        );
+
+
+    const right =
+        Math.max(
+            12,
+            infoWidth*.04
+        );
+
+
+    /*
+      Reserve space for logo.
+    */
+
+    const reservedLogo =
+        Math.min(
+            infoWidth*.27,
+            120
+        );
+
+
+    const maxTextWidth =
+        Math.max(
+            60,
+            infoWidth-left+mapWidth-right-reservedLogo
+        );
+
+
+    const titleSize =
+        Math.max(
+            14,
+            Math.round(
+                stampHeight*.135*
+                GEO.titleSize/100
+            )
+        );
+
+
+    const detailSize =
+        Math.max(
+            9,
+            Math.round(
+                titleSize*.58*
+                GEO.detailsSize/100
+            )
+        );
+
+
+    gCtx.textAlign =
+        "left";
+
+    gCtx.textBaseline =
+        "top";
+
+
+    /*
+      TITLE
+    */
+
+    const place =
+        $("gPlace").value.trim();
+
+    const state =
+        $("gState").value.trim();
+
+    const title =
+        place
+            ? `${place}, ${state}`
+            : state;
+
+
+    gCtx.font =
+        `700 ${titleSize}px Arial`;
+
+    gCtx.fillStyle =
+        "#ffffff";
+
+
+    let currentY =
+        stampY +
+        stampHeight*.09;
+
+
+    const titleLines =
+        wrapGeoText(
+            title,
+            maxTextWidth,
+            `700 ${titleSize}px Arial`,
+            2
+        );
+
+
+    for(
+        const line of titleLines
+    ){
+
+        gCtx.fillText(
+            line,
+            left,
+            currentY
+        );
+
+        currentY +=
+            titleSize*1.04;
+
     }
 
-    const textRight = logoLeft-L.stampGap;
-    const maxW      = Math.max(150,textRight-textX);
 
-    const titleSize  = Math.max(15,L.stampH*.105*GEO.titleSize/100);
-    const detailSize = Math.max(9,L.stampH*.050*GEO.detailsSize/100);
+    /*
+      ADDRESS
+    */
 
-    const titleText = [
-        $("gPlace").value.trim(),
-        $("gState").value.trim(),
-        "India"
-    ].filter(Boolean).join(", ");
+    const address =
+        $("gAddress").value.trim();
 
-    const address = $("gAddress").value.trim();
 
-    const coordText =
-        `Lat ${gLat.toFixed(6)}°  Long ${gLon.toFixed(6)}°`;
+    gCtx.font =
+        `400 ${detailSize}px Arial`;
 
-    const dateTime =
-        `${formatDate($("gDate").value)} ${geoClock($("gTime").value)}`;
+    gCtx.fillStyle =
+        "rgba(255,255,255,.98)";
 
-    ctx.save();
-    ctx.globalAlpha = stampOpacity;
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "alphabetic";
-    ctx.shadowColor = "rgba(0,0,0,.30)";
-    ctx.shadowBlur = Math.max(1,L.stampH*.008);
 
-    const titleFont = `700 ${titleSize}px Arial, sans-serif`;
-    ctx.font = titleFont;
+    const addressLines =
+        wrapGeoText(
+            address ||
+            "Location",
+            maxTextWidth,
+            `400 ${detailSize}px Arial`,
+            3
+        );
 
-    const titleLines = geoWrapText(ctx,titleText,maxW,titleFont,2);
 
-    let yy = L.stampY+L.stampPad+titleSize;
+    currentY +=
+        detailSize*.08;
 
-    titleLines.forEach(line=>{
-        ctx.fillText(line,textX,yy);
-        yy += titleSize*1.02;
-    });
 
-    const detailFont = `600 ${detailSize}px Arial, sans-serif`;
-    ctx.font = detailFont;
+    for(
+        const line of addressLines
+    ){
 
-    const lineGap = Math.max(3,detailSize*.25);
-    const bottomLimit = L.stampY+L.stampH-L.stampPad;
+        gCtx.fillText(
+            line,
+            left,
+            currentY
+        );
 
-    const addressLines = geoWrapText(ctx,address,maxW,detailFont,2);
-
-    addressLines.forEach(line=>{
-        if(yy<=bottomLimit) ctx.fillText(line,textX,yy);
-        yy += detailSize+lineGap;
-    });
-
-    if(yy<=bottomLimit){
-        ctx.fillText(coordText,textX,yy);
-        yy += detailSize+lineGap*1.05;
-    }
-
-    if(yy<=bottomLimit)
-        ctx.fillText(dateTime,textX,yy);
-
-    ctx.restore();
-
-    /* ---------- LOGO ---------- */
-
-    ctx.save();
-    ctx.globalAlpha = stampOpacity;
-    geoDrawLogo(ctx,L.logoCX,L.logoCY,L.logoSize);
-    ctx.restore();
-
-    /* ---------- preview-only map handles (never saved) ---------- */
-
-    if(GEO.showHandles){
-
-        const sc = geoScale();
-        const hs = geoHandleSize();
-
-        ctx.save();
-
-        ctx.setLineDash([6*sc,4*sc]);
-
-        ctx.strokeStyle = "rgba(0,0,0,.55)";
-        ctx.lineWidth = Math.max(3,3.5*sc);
-        ctx.strokeRect(L.mapX,L.mapY,L.mapW,L.mapH);
-
-        ctx.strokeStyle = "rgba(255,255,255,.95)";
-        ctx.lineWidth = Math.max(1.5,2*sc);
-        ctx.strokeRect(L.mapX,L.mapY,L.mapW,L.mapH);
-
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = "rgba(255,255,255,.95)";
-        ctx.strokeStyle = "rgba(0,0,0,.6)";
-        ctx.lineWidth = Math.max(1,sc);
-
-        ctx.fillRect(L.mapX+L.mapW-hs,L.mapY+L.mapH-hs,hs,hs);
-        ctx.strokeRect(L.mapX+L.mapW-hs,L.mapY+L.mapH-hs,hs,hs);
-
-        ctx.restore();
+        currentY +=
+            detailSize*1.18;
 
     }
+
+
+    /*
+      COORDINATES
+    */
+
+    currentY +=
+        detailSize*.18;
+
+
+    gCtx.font =
+        `600 ${detailSize}px Arial`;
+
+    gCtx.fillStyle =
+        "#ffffff";
+
+
+    gCtx.fillText(
+        `Lat ${gLat.toFixed(6)}° Long ${gLon.toFixed(6)}°`,
+        left,
+        currentY
+    );
+
+
+    /*
+      DATE / TIME
+    */
+
+    currentY +=
+        detailSize*1.3;
+
+
+    gCtx.font =
+        `400 ${detailSize}px Arial`;
+
+
+    gCtx.fillText(
+        `${formatDate($("gDate").value)} ${formatTime($("gTime").value)}`,
+        left,
+        currentY
+    );
+
+
+    /*
+      BLUE CAMERA LOGO
+    */
+
+    drawCameraLogo(
+        W,
+        H,
+        stampY,
+        stampHeight
+    );
+
+
+    gCtx.restore();
 
 }
 
@@ -3190,48 +3694,97 @@ function connectSlider(
             $(valueId).textContent =
                 this.value+"%";
 
-            redrawGeoFromSaved();
+            drawGeo();
 
         }
     );
 
 }
 
-connectSlider("gOpacity","opacity","gOpacityVal");
-connectSlider("gMapOpacity","mapOpacity","gMapOpacityVal");
-connectSlider("gHeight","height","gHeightVal");
-connectSlider("gMapWidth","mapWidth","gMapWidthVal");
-connectSlider("gMapHeight","mapHeight","gMapHeightVal");
-connectSlider("gTitle","titleSize","gTitleVal");
-connectSlider("gDetails","detailsSize","gDetailsVal");
-connectSlider("gLogoX","logoX","gLogoXVal");
-connectSlider("gLogoY","logoY","gLogoYVal");
-connectSlider("gLogoSize","logoSize","gLogoSizeVal");
+
+connectSlider(
+    "gOpacity",
+    "opacity",
+    "gOpacityVal"
+);
+
+connectSlider(
+    "gMapOpacity",
+    "mapOpacity",
+    "gMapOpacityVal"
+);
+
+connectSlider(
+    "gHeight",
+    "height",
+    "gHeightVal"
+);
+
+connectSlider(
+    "gMapWidth",
+    "mapWidth",
+    "gMapWidthVal"
+);
+
+connectSlider(
+    "gTitle",
+    "titleSize",
+    "gTitleVal"
+);
+
+connectSlider(
+    "gDetails",
+    "detailsSize",
+    "gDetailsVal"
+);
+
+connectSlider(
+    "gLogoX",
+    "logoX",
+    "gLogoXVal"
+);
+
+connectSlider(
+    "gLogoY",
+    "logoY",
+    "gLogoYVal"
+);
+
+connectSlider(
+    "gLogoSize",
+    "logoSize",
+    "gLogoSizeVal"
+);
 
 
 /* =========================================================
-   LIVE GEO TEXT  (clean redraw every time)
+   LIVE GEO TEXT
 ========================================================= */
 
 [
-    "gState",
     "gPlace",
     "gAddress",
     "gDate",
     "gTime"
 ].forEach(
     id=>{
+
         $(id).addEventListener(
             "input",
             function(){
+
                 if(
                     gLat !== null &&
                     gLon !== null
                 ){
-                    redrawGeoFromSaved();
+
+                    drawGeo();
+
                 }
+
             }
         );
+
     }
 );
 
@@ -3409,18 +3962,16 @@ async function findLocation(){
         gLat = lat;
         gLon = lon;
 
+
         $("gCoords").textContent =
             `Lat ${lat.toFixed(6)}° Long ${lon.toFixed(6)}°`;
 
-        $("gStatus").textContent =
-            "Location found. Loading map…";
-
-        mapImg = await makeMap(gLat,gLon);
 
         $("gStatus").textContent =
-            "Location found successfully. Map loaded."; 
+            "Location found successfully.";
 
-        await redrawGeoFromSaved();
+
+        await drawGeo();
 
     }catch(err){
 
@@ -3428,7 +3979,6 @@ async function findLocation(){
 
         gLat = null;
         gLon = null;
-        mapImg = null;
 
         $("gCoords").textContent =
             "—";
@@ -3461,34 +4011,23 @@ async function saveCurrentGeo(){
         geoImages[geoIndex];
 
     /*
-      The dashed map frame / resize handle are preview-only,
-      so draw a clean copy before saving.
+      PNG preserves the rendered result.
+      Original base filename is retained.
     */
 
-    let blob;
+    const blob =
+        await canvasToBlob(
+            gCanvas,
+            "image/png"
+        );
 
-    GEO.showHandles = false;
-
-    try{
-
-        await redrawGeoFromSaved();
-
-        blob =
-            await canvasToBlob(
-                gCanvas,
-                "image/png"
-            );
-
-    }finally{
-
-        GEO.showHandles = true;
-
-        await redrawGeoFromSaved();
-
-    }
 
     item.geoBlob =
         blob;
+
+    /*
+      Preserve original filename.
+    */
 
     const original =
         item.originalName;
@@ -3848,91 +4387,16 @@ $("gDownloadAll").addEventListener(
 
 
 /* =========================================================
-   REDRAW GEO FROM SAVED IMAGE  (clean base + overlay)
+   GEO CANVAS LOGO DRAGGING
 ========================================================= */
 
-const geoBaseCache = new WeakMap();
-let geoRedrawToken = 0;
+/*
+  You can also drag the blue camera logo directly
+  on the GeoTag preview.
+*/
 
-async function redrawGeoFromSaved(){
+let draggingLogo = false;
 
-    if(!geoImages.length)
-        return;
-
-    const token = ++geoRedrawToken;
-
-    const item =
-        geoImages[geoIndex];
-
-    try{
-
-        let image =
-            geoBaseCache.get(item.blob);
-
-        if(!image){
-
-            image =
-                await blobToImage(
-                    item.blob
-                );
-
-            geoBaseCache.set(
-                item.blob,
-                image
-            );
-
-        }
-
-        if(token !== geoRedrawToken)
-            return;
-
-        const scale =
-            Math.min(
-                1,
-                1800/image.naturalWidth
-            );
-
-        const W =
-            Math.max(
-                1,
-                Math.round(image.naturalWidth*scale)
-            );
-
-        const H =
-            Math.max(
-                1,
-                Math.round(image.naturalHeight*scale)
-            );
-
-        gCanvas.width = W;
-        gCanvas.height = H;
-
-        gCtx.setTransform(1,0,0,1,0,0);
-        gCtx.clearRect(0,0,W,H);
-        gCtx.drawImage(image,0,0,W,H);
-
-        await drawGeo();
-
-    }catch(err){
-
-        console.error(err);
-
-        $("gStatus").textContent =
-            "Could not display this saved image.";
-
-    }
-
-}
-
-
-/* =========================================================
-   DRAG ON THE PREVIEW
-   - drag the map to move it
-   - drag its bottom-right corner to resize it
-   - drag the blue logo to move it
-========================================================= */
-
-let geoDrag = null;
 
 function geoPoint(e){
 
@@ -3940,159 +4404,353 @@ function geoPoint(e){
         gCanvas.getBoundingClientRect();
 
     return {
-        x:(e.clientX-rect.left)*gCanvas.width/rect.width,
-        y:(e.clientY-rect.top)*gCanvas.height/rect.height
+
+        x:
+            (e.clientX-rect.left) *
+            gCanvas.width /
+            rect.width,
+
+        y:
+            (e.clientY-rect.top) *
+            gCanvas.height /
+            rect.height
+
     };
 
 }
 
-function geoHit(p){
-
-    const L  = geoLayout(gCanvas.width,gCanvas.height);
-    const hs = geoHandleSize();
-
-    if(Math.hypot(p.x-L.logoCX,p.y-L.logoCY) <= L.logoSize/2+4)
-        return {mode:"logo",L};
-
-    if(
-        p.x >= L.mapX+L.mapW-hs*1.6 && p.x <= L.mapX+L.mapW+hs*.4 &&
-        p.y >= L.mapY+L.mapH-hs*1.6 && p.y <= L.mapY+L.mapH+hs*.4
-    )
-        return {mode:"resize",L};
-
-    if(
-        p.x>=L.mapX && p.x<=L.mapX+L.mapW &&
-        p.y>=L.mapY && p.y<=L.mapY+L.mapH
-    )
-        return {mode:"move",L};
-
-    return null;
-
-}
-
-function geoSyncSlider(id,valueId,value){
-    $(id).value = Math.round(value);
-    $(valueId).textContent = Math.round(value)+"%";
-}
 
 gCanvas.addEventListener(
     "pointerdown",
     function(e){
 
-        if(gLat === null || gLon === null)
+        if(
+            gLat === null ||
+            gLon === null
+        )
             return;
 
-        const p   = geoPoint(e);
-        const hit = geoHit(p);
 
-        if(!hit)
-            return;
+        const p =
+            geoPoint(e);
 
-        e.preventDefault();
 
-        gCanvas.setPointerCapture(e.pointerId);
+        const stampHeight =
+            gCanvas.height*
+            GEO.height/100;
 
-        geoDrag = {
-            mode:hit.mode,
-            startX:p.x,
-            startY:p.y,
-            L:hit.L
-        };
+        const stampY =
+            gCanvas.height-
+            stampHeight;
+
+
+        const size =
+            Math.max(
+                30,
+                Math.min(
+                    stampHeight*.60,
+                    130
+                ) *
+                GEO.logoSize/70
+            );
+
+
+        let lx =
+            gCanvas.width*
+            GEO.logoX/100;
+
+        let ly =
+            stampY+
+            stampHeight*
+            GEO.logoY/100;
+
+
+        lx =
+            Math.max(
+                0,
+                Math.min(
+                    gCanvas.width-size-8,
+                    lx
+                )
+            );
+
+
+        ly =
+            Math.max(
+                stampY+5,
+                Math.min(
+                    stampY+stampHeight-size-5,
+                    ly
+                )
+            );
+
+
+        if(
+            p.x>=lx &&
+            p.x<=lx+size &&
+            p.y>=ly &&
+            p.y<=ly+size
+        ){
+
+            draggingLogo = true;
+
+            gCanvas.setPointerCapture(
+                e.pointerId
+            );
+
+        }
 
     }
 );
+
 
 gCanvas.addEventListener(
     "pointermove",
     function(e){
 
-        const p = geoPoint(e);
-
-        /* hover cursor */
-
-        if(!geoDrag){
-
-            if(gLat === null || gLon === null){
-                gCanvas.style.cursor = "default";
-                return;
-            }
-
-            const hit = geoHit(p);
-
-            gCanvas.style.cursor =
-                !hit ? "default" :
-                hit.mode === "resize" ? "nwse-resize" :
-                hit.mode === "logo" ? "grab" :
-                "move";
-
+        if(!draggingLogo)
             return;
 
-        }
 
-        const W = gCanvas.width;
-        const H = gCanvas.height;
-        const L = geoDrag.L;
+        const p =
+            geoPoint(e);
 
-        const dx = p.x-geoDrag.startX;
-        const dy = p.y-geoDrag.startY;
 
-        if(geoDrag.mode === "logo"){
+        const stampHeight =
+            gCanvas.height*
+            GEO.height/100;
 
-            GEO.logoX = geoClamp(p.x/W*100,0,100);
+        const stampY =
+            gCanvas.height-
+            stampHeight;
 
-            GEO.logoY = geoClamp(
-                (p.y-L.stampY)/L.stampH*100,
+
+        const size =
+            Math.max(
+                30,
+                Math.min(
+                    stampHeight*.60,
+                    130
+                ) *
+                GEO.logoSize/70
+            );
+
+
+        GEO.logoX =
+            Math.max(
                 0,
-                100
+                Math.min(
+                    100,
+                    (p.x-size/2) /
+                    gCanvas.width *
+                    100
+                )
             );
 
-            geoSyncSlider("gLogoX","gLogoXVal",GEO.logoX);
-            geoSyncSlider("gLogoY","gLogoYVal",GEO.logoY);
 
-        }else if(geoDrag.mode === "move"){
-
-            GEO.mapX = geoClamp(
-                (L.mapX+dx)/W*100,
+        GEO.logoY =
+            Math.max(
                 0,
-                100-GEO.mapWidth
+                Math.min(
+                    100,
+                    (p.y-size/2-stampY) /
+                    stampHeight *
+                    100
+                )
             );
 
-            GEO.mapY = geoClamp(
-                (L.mapY+dy)/H*100,
-                0,
-                100-GEO.mapHeight
+
+        $("gLogoX").value =
+            Math.round(
+                GEO.logoX
             );
 
-        }else{
-
-            GEO.mapWidth = geoClamp(
-                (L.mapW+dx)/W*100,
-                5,
-                Math.min(90,100-GEO.mapX)
+        $("gLogoY").value =
+            Math.round(
+                GEO.logoY
             );
 
-            GEO.mapHeight = geoClamp(
-                (L.mapH+dy)/H*100,
-                5,
-                Math.min(90,100-GEO.mapY)
-            );
+        $("gLogoXVal").textContent =
+            Math.round(
+                GEO.logoX
+            )+"%";
 
-            geoSyncSlider("gMapWidth","gMapWidthVal",GEO.mapWidth);
-            geoSyncSlider("gMapHeight","gMapHeightVal",GEO.mapHeight);
+        $("gLogoYVal").textContent =
+            Math.round(
+                GEO.logoY
+            )+"%";
 
-        }
+
+        /*
+          Reload image then redraw because drawGeo
+          adds the overlay to the original.
+        */
 
         redrawGeoFromSaved();
 
     }
 );
 
-function geoEndDrag(){
-    geoDrag = null;
+
+gCanvas.addEventListener(
+    "pointerup",
+    function(){
+
+        draggingLogo = false;
+
+    }
+);
+
+
+gCanvas.addEventListener(
+    "pointercancel",
+    function(){
+
+        draggingLogo = false;
+
+    }
+);
+
+
+/* =========================================================
+   REDRAW GEO FROM SAVED IMAGE
+========================================================= */
+
+async function redrawGeoFromSaved(){
+
+    if(!geoImages.length)
+        return;
+
+    const item =
+        geoImages[geoIndex];
+
+    try{
+
+        const image =
+            await blobToImage(
+                item.blob
+            );
+
+        const maxWidth =
+            1800;
+
+        const scale =
+            Math.min(
+                1,
+                maxWidth/image.naturalWidth
+            );
+
+        const W =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalWidth*scale
+                )
+            );
+
+        const H =
+            Math.max(
+                1,
+                Math.round(
+                    image.naturalHeight*scale
+                )
+            );
+
+        gCanvas.width = W;
+        gCanvas.height = H;
+
+        gCtx.setTransform(
+            1,0,0,1,0,0
+        );
+
+        gCtx.drawImage(
+            image,
+            0,
+            0,
+            W,
+            H
+        );
+
+        await drawGeo();
+
+    }catch(err){
+
+        console.error(err);
+
+    }
+
 }
 
-gCanvas.addEventListener("pointerup",geoEndDrag);
-gCanvas.addEventListener("pointercancel",geoEndDrag);
+
+/* =========================================================
+   REDRAW WHEN GEO SLIDER CHANGES
+========================================================= */
+
+/*
+  The slider currently calls drawGeo() directly.
+  For a canvas, that would stack overlays.
+  Replace the behaviour with a clean redraw.
+*/
+
+[
+    "gOpacity",
+    "gMapOpacity",
+    "gHeight",
+    "gMapWidth",
+    "gTitle",
+    "gDetails",
+    "gLogoX",
+    "gLogoY",
+    "gLogoSize"
+].forEach(
+    id=>{
+
+        $(id).addEventListener(
+            "input",
+            function(){
+
+                setTimeout(
+                    redrawGeoFromSaved,
+                    0
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   TEXT INPUT ALSO NEEDS CLEAN REDRAW
+========================================================= */
+
+[
+    "gPlace",
+    "gAddress",
+    "gDate",
+    "gTime"
+].forEach(
+    id=>{
+
+        $(id).addEventListener(
+            "input",
+            function(){
+
+                if(
+                    gLat !== null &&
+                    gLon !== null
+                ){
+
+                    redrawGeoFromSaved();
+
+                }
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
