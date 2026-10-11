@@ -1079,6 +1079,7 @@ let imageFiles = [];
 let currentEditIndex = 0;
 
 let originalCanvasData = null;
+let undoHistory = []; // per-action snapshots so each text-removal box can be undone separately
 
 let selection = null;
 let lastRemoveSel = null;   // last text-removal box, re-used for the other images
@@ -1268,6 +1269,7 @@ async function loadCurrentEditImage(){
                 editCanvas.width,
                 editCanvas.height
             );
+        undoHistory = [];
 
         selection = null;
         cropSelection = null;
@@ -1659,6 +1661,9 @@ $("removeBtn").addEventListener("click", function(){
         const h = Math.min(editCanvas.height-y, Math.ceil(selection.h));
         if(w < 2 || h < 2) return;
 
+        // Keep the whole current canvas before every removal, so multiple boxes
+        // are cumulative and Undo reverses only the most recent operation.
+        undoHistory.push(editCtx.getImageData(0, 0, editCanvas.width, editCanvas.height));
         const imageData = editCtx.getImageData(x,y,w,h);
         const original = new Uint8ClampedArray(imageData.data);
         const threshold = Number($("whiteThreshold").value);
@@ -1766,7 +1771,6 @@ $("removeBtn").addEventListener("click", function(){
         }
 
         editCtx.putImageData(new ImageData(current,w,h),x,y);
-        if(typeof pushUndo==="function") pushUndo();
         $("undoBtn").disabled=false;
         $("editStatus").textContent = "Text removal applied. You can draw another box to remove more text.";
         selection=null;
@@ -1784,28 +1788,29 @@ $("undoBtn").addEventListener(
     "click",
     function(){
 
-        if(!originalCanvasData)
+        if(undoHistory.length){
+            const previous = undoHistory.pop();
+            if(previous.width === editCanvas.width && previous.height === editCanvas.height){
+                editCtx.putImageData(previous, 0, 0);
+            } else if(originalCanvasData){
+                // Canvas dimensions changed (for example after cropping): fall back safely.
+                editCtx.putImageData(originalCanvasData, 0, 0);
+                undoHistory = [];
+            }
+        } else if(originalCanvasData){
+            editCtx.putImageData(originalCanvasData, 0, 0);
+        } else {
             return;
-
-        editCtx.putImageData(
-            originalCanvasData,
-            0,
-            0
-        );
+        }
 
         selection = null;
         cropSelection = null;
-
         showSelection(null);
-
-        $("undoBtn").disabled =
-            true;
-
-        $("applyCropBtn").disabled =
-            true;
-
-        $("editStatus").textContent =
-            "Original image restored.";
+        $("undoBtn").disabled = undoHistory.length === 0;
+        $("applyCropBtn").disabled = true;
+        $("editStatus").textContent = undoHistory.length
+            ? "Last text-removal action undone. Earlier edits are preserved."
+            : "Image restored to its saved starting state.";
 
     }
 );
@@ -1916,6 +1921,8 @@ $("applyCropBtn").addEventListener(
                 sw,
                 sh
             );
+        undoHistory = [];
+        $("undoBtn").disabled = true;
 
         selection = null;
         cropSelection = null;
