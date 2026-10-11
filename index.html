@@ -912,6 +912,14 @@ button,
 
 
             <div class="slider">
+    <div class="sliderTop">
+        <span>Map zoom (higher = closer)</span>
+        <b id="gMapZoomVal">16</b>
+    </div>
+    <input id="gMapZoom" type="range" min="12" max="18" step="1" value="16">
+</div>
+
+            <div class="slider">
 
                 <div class="sliderTop">
                     <span>Title size</span>
@@ -2524,6 +2532,8 @@ const GEO = {
 
     mapWidth:29,
 
+    mapZoom:16,
+
     titleSize:100,
 
     detailsSize:100,
@@ -3106,7 +3116,7 @@ async function makeMapCanvas(la,lo,w,h){
  if(big>1400){cw=Math.round(cw*1400/big);ch=Math.round(ch*1400/big);}
  cw=Math.max(160,cw);ch=Math.max(160,ch);
  const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
- const z=16,n=2**z,c=tileXY(la,lo,z);
+ const z=Math.max(12,Math.min(18,Math.round(GEO.mapZoom||16))),n=2**z,c=tileXY(la,lo,z);
  const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
  const cc=cv.getContext('2d');
  cc.fillStyle='#e8e8e8';cc.fillRect(0,0,cw,ch);
@@ -4692,9 +4702,16 @@ async function redrawGeoFromSaved(){
   Replace the behaviour with a clean redraw.
 */
 
+
+$("gMapZoom").addEventListener("input",function(){
+    GEO.mapZoom=Number(this.value);
+    $("gMapZoomVal").textContent=this.value;
+});
+
 [
     "gOpacity",
     "gMapOpacity",
+    "gMapZoom",
     "gHeight",
     "gMapWidth",
     "gTitle",
