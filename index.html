@@ -774,7 +774,9 @@ async function saveCurrentWithoutAdvance(){
  const blob=await canvasToBlob(editCanvas,"image/png");
  const originalName=file.name,dot=originalName.lastIndexOf(".");
  const baseName=dot>0?originalName.slice(0,dot):originalName;
- const item={index:currentEditIndex,originalName,outputName:baseName+".png",blob};
+ const rel=file.webkitRelativePath||"";                       // e.g. "MyFolder/sub/photo.jpg" when a folder was uploaded
+ const folder=rel.indexOf("/")>0?rel.slice(0,rel.lastIndexOf("/")):"";   // "MyFolder/sub" ("" for a single image)
+ const item={index:currentEditIndex,originalName,outputName:baseName+".png",blob,folder};
  const existing=cleanedImages.findIndex(x=>x.index===currentEditIndex);
  if(existing>=0)cleanedImages[existing]=item;else cleanedImages.push(item);
  cleanedImages.sort((a,b)=>a.index-b.index);
@@ -1243,14 +1245,15 @@ $("gDownloadAll").addEventListener("click",async function(){
   const zip=new JSZip(),usedNames=new Set();
   for(const item of completed){
    const name=item.geoName||item.outputName||item.originalName;
+   const dir=item.folder?item.folder+"/":"";          // keeps the uploaded folder (and sub-folders) inside the ZIP
    let finalName=name,counter=2;
-   while(usedNames.has(finalName)){
+   while(usedNames.has(dir+finalName)){
     const dot=name.lastIndexOf(".");
     finalName=dot>0?name.slice(0,dot)+` (${counter})`+name.slice(dot):name+` (${counter})`;
     counter++;
    }
-   usedNames.add(finalName);
-   zip.file(finalName,item.geoBlob);
+   usedNames.add(dir+finalName);
+   zip.file(dir+finalName,item.geoBlob);
   }
   const zipBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}},meta=>{btn.textContent=`ZIP ${Math.round(meta.percent)}%`});
   const url=URL.createObjectURL(zipBlob),a=document.createElement("a");
