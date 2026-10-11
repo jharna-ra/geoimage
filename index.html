@@ -3167,7 +3167,7 @@ async function drawMap(x,y,w,h){
  if(!cv){drawFallbackMap(x,y,w,h);return;}
  gCtx.save();
  gCtx.beginPath();
- gCtx.roundRect(x,y,w,h,Math.min(18,h*.07));
+ gCtx.rect(x,y,w,h);   // square map corners
  gCtx.clip();
  gCtx.globalAlpha=GEO.mapOpacity/100;
  const ms=Math.max(w/cv.width,h/cv.height),dw=cv.width*ms,dh=cv.height*ms;
@@ -3451,10 +3451,7 @@ async function drawGeo(){
         stampY,
         W,
         stampHeight,
-        Math.min(
-            22,
-            stampHeight*.14
-        )
+        (()=>{const r=Math.min(22,stampHeight*.14);return [0,r,r,0]})()
     );
 
     gCtx.clip();
