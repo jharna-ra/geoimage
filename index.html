@@ -663,8 +663,8 @@ button,
 
             <div class="control">
                 <label>Strong inpaint passes <b id="inpaintPassValue">5</b></label>
-                <input id="inpaintPasses" type="range" min="1" max="8" value="5">
-                <div style="font-size:11px;color:#666;line-height:1.4">More passes fill thicker text areas from nearby pixels.</div>
+                <input id="inpaintPasses" type="range" min="1" max="8" value="8">
+                <div style="font-size:11px;color:#666;line-height:1.4">Default is maximum strength. One click targets the white strokes and their pale edges.</div>
             </div>
 
         </div>
@@ -1668,7 +1668,7 @@ $("removeBtn").addEventListener("click", function(){
         const original = new Uint8ClampedArray(imageData.data);
         const threshold = Number($("whiteThreshold").value);
         const strength = Number($("whiteOpacity").value)/100;
-        const passes = Math.max(1, Number($("inpaintPasses").value)||5);
+        const passes = Math.max(1, Number($("inpaintPasses").value)||8);
         const N=w*h, mask=new Uint8Array(N), expanded=new Uint8Array(N);
 
         // Detect neutral bright text and its grey anti-aliased edge pixels.
@@ -1677,11 +1677,18 @@ $("removeBtn").addEventListener("click", function(){
             const r=original[i],g=original[i+1],b=original[i+2];
             const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
             const brightness=(r+g+b)/3;
-            if((mx-mn)<=110 && mx>=threshold && brightness>=threshold-12) mask[p]=1;
+            // Strong single-pass detection: include bright white pixels and
+            // many anti-aliased edge pixels, while rejecting strongly coloured
+            // background pixels (for example yellow/orange areas).
+            const chroma = mx - mn;
+            const nearWhite = chroma <= 145 && mx >= threshold && brightness >= threshold - 28;
+            if(nearWhite) mask[p]=1;
         }
 
         // Dilate the mask enough to cover the white halo without affecting the whole box.
-        const radius=Math.max(1,Math.min(5,Math.round(passes/2)));
+        // Expand farther than the visible white core so faint anti-aliased
+        // fringes are also replaced in the same click.
+        const radius=Math.max(2,Math.min(7,Math.round(passes*0.8)));
         for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
             if(!mask[yy*w+xx]) continue;
             for(let dy=-radius;dy<=radius;dy++) for(let dx=-radius;dx<=radius;dx++){
