@@ -151,9 +151,9 @@ button,.fileButton{padding:11px 15px;border-radius:9px;font-weight:700}
     <div class="hint">Raise for big / bold letters, lower for thin small text.</div>
    </div>
    <div class="control">
-    <label>Edge expand (halo cleanup) <b id="inpaintPassValue">5</b></label>
-    <input id="inpaintPasses" type="range" min="1" max="8" value="5">
-    <div class="hint">Grows the removed area to wipe the pale edge around letters.</div>
+    <label>Edge expand (halo cleanup) <b id="inpaintPassValue">3</b></label>
+    <input id="inpaintPasses" type="range" min="1" max="8" value="3">
+    <div class="hint">Grows the hidden area to wipe the pale edge around letters. Keep it small so the photo stays natural.</div>
    </div>
    <div class="control">
     <label>Removal strength <b id="whiteOpacityValue">100%</b></label>
@@ -354,7 +354,8 @@ editCanvas.addEventListener("pointerup",function(){
   $("editStatus").textContent="Crop area selected. Click Apply Crop.";
  }else{
   lastRemoveSel={...selection};
-  $("removeBtn").click();   // remove automatically, no extra click
+  $("editStatus").textContent="Removing white text…";
+  setTimeout(()=>$("removeBtn").click(),30);   // remove automatically, no extra click
  }
 });
 
@@ -511,22 +512,120 @@ function inpaintHole(d,w,h,hole,strength){
  }
 }
 
+/* ---------------------------------------------------------------
+   Exemplar (patch-copy) inpainting — Criminisi style.
+   The hidden area is rebuilt by COPYING real pieces of the neighbouring photo
+   (bricks, sand, cloth …) so the result keeps its grain and looks unedited,
+   instead of being blurred.
+---------------------------------------------------------------- */
+function inpaintPatch(d,w,h,hole,badSrc,pr){
+ const N=w*h,S=2*pr+1,SS=S*S;
+ const known=new Uint8Array(N),conf=new Float32Array(N),lum=new Float32Array(N);
+ let live=[];
+ for(let p=0;p<N;p++){
+  const i=p*4;lum[p]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
+  if(hole[p])live.push(p);else{known[p]=1;conf[p]=1}
+ }
+ if(!live.length)return true;
+ if(live.length===N)return false;
+ const gx=new Float32Array(N),gy=new Float32Array(N);
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const p=y*w+x;
+  if(known[p]&&known[p-1]&&known[p+1]&&known[p-w]&&known[p+w]){gx[p]=(lum[p+1]-lum[p-1])*.5;gy[p]=(lum[p+w]-lum[p-w])*.5}
+ }
+ // source patch centres: whole patch must be free of hole pixels and of any text
+ const W1=w+1,integ=new Int32Array(W1*(h+1));
+ for(let y=0;y<h;y++){let row=0;for(let x=0;x<w;x++){const p=y*w+x;row+=(hole[p]||badSrc[p])?1:0;integ[(y+1)*W1+x+1]=integ[y*W1+x+1]+row}}
+ let src=[];
+ for(let y=pr;y<h-pr;y++)for(let x=pr;x<w-pr;x++){
+  const A=(y-pr)*W1+(x-pr),B=(y-pr)*W1+(x+pr+1),C=(y+pr+1)*W1+(x-pr),E=(y+pr+1)*W1+(x+pr+1);
+  if(integ[E]-integ[B]-integ[C]+integ[A]===0)src.push(y*w+x);
+ }
+ if(!src.length)return false;
+ const MAXS=16000;
+ if(src.length>MAXS){const step=src.length/MAXS,s2=[];for(let t=0;t<MAXS;t++)s2.push(src[Math.floor(t*step)]);src=s2}
+ const srcArr=Int32Array.from(src),srcX=new Int32Array(srcArr.length),srcY=new Int32Array(srcArr.length);
+ for(let s=0;s<srcArr.length;s++){srcX[s]=srcArr[s]%w;srcY[s]=(srcArr[s]/w)|0}
+ const offs=new Int32Array(SS);
+ for(let t=0;t<SS;t++)offs[t]=(((t/S)|0)-pr)*w+(t%S-pr);
+ const tIdx=new Int32Array(SS),tR=new Float32Array(SS),tG=new Float32Array(SS),tB=new Float32Array(SS);
+ let remaining=live.length,guard=0;
+ while(remaining>0&&guard++<400000){
+  // 1. find the best place to fill next (high confidence + strong edge continuing into the hole)
+  let bestP=-1,bestPri=-1,bestC=0;const nextLive=[];
+  for(const p of live){
+   if(known[p])continue;
+   nextLive.push(p);
+   const x=p%w,y=(p/w)|0;
+   if(!((x>0&&known[p-1])||(x<w-1&&known[p+1])||(y>0&&known[p-w])||(y<h-1&&known[p+w])))continue;
+   const cx=clampN(x,pr,w-pr-1),cy=clampN(y,pr,h-pr-1),base=cy*w+cx;
+   let cs=0,mg=0,mgx=0,mgy=0;
+   for(let t=0;t<SS;t++){
+    const q=base+offs[t];
+    if(known[q]){cs+=conf[q];const g2=gx[q]*gx[q]+gy[q]*gy[q];if(g2>mg){mg=g2;mgx=gx[q];mgy=gy[q]}}
+   }
+   const Cv=cs/SS;
+   let nx=(x<w-1?known[p+1]:0)-(x>0?known[p-1]:0),ny=(y<h-1?known[p+w]:0)-(y>0?known[p-w]:0);
+   const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
+   const pri=Cv*(Math.abs(-mgy*nx+mgx*ny)/255+0.001);
+   if(pri>bestPri){bestPri=pri;bestP=p;bestC=Cv}
+  }
+  live=nextLive;
+  if(bestP<0)return false;
+  // 2. find the most similar clean patch nearby
+  const bx=bestP%w,by=(bestP/w)|0,cx=clampN(bx,pr,w-pr-1),cy=clampN(by,pr,h-pr-1),base=cy*w+cx;
+  let tn=0;
+  for(let t=0;t<SS;t++){
+   const q=base+offs[t];
+   if(known[q]){tIdx[tn]=t;const i=q*4;tR[tn]=d[i];tG[tn]=d[i+1];tB[tn]=d[i+2];tn++}
+  }
+  let bestS=-1,bestScore=Infinity;
+  for(let s=0;s<srcArr.length;s++){
+   const sc=srcArr[s];
+   const factor=1+(Math.abs(srcX[s]-cx)+Math.abs(srcY[s]-cy))/300;   // slight preference for nearby texture
+   const limit=bestScore/factor;
+   let ssd=0;
+   for(let m=0;m<tn;m++){
+    const j=(sc+offs[tIdx[m]])*4;
+    const dr=d[j]-tR[m],dg=d[j+1]-tG[m],db=d[j+2]-tB[m];
+    ssd+=dr*dr+dg*dg+db*db;
+    if(ssd>=limit)break;
+   }
+   if(ssd<limit){bestScore=ssd*factor;bestS=sc}
+  }
+  if(bestS<0)return false;
+  // 3. copy only the missing pixels of the patch from the matching clean patch
+  for(let t=0;t<SS;t++){
+   const q=base+offs[t];
+   if(!known[q]){
+    const sq=bestS+offs[t],i=q*4,j=sq*4;
+    d[i]=d[j];d[i+1]=d[j+1];d[i+2]=d[j+2];
+    gx[q]=gx[sq];gy[q]=gy[sq];lum[q]=lum[sq];
+    known[q]=1;conf[q]=bestC;remaining--;
+   }
+  }
+ }
+ return remaining<=0;
+}
+
 /* removes the text inside ONE box; returns true when something was removed */
 function removeTextRect(ctx,W,H,rect){
  if(!rect||rect.w<2||rect.h<2)return false;
- const k=Math.max(.7,W/1080),power=5;
+ const k=Math.max(.7,W/1080);
  const sens=+$("whiteThreshold").value||200;
  const strength=clampN((+$("whiteOpacity").value||100)/100,.5,1);
- const passes=+$("inpaintPasses").value||5;
+ const passes=+$("inpaintPasses").value||3;
  const thk=+$("textThick").value||9;
- const mg=Math.round((2+power*.4)*k);
+ const mg=Math.max(2,Math.round(3*k));
  const rx0=Math.max(0,Math.floor(rect.x)-mg),ry0=Math.max(0,Math.floor(rect.y)-mg);
  const rx1=Math.min(W,Math.ceil(rect.x+rect.w)+mg),ry1=Math.min(H,Math.ceil(rect.y+rect.h)+mg);
  if(rx1-rx0<2||ry1-ry0<2)return false;
- const T0=Math.max(70,sens-power*3);
+ const T0=Math.max(70,sens-10);
  const thick=Math.max(3,Math.round(thk*k));
- const grow=Math.max(2,Math.round((passes*.5+power*.3)*k));
- const pad=Math.max(16,grow*4+thick*2),x0=Math.max(0,rx0-pad),y0=Math.max(0,ry0-pad),x1=Math.min(W,rx1+pad),y1=Math.min(H,ry1+pad);
+ const grow=Math.max(1,Math.round(passes*.5*k));          // small: only the letters + their pale edge
+ const pr=clampN(Math.round(thick*.45),3,6);               // patch size used when copying texture
+ const pad=clampN(Math.round(60*k),40,140);                // how much surrounding photo may be used as texture
+ const x0=Math.max(0,rx0-pad),y0=Math.max(0,ry0-pad),x1=Math.min(W,rx1+pad),y1=Math.min(H,ry1+pad);
  const w=x1-x0,h=y1-y0,N=w*h;if(w<2||h<2)return false;
  const img=ctx.getImageData(x0,y0,w,h),d=img.data;
  const ix0=rx0-x0,iy0=ry0-y0,ix1=rx1-x0,iy1=ry1-y0,area=Math.max(1,(rx1-rx0)*(ry1-ry0));
@@ -542,14 +641,25 @@ function removeTextRect(ctx,W,H,rect){
   if(inRect(m)/area<=.12){mask=m;break}
  }
  if(!mask)return false;
- inpaintHole(d,w,h,clipM(dilateMask(mask,w,h,grow)),strength);
- const near=dilateMask(mask,w,h,grow+4);
+ // texture is never copied from anything that looks like text (also text outside the box)
+ const textAll=detectWhite(d,w,h,T0,0,0,w,h,0,thick);
+ const bad=textAll?dilateMask(textAll,w,h,3):new Uint8Array(N);
+ const orig=new Uint8ClampedArray(d);
+ const fillHole=hole=>{if(!inpaintPatch(d,w,h,hole,bad,pr))inpaintHole(d,w,h,hole,1)};
+ fillHole(clipM(dilateMask(mask,w,h,grow)));
+ // look again: anything pale left next to the removed letters is filled too
+ const near=dilateMask(mask,w,h,grow+3);
  for(let it=0;it<2;it++){
   const r=detectWhite(d,w,h,T0+10,ix0,iy0,ix1,iy1,0,thick);if(!r)break;
   const hr=new Uint8Array(N);let c=0;
   for(let p=0;p<N;p++)if(r[p]&&near[p]){hr[p]=1;c++}
   if(!c)break;
-  inpaintHole(d,w,h,clipM(dilateMask(hr,w,h,Math.max(1,grow-1))),1);
+  fillHole(clipM(dilateMask(hr,w,h,Math.max(1,grow-1))));
+ }
+ if(strength<1){
+  for(let p=0;p<N;p++){const i=p*4;
+   for(let q=0;q<3;q++)d[i+q]=orig[i+q]*(1-strength)+d[i+q]*strength;
+  }
  }
  ctx.putImageData(img,x0,y0);
  return true;
@@ -596,13 +706,14 @@ $("removeBtn").addEventListener("click",function(){
 let liveTimer=null;
 function liveReapply(){
  clearTimeout(liveTimer);
+ if(removeOps.length)$("editStatus").textContent="Updating…";
  liveTimer=setTimeout(()=>{
   if(!removeOps.length)return;
   try{
    reapplyAll();
    $("editStatus").textContent="Settings applied to "+removeOps.length+" box"+(removeOps.length>1?"es":"")+".";
   }catch(err){console.error(err)}
- },70);
+ },350);
 }
 [["whiteThreshold","whiteThresholdValue",""],["textThick","textThickValue",""],["inpaintPasses","inpaintPassValue",""],["whiteOpacity","whiteOpacityValue","%"]].forEach(([id,vid,suffix])=>{
  $(id).addEventListener("input",function(){
