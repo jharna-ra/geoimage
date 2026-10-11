@@ -549,7 +549,7 @@ button,
     <h1>Fast White Text Remover</h1>
 
     <p class="subtitle">
-        Upload one image or an entire folder. Edits are saved automatically. Move between images whenever you are ready.
+        Upload one image or an entire folder. Process each image and use Save & Next.
     </p>
 
     <div class="card">
@@ -594,7 +594,7 @@ button,
             </button>
 
             <button id="saveNextBtn" class="btn-green" disabled>
-                Next Image
+                💾 Save & Next
             </button>
 
             <button id="goGeoBtn" class="btn-blue" disabled>
@@ -637,50 +637,21 @@ button,
         <div class="controlPanel">
 
             <div class="control">
-
-                <label>
-                    White removal opacity
-                    <b id="whiteOpacityValue">100%</b>
-                </label>
-
-                <input
-                    id="whiteOpacity"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="100"
-                >
-
+                <label>Removal strength <b id="whiteOpacityValue">100%</b></label>
+                <input id="whiteOpacity" type="range" min="50" max="100" value="100">
+                <div style="font-size:11px;color:#666;line-height:1.4">How completely detected text pixels are replaced.</div>
             </div>
 
             <div class="control">
-
-                <label>
-                    White detection
-                    <b id="whiteThresholdValue">150</b>
-                </label>
-
-                <input
-                    id="whiteThreshold"
-                    type="range"
-                    min="100"
-                    max="230"
-                    value="150"
-                >
-
+                <label>White detection sensitivity <b id="whiteThresholdValue">165</b></label>
+                <input id="whiteThreshold" type="range" min="110" max="245" value="165">
+                <div style="font-size:11px;color:#666;line-height:1.4">Lower detects dimmer/grey text; higher targets brighter text.</div>
             </div>
 
             <div class="control">
-
-                <label>
-                    Working image size
-                    <b>2200px max</b>
-                </label>
-
-                <div style="font-size:11px;color:#666;line-height:1.4">
-                    Large phone images are automatically scaled for reliable browser processing.
-                </div>
-
+                <label>Strong inpaint passes <b id="inpaintPassValue">5</b></label>
+                <input id="inpaintPasses" type="range" min="1" max="8" value="5">
+                <div style="font-size:11px;color:#666;line-height:1.4">More passes fill thicker text areas from nearby pixels.</div>
             </div>
 
         </div>
@@ -691,8 +662,8 @@ button,
         ></div>
 
         <div class="help">
-            Drag around the white text to remove it automatically.
-            Crop by clicking Crop and dragging around the part you want to keep. Changes are saved automatically.
+            Drag around the white text, then click Remove White Text.
+            Crop by clicking Crop and dragging around the part you want to keep.
         </div>
 
     </div>
@@ -1025,7 +996,7 @@ button,
                 </button>
 
                 <button id="gSaveNext">
-                    Next Image
+                    💾 Save & Next
                 </button>
 
                 <button id="gDownloadAll">
@@ -1093,7 +1064,6 @@ const selectionBox = $("selectionBox");
 
 let imageFiles = [];
 let currentEditIndex = 0;
-let uploadedFolderName = "Photo_Editor_Images";
 
 let originalCanvasData = null;
 
@@ -1175,10 +1145,6 @@ async function setImageFiles(files){
     }
 
     imageFiles = arr;
-    const firstRelative = arr.find(file => file.webkitRelativePath && file.webkitRelativePath.includes("/"));
-    uploadedFolderName = firstRelative
-        ? firstRelative.webkitRelativePath.split("/")[0]
-        : "Photo_Editor_Images";
 
     currentEditIndex = 0;
 
@@ -1662,273 +1628,123 @@ function isWhitePixel(data,i){
    REMOVE WHITE TEXT
 ========================================================= */
 
-$("removeBtn").addEventListener(
-    "click",
-    function(){
-
-        if(
-            !selection ||
-            selection.w < 4 ||
-            selection.h < 4
-        ){
-
-            $("editStatus").textContent =
-                "First drag around the white text.";
-
-            return;
-
-        }
-
-        if(selectionMode !== "remove"){
-
-            $("editStatus").textContent =
-                "Click Crop again to leave crop mode.";
-
-            return;
-
-        }
-
-        $("editStatus").textContent =
-            "Removing white text…";
-
-        const x =
-            Math.max(
-                0,
-                Math.floor(selection.x)
-            );
-
-        const y =
-            Math.max(
-                0,
-                Math.floor(selection.y)
-            );
-
-        const w =
-            Math.min(
-                editCanvas.width-x,
-                Math.ceil(selection.w)
-            );
-
-        const h =
-            Math.min(
-                editCanvas.height-y,
-                Math.ceil(selection.h)
-            );
-
-        const imageData =
-            editCtx.getImageData(
-                x,
-                y,
-                w,
-                h
-            );
-
-        const pixels =
-            imageData.data;
-
-        const mask =
-            new Uint8Array(w*h);
-
-
-        /* Detect */
-
-        for(
-            let yy=0;
-            yy<h;
-            yy++
-        ){
-
-            for(
-                let xx=0;
-                xx<w;
-                xx++
-            ){
-
-                const i =
-                    (yy*w+xx)*4;
-
-                if(
-                    isWhitePixel(
-                        pixels,
-                        i
-                    )
-                ){
-
-                    mask[
-                        yy*w+xx
-                    ] = 1;
-
-                }
-
-            }
-
-        }
-
-
-        /* Expand */
-
-        for(
-            let pass=0;
-            pass<2;
-            pass++
-        ){
-
-            const old =
-                mask.slice();
-
-            for(
-                let yy=0;
-                yy<h;
-                yy++
-            ){
-
-                for(
-                    let xx=0;
-                    xx<w;
-                    xx++
-                ){
-
-                    if(
-                        old[yy*w+xx]
-                    )
-                        continue;
-
-                    let hit=false;
-
-                    for(
-                        let dy=-1;
-                        dy<=1 && !hit;
-                        dy++
-                    ){
-
-                        for(
-                            let dx=-1;
-                            dx<=1;
-                            dx++
-                        ){
-
-                            const nx =
-                                xx+dx;
-
-                            const ny =
-                                yy+dy;
-
-                            if(
-                                nx>=0 &&
-                                nx<w &&
-                                ny>=0 &&
-                                ny<h &&
-                                old[
-                                    ny*w+nx
-                                ]
-                            ){
-
-                                hit=true;
-                                break;
-
-                            }
-
-                        }
-
-                    }
-
-                    if(hit)
-                        mask[
-                            yy*w+xx
-                        ]=1;
-
-                }
-
-            }
-
-        }
-
-
-        /*
-          Edge-aware iterative inpainting. The previous method sampled far-away
-          pixels along rows/columns, causing smeared stripes on clothes and water.
-          This fills only the detected mask using immediate neighbours.
-        */
-        const original = pixels.slice();
-        let work = pixels.slice();
-        const opacity = Math.max(0, Math.min(1, Number($("whiteOpacity").value) / 100));
-        const iterations = Math.min(90, Math.max(28, Math.ceil(Math.max(w, h) * 0.55)));
-
-        // Expand slightly to cover antialiased letter edges and their bright fringe.
-        for (let pass = 0; pass < 2; pass++) {
-            const oldMask = mask.slice();
-            for (let yy = 1; yy < h - 1; yy++) {
-                for (let xx = 1; xx < w - 1; xx++) {
-                    const mi = yy * w + xx;
-                    if (oldMask[mi]) continue;
-                    if (oldMask[mi - 1] || oldMask[mi + 1] || oldMask[mi - w] || oldMask[mi + w] ||
-                        oldMask[mi - w - 1] || oldMask[mi - w + 1] || oldMask[mi + w - 1] || oldMask[mi + w + 1]) {
-                        mask[mi] = 1;
-                    }
-                }
-            }
-        }
-
-        // Jacobi-style diffusion propagates surrounding texture inward gradually.
-        const dirs = [[-1,0,1],[1,0,1],[0,-1,1],[0,1,1],[-1,-1,0.7],[1,-1,0.7],[-1,1,0.7],[1,1,0.7]];
-        for (let pass = 0; pass < iterations; pass++) {
-            const next = work.slice();
-            for (let yy = 0; yy < h; yy++) {
-                for (let xx = 0; xx < w; xx++) {
-                    const mi = yy * w + xx;
-                    if (!mask[mi]) continue;
-                    let rr = 0, gg = 0, bb = 0, total = 0;
-                    for (const [dx, dy, weight] of dirs) {
-                        const nx = xx + dx, ny = yy + dy;
-                        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-                        const pi = (ny * w + nx) * 4;
-                        rr += work[pi] * weight;
-                        gg += work[pi + 1] * weight;
-                        bb += work[pi + 2] * weight;
-                        total += weight;
-                    }
-                    if (!total) continue;
-                    const i = mi * 4;
-                    const blend = opacity * 0.82;
-                    next[i] = Math.round(work[i] * (1 - blend) + (rr / total) * blend);
-                    next[i + 1] = Math.round(work[i + 1] * (1 - blend) + (gg / total) * blend);
-                    next[i + 2] = Math.round(work[i + 2] * (1 - blend) + (bb / total) * blend);
-                }
-            }
-            work = next;
-        }
-
-        // Pixels outside the mask are not touched.
-        for (let i = 0; i < w * h; i++) {
-            if (!mask[i]) continue;
-            const k = i * 4;
-            pixels[k] = work[k];
-            pixels[k + 1] = work[k + 1];
-            pixels[k + 2] = work[k + 2];
-            pixels[k + 3] = original[k + 3];
-        }
-
-        editCtx.putImageData(
-            imageData,
-            x,
-            y
-        );
-
-        selection = null;
-
-        showSelection(null);
-
-        $("undoBtn").disabled =
-            false;
-
-        $("editStatus").textContent =
-            "White text removed. Edit saved automatically.";
-        scheduleEditAutoSave();
-
+$("removeBtn").addEventListener("click", function(){
+    if(!selection || selection.w < 4 || selection.h < 4){
+        $("editStatus").textContent = "First drag around the white text.";
+        return;
     }
-);
+    if(selectionMode !== "remove"){
+        $("editStatus").textContent = "Switch to Remove White Text mode first.";
+        return;
+    }
 
+    $("editStatus").textContent = "Removing white text…";
+    try {
+        const x = Math.max(0, Math.floor(selection.x));
+        const y = Math.max(0, Math.floor(selection.y));
+        const w = Math.min(editCanvas.width-x, Math.ceil(selection.w));
+        const h = Math.min(editCanvas.height-y, Math.ceil(selection.h));
+        if(w < 2 || h < 2) return;
 
+        const imageData = editCtx.getImageData(x,y,w,h);
+        const original = imageData.data;
+        const threshold = Number($("whiteThreshold").value);
+        const strength = Number($("whiteOpacity").value)/100;
+        const passes = Math.max(1, Number($("inpaintPasses").value)||5);
+        const N=w*h, mask=new Uint8Array(N), expanded=new Uint8Array(N);
+
+        // Match the video editor's neutral-white detection, including anti-aliased edges.
+        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+            const p=yy*w+xx, i=p*4;
+            const r=original[i],g=original[i+1],b=original[i+2];
+            const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+            const brightness=(r+g+b)/3;
+            if((mx-mn)<=105 && (mx>=threshold || brightness>=threshold)) mask[p]=1;
+        }
+
+        // Expand the mask to cover thin grey/anti-aliased outlines.
+        const radius=2;
+        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+            if(!mask[yy*w+xx]) continue;
+            for(let dy=-radius;dy<=radius;dy++) for(let dx=-radius;dx<=radius;dx++){
+                const nx=xx+dx, ny=yy+dy;
+                if(nx>=0&&ny>=0&&nx<w&&ny<h) expanded[ny*w+nx]=1;
+            }
+        }
+
+        // Iterative inpainting: use only clean boundary pixels to grow fills inward.
+        // This avoids smearing untouched parts of the photo.
+        let current=new Uint8ClampedArray(original);
+        const filled=new Uint8Array(N);
+        for(let pass=0; pass<passes; pass++){
+            let changed=false;
+            const next=new Uint8ClampedArray(current);
+            const radiusNow=Math.min(10, 2+pass*2);
+            for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+                const p=yy*w+xx;
+                if(!expanded[p] || filled[p]) continue;
+                let sr=0,sg=0,sb=0,sw=0;
+                // Sample nearby unmasked pixels in all directions, weighting nearer pixels more.
+                for(let d=1;d<=radiusNow;d++){
+                    const candidates=[
+                        [xx-d,yy],[xx+d,yy],[xx,yy-d],[xx,yy+d],
+                        [xx-d,yy-d],[xx+d,yy-d],[xx-d,yy+d],[xx+d,yy+d]
+                    ];
+                    for(const [nx,ny] of candidates){
+                        if(nx<0||ny<0||nx>=w||ny>=h) continue;
+                        const q=ny*w+nx;
+                        if(expanded[q] && !filled[q]) continue;
+                        const wt=1/(d+0.75), j=q*4;
+                        sr+=current[j]*wt; sg+=current[j+1]*wt; sb+=current[j+2]*wt; sw+=wt;
+                    }
+                }
+                if(sw>0){
+                    const i=p*4;
+                    next[i]=current[i]*(1-strength)+(sr/sw)*strength;
+                    next[i+1]=current[i+1]*(1-strength)+(sg/sw)*strength;
+                    next[i+2]=current[i+2]*(1-strength)+(sb/sw)*strength;
+                    filled[p]=1; changed=true;
+                }
+            }
+            current=next;
+            if(!changed) break;
+        }
+
+        // Finish remaining mask pixels using a wider nearest-clean boundary sample.
+        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+            const p=yy*w+xx;
+            if(!expanded[p]) continue;
+            let sr=0,sg=0,sb=0,sw=0;
+            for(let d=1;d<=Math.min(24,Math.max(w,h));d++){
+                const candidates=[[xx-d,yy],[xx+d,yy],[xx,yy-d],[xx,yy+d]];
+                for(const [nx,ny] of candidates){
+                    if(nx<0||ny<0||nx>=w||ny>=h) continue;
+                    const q=ny*w+nx;
+                    if(expanded[q]) continue;
+                    const wt=1/(d+1),j=q*4;
+                    sr+=original[j]*wt;sg+=original[j+1]*wt;sb+=original[j+2]*wt;sw+=wt;
+                }
+                if(sw>0 && d>=4) break;
+            }
+            if(sw>0){
+                const i=p*4;
+                current[i]=original[i]*(1-strength)+(sr/sw)*strength;
+                current[i+1]=original[i+1]*(1-strength)+(sg/sw)*strength;
+                current[i+2]=original[i+2]*(1-strength)+(sb/sw)*strength;
+            }
+        }
+
+        editCtx.putImageData(new ImageData(current,w,h),x,y);
+        if(typeof pushUndo==="function") pushUndo();
+        $("undoBtn").disabled=false;
+        $("editStatus").textContent = "Text removal applied. You can draw another box to remove more text.";
+        selection=null;
+        showSelection(null);
+    } catch(err) {
+        console.error(err);
+        $("editStatus").textContent = "Could not remove text from this selection. Try a smaller box.";
+    }
+});
 /* =========================================================
    UNDO
 ========================================================= */
@@ -1959,7 +1775,6 @@ $("undoBtn").addEventListener(
 
         $("editStatus").textContent =
             "Original image restored.";
-        scheduleEditAutoSave();
 
     }
 );
@@ -2085,8 +1900,7 @@ $("applyCropBtn").addEventListener(
             false;
 
         $("editStatus").textContent =
-            "Crop applied. Edit saved automatically.";
-        scheduleEditAutoSave();
+            "Crop applied.";
 
     }
 );
@@ -2132,25 +1946,42 @@ async function saveCurrentWithoutAdvance(){
     const file =
         imageFiles[currentEditIndex];
 
-    const originalName = file.name;
-    const dot = originalName.lastIndexOf(".");
-    const ext = dot > 0 ? originalName.slice(dot + 1).toLowerCase() : "";
-    const format = ext === "jpg" || ext === "jpeg" ? "image/jpeg"
-        : ext === "webp" ? "image/webp" : "image/png";
-    const supportedName = ["jpg","jpeg","png","webp"].includes(ext);
-    const outputName = supportedName ? originalName
-        : ((dot > 0 ? originalName.slice(0,dot) : originalName) + ".png");
-    const blob = await canvasToBlob(editCanvas, format);
-    const relative = file.webkitRelativePath || originalName;
-    const parts = relative.split("/");
-    const zipRelativePath = parts.length > 1 ? parts.slice(1).join("/") : outputName;
+    const blob =
+        await canvasToBlob(
+            editCanvas,
+            "image/png"
+        );
+
+    /*
+      Preserve the original filename.
+      Only the extension changes to PNG if needed.
+      The base name remains exactly the same.
+    */
+
+    const originalName =
+        file.name;
+
+    const dot =
+        originalName.lastIndexOf(".");
+
+    const baseName =
+        dot > 0
+            ? originalName.slice(0,dot)
+            : originalName;
+
+    const outputName =
+        baseName + ".png";
 
     const item = {
-        index: currentEditIndex,
-        originalName,
-        outputName,
-        zipRelativePath,
-        blob
+
+        index:currentEditIndex,
+
+        originalName:originalName,
+
+        outputName:outputName,
+
+        blob:blob
+
     };
 
     const existing =
@@ -2175,21 +2006,6 @@ async function saveCurrentWithoutAdvance(){
 
 }
 
-
-/* Save edits quietly after a remove/crop/undo action. */
-let editAutoSaveTimer = null;
-function scheduleEditAutoSave(){
-    if(!imageFiles.length) return;
-    clearTimeout(editAutoSaveTimer);
-    editAutoSaveTimer = setTimeout(async () => {
-        try{
-            await saveCurrentWithoutAdvance();
-            $("editStatus").textContent = "Edit saved automatically.";
-        }catch(err){
-            console.warn("Automatic image save failed", err);
-        }
-    }, 250);
-}
 
 /* =========================================================
    SAVE & NEXT
@@ -2249,7 +2065,7 @@ $("saveNextBtn").addEventListener(
             btn.disabled = false;
 
             btn.textContent =
-                "Next Image";
+                "💾 Save & Next";
 
         }
 
@@ -2322,6 +2138,10 @@ $("whiteThreshold").addEventListener(
 
     }
 );
+
+$("inpaintPasses").addEventListener("input", function(){
+    $("inpaintPassValue").textContent = this.value;
+});
 
 
 /* =========================================================
@@ -2690,7 +2510,6 @@ async function loadGeoImage(){
             geoIndex <= 0;
 
         await drawGeo();
-        scheduleGeoAutoSave();
 
     }catch(err){
 
@@ -3944,15 +3763,33 @@ async function saveCurrentGeo(){
       Original base filename is retained.
     */
 
-    const original = item.originalName || item.outputName || "image.png";
-    const dot = original.lastIndexOf(".");
-    const ext = dot > 0 ? original.slice(dot + 1).toLowerCase() : "";
-    const format = ext === "jpg" || ext === "jpeg" ? "image/jpeg"
-        : ext === "webp" ? "image/webp" : "image/png";
-    const supportedName = ["jpg","jpeg","png","webp"].includes(ext);
-    item.geoBlob = await canvasToBlob(gCanvas, format);
-    item.geoName = supportedName ? original
-        : ((dot > 0 ? original.slice(0,dot) : original) + ".png");
+    const blob =
+        await canvasToBlob(
+            gCanvas,
+            "image/png"
+        );
+
+
+    item.geoBlob =
+        blob;
+
+    /*
+      Preserve original filename.
+    */
+
+    const original =
+        item.originalName;
+
+    const dot =
+        original.lastIndexOf(".");
+
+    const base =
+        dot > 0
+            ? original.slice(0,dot)
+            : original;
+
+    item.geoName =
+        base + ".png";
 
 }
 
@@ -3961,7 +3798,6 @@ async function saveCurrentGeo(){
    GEO SAVE & NEXT
 ========================================================= */
 
-$("gSaveNext").textContent = "Next Image";
 $("gSaveNext").addEventListener(
     "click",
     async function(){
@@ -4000,7 +3836,7 @@ $("gSaveNext").addEventListener(
                 await loadGeoImage();
 
                 $("gStatus").textContent =
-                    "Changes saved automatically. Now edit the next image.";
+                    "Saved. Now edit the next image.";
 
             }else{
 
@@ -4021,7 +3857,7 @@ $("gSaveNext").addEventListener(
             btn.disabled = false;
 
             btn.textContent =
-                "Next Image";
+                "💾 Save & Next";
 
         }
 
@@ -4106,7 +3942,8 @@ if(geoImages.length){
  const keepGeo=geoIndex,zb=$("gDownloadAll"),zt=zb.textContent;
  try{
   for(let i=0;i<geoImages.length;i++){
-   zb.textContent="Updating "+(i+1)+"/"+geoImages.length+"…";
+   if(geoImages[i].geoBlob)continue;
+   zb.textContent="Rendering "+(i+1)+"/"+geoImages.length+"…";
    geoIndex=i;await loadGeoImage();await saveCurrentGeo();
   }
  }catch(err){console.error(err)}
@@ -4223,11 +4060,8 @@ if(geoImages.length){
                 );
 
 
-                const relative = item.zipRelativePath || finalName;
-                const pathParts = relative.split("/");
-                pathParts[pathParts.length - 1] = finalName;
                 zip.file(
-                    `${uploadedFolderName}/${pathParts.join("/")}`,
+                    finalName,
                     item.geoBlob
                 );
 
@@ -4269,7 +4103,7 @@ if(geoImages.length){
             a.href = url;
 
             a.download =
-                `${uploadedFolderName}_GeoTagged.zip`;
+                "GeoTagged_Images.zip";
 
             document.body.appendChild(a);
 
@@ -4289,7 +4123,7 @@ if(geoImages.length){
 
 
             $("gStatus").textContent =
-                `${completed.length} image(s) downloaded inside “${uploadedFolderName}/” in the ZIP.`;
+                `${completed.length} image(s) downloaded in ZIP.`;
 
         }catch(err){
 
@@ -4609,32 +4443,6 @@ async function redrawGeoFromSaved(){
 
 
 /* =========================================================
-   AUTO-UPDATE / AUTO-SAVE GEOTAG
-========================================================= */
-let geoAutoSaveTimer = null;
-let geoAutoSaveBusy = false;
-let geoAutoSaveAgain = false;
-
-function scheduleGeoAutoSave(){
-    if(!geoImages.length || gLat === null || gLon === null) return;
-    clearTimeout(geoAutoSaveTimer);
-    geoAutoSaveTimer = setTimeout(async () => {
-        if(geoAutoSaveBusy){ geoAutoSaveAgain = true; return; }
-        geoAutoSaveBusy = true;
-        try{
-            await redrawGeoFromSaved();
-            await saveCurrentGeo();
-            $("gStatus").textContent = "Preview updated and changes saved automatically.";
-        }catch(err){
-            console.warn("Auto-save GeoTag failed", err);
-        }finally{
-            geoAutoSaveBusy = false;
-            if(geoAutoSaveAgain){ geoAutoSaveAgain = false; scheduleGeoAutoSave(); }
-        }
-    }, 450);
-}
-
-/* =========================================================
    REDRAW WHEN GEO SLIDER CHANGES
 ========================================================= */
 
@@ -4668,10 +4476,10 @@ $("gMapZoom").addEventListener("input",function(){
             "input",
             function(){
 
-                setTimeout(() => {
-                    redrawGeoFromSaved();
-                    scheduleGeoAutoSave();
-                }, 0);
+                setTimeout(
+                    redrawGeoFromSaved,
+                    0
+                );
 
             }
         );
@@ -4702,7 +4510,6 @@ $("gMapZoom").addEventListener("input",function(){
                 ){
 
                     redrawGeoFromSaved();
-                    scheduleGeoAutoSave();
 
                 }
 
