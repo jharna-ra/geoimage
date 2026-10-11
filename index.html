@@ -1097,6 +1097,7 @@ let currentEditIndex = 0;
 let originalCanvasData = null;
 
 let selection = null;
+let lastRemoveSel = null;   // last text-removal box, re-used for the other images
 let selecting = false;
 let selectionMode = "remove";
 
@@ -1295,8 +1296,7 @@ async function loadCurrentEditImage(){
         $("cropBtn").disabled = false;
         $("applyCropBtn").disabled = true;
         $("saveNextBtn").disabled = false;
-        $("goGeoBtn").disabled =
-            cleanedImages.length === 0;
+        $("goGeoBtn").disabled = false;
 
         updateEditUI();
 
@@ -1614,8 +1614,8 @@ editCanvas.addEventListener(
 
         }else{
 
-            $("editStatus").textContent =
-                "White text area selected. Click Remove White Text.";
+            lastRemoveSel={...selection};
+            $("removeBtn").click();   // remove automatically, no extra click
 
         }
 
@@ -2634,6 +2634,24 @@ function blobToImage(blob){
    OPEN GEOTAG PAGE
 ========================================================= */
 
+/* Every image you did not press Save & Next on is cleaned automatically with the same text box, then saved. */
+async function saveAllRemaining(){
+ const keep=currentEditIndex,btn=$("goGeoBtn"),old=btn.textContent;let did=false;
+ try{
+  for(let i=0;i<imageFiles.length;i++){
+   if(cleanedImages.some(x=>x.index===i))continue;
+   did=true;btn.textContent="Preparing "+(i+1)+"/"+imageFiles.length+"…";
+   currentEditIndex=i;await loadCurrentEditImage();
+   if(lastRemoveSel){
+    const W=editCanvas.width,H=editCanvas.height,sx=Math.max(0,Math.min(lastRemoveSel.x,W-4)),sy=Math.max(0,Math.min(lastRemoveSel.y,H-4));
+    selection={x:sx,y:sy,w:Math.min(lastRemoveSel.w,W-sx),h:Math.min(lastRemoveSel.h,H-sy)};
+    selectionMode="remove";$("removeBtn").click();
+   }
+   await saveCurrentWithoutAdvance();
+  }
+ }catch(err){console.error(err)}
+ finally{btn.textContent=old;if(did){currentEditIndex=keep;try{await loadCurrentEditImage()}catch(e){}}}
+}
 $("goGeoBtn").addEventListener(
     "click",
     async function(){
@@ -2651,6 +2669,7 @@ $("goGeoBtn").addEventListener(
             console.error(err);
 
         }
+await saveAllRemaining();
 
         geoImages =
             cleanedImages
@@ -4199,6 +4218,18 @@ $("gDownloadAll").addEventListener(
             await saveCurrentGeo();
 
         }
+/* Also render every GeoTag image you did not press Save & Next on, using the current settings. */
+if(geoImages.length){
+ const keepGeo=geoIndex,zb=$("gDownloadAll"),zt=zb.textContent;
+ try{
+  for(let i=0;i<geoImages.length;i++){
+   if(geoImages[i].geoBlob)continue;
+   zb.textContent="Rendering "+(i+1)+"/"+geoImages.length+"…";
+   geoIndex=i;await loadGeoImage();await saveCurrentGeo();
+  }
+ }catch(err){console.error(err)}
+ geoIndex=keepGeo;zb.textContent=zt;try{await loadGeoImage()}catch(e){}
+}
 
 
         const completed =
