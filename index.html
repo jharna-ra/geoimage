@@ -542,7 +542,7 @@ function inpaintPatch(d,w,h,hole,badSrc,pr){
   if(integ[E]-integ[B]-integ[C]+integ[A]===0)src.push(y*w+x);
  }
  if(!src.length)return false;
- const MAXS=16000;
+ const MAXS=12000;
  if(src.length>MAXS){const step=src.length/MAXS,s2=[];for(let t=0;t<MAXS;t++)s2.push(src[Math.floor(t*step)]);src=s2}
  const srcArr=Int32Array.from(src),srcX=new Int32Array(srcArr.length),srcY=new Int32Array(srcArr.length);
  for(let s=0;s<srcArr.length;s++){srcX[s]=srcArr[s]%w;srcY[s]=(srcArr[s]/w)|0}
@@ -638,9 +638,10 @@ function removeTextRect(ctx,W,H,rect){
   if(!a&&!b)break;
   const m=new Uint8Array(N);
   for(let p=0;p<N;p++)m[p]=(a&&a[p])||(b&&b[p])?1:0;
-  if(inRect(m)/area<=.12){mask=m;break}
+  mask=m;                                   // keep the strictest mask seen so far
+  if(inRect(m)/area<=.30)break;             // small enough = real text, not a white wall
  }
- if(!mask)return false;
+ if(!mask||inRect(mask)/area>.55)return false;
  // texture is never copied from anything that looks like text (also text outside the box)
  const textAll=detectWhite(d,w,h,T0,0,0,w,h,0,thick);
  const bad=textAll?dilateMask(textAll,w,h,3):new Uint8Array(N);
