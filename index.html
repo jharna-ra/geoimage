@@ -1845,172 +1845,68 @@ $("removeBtn").addEventListener(
 
 
         /*
-          Inpaint using nearby non-white pixels.
+          Edge-aware iterative inpainting. The previous method sampled far-away
+          pixels along rows/columns, causing smeared stripes on clothes and water.
+          This fills only the detected mask using immediate neighbours.
         */
+        const original = pixels.slice();
+        let work = pixels.slice();
+        const opacity = Math.max(0, Math.min(1, Number($("whiteOpacity").value) / 100));
+        const iterations = Math.min(90, Math.max(28, Math.ceil(Math.max(w, h) * 0.55)));
 
-        const distances =
-            [
-                1,2,3,4,5,
-                7,9,12,16,
-                20,25
-            ];
-
-
-        for(
-            let pass=0;
-            pass<6;
-            pass++
-        ){
-
-            const old =
-                pixels.slice();
-
-            for(
-                let yy=0;
-                yy<h;
-                yy++
-            ){
-
-                for(
-                    let xx=0;
-                    xx<w;
-                    xx++
-                ){
-
-                    if(
-                        !mask[yy*w+xx]
-                    )
-                        continue;
-
-                    const samples=[];
-
-                    for(
-                        const d of distances
-                    ){
-
-                        const candidates=[
-
-                            [xx-d,yy],
-                            [xx+d,yy],
-                            [xx,yy-d],
-                            [xx,yy+d],
-                            [xx-d,yy-d],
-                            [xx+d,yy-d],
-                            [xx-d,yy+d],
-                            [xx+d,yy+d]
-
-                        ];
-
-                        for(
-                            const pair of candidates
-                        ){
-
-                            const nx =
-                                pair[0];
-
-                            const ny =
-                                pair[1];
-
-                            if(
-                                nx>=0 &&
-                                nx<w &&
-                                ny>=0 &&
-                                ny<h &&
-                                !mask[
-                                    ny*w+nx
-                                ]
-                            ){
-
-                                samples.push(
-                                    (ny*w+nx)*4
-                                );
-
-                            }
-
-                        }
-
-                        if(
-                            samples.length >= 10
-                        )
-                            break;
-
+        // Expand slightly to cover antialiased letter edges and their bright fringe.
+        for (let pass = 0; pass < 2; pass++) {
+            const oldMask = mask.slice();
+            for (let yy = 1; yy < h - 1; yy++) {
+                for (let xx = 1; xx < w - 1; xx++) {
+                    const mi = yy * w + xx;
+                    if (oldMask[mi]) continue;
+                    if (oldMask[mi - 1] || oldMask[mi + 1] || oldMask[mi - w] || oldMask[mi + w] ||
+                        oldMask[mi - w - 1] || oldMask[mi - w + 1] || oldMask[mi + w - 1] || oldMask[mi + w + 1]) {
+                        mask[mi] = 1;
                     }
-
-                    if(!samples.length)
-                        continue;
-
-                    let r=0;
-                    let g=0;
-                    let b=0;
-
-                    const count =
-                        Math.min(
-                            samples.length,
-                            12
-                        );
-
-                    for(
-                        let s=0;
-                        s<count;
-                        s++
-                    ){
-
-                        const i =
-                            samples[s];
-
-                        r += old[i];
-                        g += old[i+1];
-                        b += old[i+2];
-
-                    }
-
-                    const i =
-                        (yy*w+xx)*4;
-
-                    const opacity =
-                        Number(
-                            $("whiteOpacity").value
-                        ) / 100;
-
-                    const nr =
-                        Math.round(r/count);
-
-                    const ng =
-                        Math.round(g/count);
-
-                    const nb =
-                        Math.round(b/count);
-
-                    pixels[i] =
-                        Math.round(
-                            pixels[i] *
-                            (1-opacity) +
-                            nr *
-                            opacity
-                        );
-
-                    pixels[i+1] =
-                        Math.round(
-                            pixels[i+1] *
-                            (1-opacity) +
-                            ng *
-                            opacity
-                        );
-
-                    pixels[i+2] =
-                        Math.round(
-                            pixels[i+2] *
-                            (1-opacity) +
-                            nb *
-                            opacity
-                        );
-
                 }
-
             }
-
         }
 
+        // Jacobi-style diffusion propagates surrounding texture inward gradually.
+        const dirs = [[-1,0,1],[1,0,1],[0,-1,1],[0,1,1],[-1,-1,0.7],[1,-1,0.7],[-1,1,0.7],[1,1,0.7]];
+        for (let pass = 0; pass < iterations; pass++) {
+            const next = work.slice();
+            for (let yy = 0; yy < h; yy++) {
+                for (let xx = 0; xx < w; xx++) {
+                    const mi = yy * w + xx;
+                    if (!mask[mi]) continue;
+                    let rr = 0, gg = 0, bb = 0, total = 0;
+                    for (const [dx, dy, weight] of dirs) {
+                        const nx = xx + dx, ny = yy + dy;
+                        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                        const pi = (ny * w + nx) * 4;
+                        rr += work[pi] * weight;
+                        gg += work[pi + 1] * weight;
+                        bb += work[pi + 2] * weight;
+                        total += weight;
+                    }
+                    if (!total) continue;
+                    const i = mi * 4;
+                    const blend = opacity * 0.82;
+                    next[i] = Math.round(work[i] * (1 - blend) + (rr / total) * blend);
+                    next[i + 1] = Math.round(work[i + 1] * (1 - blend) + (gg / total) * blend);
+                    next[i + 2] = Math.round(work[i + 2] * (1 - blend) + (bb / total) * blend);
+                }
+            }
+            work = next;
+        }
+
+        // Pixels outside the mask are not touched.
+        for (let i = 0; i < w * h; i++) {
+            if (!mask[i]) continue;
+            const k = i * 4;
+            pixels[k] = work[k];
+            pixels[k + 1] = work[k + 1];
+            pixels[k + 2] = work[k + 2];
+            pixels[k + 3] = original[k + 3];
+        }
 
         editCtx.putImageData(
             imageData,
