@@ -195,6 +195,9 @@ button,
 }
 
 .toolRow{
+    position:relative;
+    z-index:20;
+    pointer-events:auto;
     display:flex;
     justify-content:center;
     flex-wrap:wrap;
@@ -418,6 +421,9 @@ button,
 }
 
 .geoButtons{
+    position:relative;
+    z-index:20;
+    pointer-events:auto;
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:7px;
@@ -517,6 +523,13 @@ button,
     .dateGrid{
         grid-template-columns:1fr;
     }
+}
+
+/* Keep bottom action/navigation controls above preview layers. */
+.toolRow button, .geoButtons button, .controlPanel button {
+    position: relative;
+    z-index: 21;
+    pointer-events: auto;
 }
 </style>
 </head>
@@ -1647,90 +1660,108 @@ $("removeBtn").addEventListener("click", function(){
         if(w < 2 || h < 2) return;
 
         const imageData = editCtx.getImageData(x,y,w,h);
-        const original = imageData.data;
+        const original = new Uint8ClampedArray(imageData.data);
         const threshold = Number($("whiteThreshold").value);
         const strength = Number($("whiteOpacity").value)/100;
         const passes = Math.max(1, Number($("inpaintPasses").value)||5);
         const N=w*h, mask=new Uint8Array(N), expanded=new Uint8Array(N);
 
-        // Match the video editor's neutral-white detection, including anti-aliased edges.
+        // Detect neutral bright text and its grey anti-aliased edge pixels.
         for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
             const p=yy*w+xx, i=p*4;
             const r=original[i],g=original[i+1],b=original[i+2];
             const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
             const brightness=(r+g+b)/3;
-            if((mx-mn)<=105 && (mx>=threshold || brightness>=threshold)) mask[p]=1;
+            if((mx-mn)<=110 && mx>=threshold && brightness>=threshold-12) mask[p]=1;
         }
 
-        // Expand the mask to cover thin grey/anti-aliased outlines.
-        const radius=2;
+        // Dilate the mask enough to cover the white halo without affecting the whole box.
+        const radius=Math.max(1,Math.min(5,Math.round(passes/2)));
         for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
             if(!mask[yy*w+xx]) continue;
             for(let dy=-radius;dy<=radius;dy++) for(let dx=-radius;dx<=radius;dx++){
-                const nx=xx+dx, ny=yy+dy;
+                const nx=xx+dx,ny=yy+dy;
                 if(nx>=0&&ny>=0&&nx<w&&ny<h) expanded[ny*w+nx]=1;
             }
         }
 
-        // Iterative inpainting: use only clean boundary pixels to grow fills inward.
-        // This avoids smearing untouched parts of the photo.
-        let current=new Uint8ClampedArray(original);
-        const filled=new Uint8Array(N);
-        for(let pass=0; pass<passes; pass++){
-            let changed=false;
+        // Directional inpainting: copy/interpolate clean pixels along the direction
+        // with the most similar surrounding colours. This avoids averaging every
+        // direction together, which creates the hazy/blurred look.
+        const current=new Uint8ClampedArray(original);
+        const known=new Uint8Array(N);
+        for(let p=0;p<N;p++) known[p]=expanded[p]?0:1;
+        const maxDist=Math.min(80,Math.max(12,Math.ceil(Math.max(w,h)*0.35)));
+
+        for(let pass=0;pass<passes;pass++){
             const next=new Uint8ClampedArray(current);
-            const radiusNow=Math.min(10, 2+pass*2);
-            for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+            let changed=false;
+            for(let yy=0;yy<h;yy++) for(let xx=0;xx<w;xx++){
                 const p=yy*w+xx;
-                if(!expanded[p] || filled[p]) continue;
-                let sr=0,sg=0,sb=0,sw=0;
-                // Sample nearby unmasked pixels in all directions, weighting nearer pixels more.
-                for(let d=1;d<=radiusNow;d++){
-                    const candidates=[
-                        [xx-d,yy],[xx+d,yy],[xx,yy-d],[xx,yy+d],
-                        [xx-d,yy-d],[xx+d,yy-d],[xx-d,yy+d],[xx+d,yy+d]
-                    ];
-                    for(const [nx,ny] of candidates){
-                        if(nx<0||ny<0||nx>=w||ny>=h) continue;
+                if(!expanded[p] || known[p]) continue;
+                const candidates=[];
+                // horizontal and vertical clean samples; prefer short distance
+                for(const [dx,dy,axis] of [[-1,0,0],[1,0,0],[0,-1,1],[0,1,1]]){
+                    for(let d=1;d<=maxDist;d++){
+                        const nx=xx+dx*d,ny=yy+dy*d;
+                        if(nx<0||ny<0||nx>=w||ny>=h) break;
                         const q=ny*w+nx;
-                        if(expanded[q] && !filled[q]) continue;
-                        const wt=1/(d+0.75), j=q*4;
-                        sr+=current[j]*wt; sg+=current[j+1]*wt; sb+=current[j+2]*wt; sw+=wt;
+                        if(known[q]){
+                            const j=q*4;
+                            candidates.push({r:current[j],g:current[j+1],b:current[j+2],d,axis});
+                            break;
+                        }
                     }
                 }
-                if(sw>0){
-                    const i=p*4;
-                    next[i]=current[i]*(1-strength)+(sr/sw)*strength;
-                    next[i+1]=current[i+1]*(1-strength)+(sg/sw)*strength;
-                    next[i+2]=current[i+2]*(1-strength)+(sb/sw)*strength;
-                    filled[p]=1; changed=true;
+                if(!candidates.length) continue;
+                // Select the direction whose two sides agree most; it is usually
+                // the least visible continuation of the background.
+                let best=null,bestScore=Infinity;
+                for(let a=0;a<candidates.length;a++) for(let b=a+1;b<candidates.length;b++){
+                    if(candidates[a].axis!==candidates[b].axis) continue;
+                    const A=candidates[a],B=candidates[b];
+                    const colourDiff=Math.abs(A.r-B.r)+Math.abs(A.g-B.g)+Math.abs(A.b-B.b);
+                    const score=colourDiff*0.7+(A.d+B.d)*1.5;
+                    if(score<bestScore){bestScore=score;best=[A,B];}
                 }
+                if(!best) best=[...candidates].sort((a,b)=>a.d-b.d).slice(0,2);
+                let rr,gg,bb;
+                if(best.length===2){
+                    const [A,B]=best,wa=1/(A.d+0.5),wb=1/(B.d+0.5);
+                    rr=(A.r*wa+B.r*wb)/(wa+wb);
+                    gg=(A.g*wa+B.g*wb)/(wa+wb);
+                    bb=(A.b*wa+B.b*wb)/(wa+wb);
+                }else{rr=best[0].r;gg=best[0].g;bb=best[0].b;}
+                const i=p*4;
+                next[i]=original[i]*(1-strength)+rr*strength;
+                next[i+1]=original[i+1]*(1-strength)+gg*strength;
+                next[i+2]=original[i+2]*(1-strength)+bb*strength;
+                known[p]=1;changed=true;
             }
-            current=next;
+            current.set(next);
             if(!changed) break;
         }
 
-        // Finish remaining mask pixels using a wider nearest-clean boundary sample.
-        for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
+        // Last-resort fill for enclosed pixels: nearest already reconstructed pixels,
+        // not a broad blur kernel.
+        for(let yy=0;yy<h;yy++) for(let xx=0;xx<w;xx++){
             const p=yy*w+xx;
-            if(!expanded[p]) continue;
-            let sr=0,sg=0,sb=0,sw=0;
-            for(let d=1;d<=Math.min(24,Math.max(w,h));d++){
-                const candidates=[[xx-d,yy],[xx+d,yy],[xx,yy-d],[xx,yy+d]];
-                for(const [nx,ny] of candidates){
-                    if(nx<0||ny<0||nx>=w||ny>=h) continue;
-                    const q=ny*w+nx;
-                    if(expanded[q]) continue;
-                    const wt=1/(d+1),j=q*4;
-                    sr+=original[j]*wt;sg+=original[j+1]*wt;sb+=original[j+2]*wt;sw+=wt;
+            if(!expanded[p] || known[p]) continue;
+            let found=false;
+            for(let d=1;d<=maxDist&&!found;d++){
+                for(let dy=-d;dy<=d&&!found;dy++){
+                    const dx=d-Math.abs(dy);
+                    for(const sign of dx===0?[1]:[-1,1]){
+                        const nx=xx+sign*dx,ny=yy+dy;
+                        if(nx<0||ny<0||nx>=w||ny>=h) continue;
+                        const q=ny*w+nx;
+                        if(known[q]){
+                            const i=p*4,j=q*4;
+                            current[i]=current[j];current[i+1]=current[j+1];current[i+2]=current[j+2];
+                            known[p]=1;found=true;break;
+                        }
+                    }
                 }
-                if(sw>0 && d>=4) break;
-            }
-            if(sw>0){
-                const i=p*4;
-                current[i]=original[i]*(1-strength)+(sr/sw)*strength;
-                current[i+1]=original[i+1]*(1-strength)+(sg/sw)*strength;
-                current[i+2]=original[i+2]*(1-strength)+(sb/sw)*strength;
             }
         }
 
@@ -2084,11 +2115,14 @@ $("prevEditBtn").addEventListener(
         if(currentEditIndex <= 0)
             return;
 
-        await saveCurrentWithoutAdvance();
-
-        currentEditIndex--;
-
-        await loadCurrentEditImage();
+        try {
+            await saveCurrentWithoutAdvance();
+            currentEditIndex--;
+            await loadCurrentEditImage();
+        } catch (err) {
+            console.error(err);
+            $("editStatus").textContent = "Previous image failed: " + (err.message || err);
+        }
 
     }
 );
@@ -2104,11 +2138,14 @@ $("nextEditBtn").addEventListener(
         )
             return;
 
-        await saveCurrentWithoutAdvance();
-
-        currentEditIndex++;
-
-        await loadCurrentEditImage();
+        try {
+            await saveCurrentWithoutAdvance();
+            currentEditIndex++;
+            await loadCurrentEditImage();
+        } catch (err) {
+            console.error(err);
+            $("editStatus").textContent = "Next image failed: " + (err.message || err);
+        }
 
     }
 );
